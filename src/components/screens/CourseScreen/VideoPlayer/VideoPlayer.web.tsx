@@ -1,7 +1,7 @@
 import { Box } from '@/src/components/ui/box';
 import type MuxPlayerElement from '@mux/mux-player';
 import MuxPlayer from '@mux/mux-player-react';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useInView } from './useInView';
 
 interface VideoPlayerProps {
@@ -13,9 +13,7 @@ interface VideoPlayerProps {
 const VideoPlayer: React.FC<VideoPlayerProps> = ({ uri, mux }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const muxPlayerRef = useRef<MuxPlayerElement>(null);
-  const [isMuted, setIsMuted] = useState(false);
-  const [needsUserInteraction, setNeedsUserInteraction] = useState(false);
-  const { ref: viewRef, inView } = useInView<HTMLDivElement>({ threshold: 0.35 });
+  const { ref: viewRef } = useInView<HTMLDivElement>({ threshold: 0.35 });
 
   // Disable Cast SDK globally when component mounts
   useEffect(() => {
@@ -33,55 +31,34 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ uri, mux }) => {
     }
   }, [mux]);
 
-  // Native video: play/pause based on inView
+  // Native video: setup video element
   useEffect(() => {
     if (!uri) return;
     const videoElement = videoRef.current;
     if (!videoElement) return;
     videoElement.playsInline = true;
     videoElement.controls = true;
-    videoElement.muted = isMuted;
-    if (inView) {
-      const playPromise = videoElement.play();
-      if (playPromise !== undefined) {
-        playPromise.catch((error: Error) => {
-          console.warn('Autoplay prevented:', error);
-          setNeedsUserInteraction(true);
-        });
-      }
-    } else {
-      videoElement.pause();
-    }
-  }, [inView, uri, isMuted]);
+    videoElement.muted = true; // Start muted by default
+    // Remove autoplay - video will only play when user clicks play button
+  }, [uri]);
 
-  // MuxPlayer: play/pause based on inView
+  // MuxPlayer: setup player (no autoplay)
   useEffect(() => {
     if (!mux || !muxPlayerRef.current) return;
-    if (
-      typeof muxPlayerRef.current.play === 'function' &&
-      typeof muxPlayerRef.current.pause === 'function'
-    ) {
-      if (inView) {
-        muxPlayerRef.current.play();
-      } else {
-        muxPlayerRef.current.pause();
-      }
-    }
-  }, [inView, mux]);
+    // Remove autoplay - player will only play when user interacts
+  }, [mux]);
 
-  const handleUserPlay = () => {
+  // Handle play event for native video - enable sound when user plays
+  const handleVideoPlay = () => {
     const videoElement = videoRef.current;
     if (!videoElement) return;
     videoElement.muted = false;
-    setIsMuted(false);
-    const playPromise = videoElement.play();
-    playPromise
-      .then(() => {
-        setNeedsUserInteraction(false);
-      })
-      .catch((error: Error) => {
-        console.error('Play failed even after user interaction:', error);
-      });
+  };
+
+  // Handle play event for MuxPlayer - enable sound when user plays
+  const handleMuxPlay = () => {
+    if (!muxPlayerRef.current) return;
+    muxPlayerRef.current.muted = false;
   };
 
   return (
@@ -91,35 +68,22 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ uri, mux }) => {
       className='relative h-full w-full flex-1 items-center justify-center bg-black'
     >
       {uri ? (
-        <>
-          <video
-            ref={videoRef}
-            src={uri || undefined}
-            style={{ width: '100%', height: '80%', objectFit: 'cover' }}
-            preload='auto'
-          />
-          {needsUserInteraction && inView && (
-            <button
-              className='absolute z-10 rounded bg-black/70 px-4 py-3 text-base text-white'
-              onClick={handleUserPlay}
-            >
-              Натисніть для відтворення зі звуком
-            </button>
-          )}
-        </>
+        <video
+          ref={videoRef}
+          src={uri || undefined}
+          style={{ width: '100%', height: '80%', objectFit: 'cover' }}
+          preload='auto'
+          onPlay={handleVideoPlay}
+        />
       ) : mux ? (
-        // <View>ddkd</View>
         <MuxPlayer
           ref={muxPlayerRef}
           playbackId={mux}
           streamType='on-demand'
-          style={{ width: '100%', height: '80%', objectFit: 'cover' }}
-          autoPlay={inView}
+          style={{ width: '100%', height: '95%', objectFit: 'cover' }}
+          autoPlay={false}
           muted
-          cast={false}
-          disableRemotePlayback={true}
-          noCast={true}
-          castDisabled={true}
+          onPlay={handleMuxPlay}
         />
       ) : null}
     </Box>
