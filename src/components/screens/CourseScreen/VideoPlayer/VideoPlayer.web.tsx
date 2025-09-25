@@ -90,8 +90,17 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ uri, mux }) => {
     >
       {/* Hide Mux control bar via shadow parts */}
       <style>{`
-        mux-player::part(control-bar) { display: none !important; }
-        mux-player::part(bottom) { display: none !important; }
+        /* Hide Mux UI parts */
+        mux-player::part(control-bar),
+        mux-player::part(bottom),
+        mux-player::part(controls),
+        mux-player::part(center-controls),
+        mux-player::part(top) { display: none !important; }
+
+        /* Safari/iOS: aggressively hide native controls if they appear */
+        video::-webkit-media-controls-enclosure,
+        video::-webkit-media-controls-panel,
+        video::-webkit-media-controls { display: none !important; }
       `}</style>
       {uri ? (
         <video
