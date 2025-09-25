@@ -86,28 +86,30 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ uri, mux }) => {
     <Box
       // @ts-expect-error Box component type definition issue
       ref={viewRef}
-      className='relative h-full w-full flex-1 items-center justify-center bg-black'
+      className="relative h-full w-full flex-1 items-center justify-center bg-black"
     >
-      {/* Hide Mux control bar via shadow parts */}
+      {/* Стили для скрытия контролов */}
       <style>{`
-        /* Hide Mux UI parts */
-        mux-player::part(control-bar),
-        mux-player::part(bottom),
-        mux-player::part(controls),
-        mux-player::part(center-controls),
-        mux-player::part(top) { display: none !important; }
-
-        /* Safari/iOS: aggressively hide native controls if they appear */
+        .mux-no-controls {
+          --controls: none;
+          --top: none;
+          --bottom: none;
+             --play-button: none;
+             --time-range: none;
+             --mute-button: none;
+             --captions-button: none;
+        }
         video::-webkit-media-controls-enclosure,
         video::-webkit-media-controls-panel,
         video::-webkit-media-controls { display: none !important; }
       `}</style>
+
       {uri ? (
         <video
           ref={videoRef}
           src={uri || undefined}
           style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-          preload='auto'
+          preload="auto"
           controls={false}
           onPlay={handleVideoPlay}
           onClick={toggleNativePlayback}
@@ -117,7 +119,8 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ uri, mux }) => {
           <MuxPlayer
             ref={muxPlayerRef}
             playbackId={mux}
-            streamType='on-demand'
+            streamType="on-demand"
+            className="mux-no-controls"
             style={{ width: '100%', height: '100%', objectFit: 'cover' }}
             autoPlay={false}
             muted
