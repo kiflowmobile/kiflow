@@ -139,7 +139,6 @@ export const updateLastSlideId = async (
     }
 
     if (!slide || slide.length === 0) {
-      console.log('Слайд не знайдено, upsert не виконуємо.');
       return { error: null };
     }
 
