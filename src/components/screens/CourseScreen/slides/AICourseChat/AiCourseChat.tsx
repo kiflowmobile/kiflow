@@ -1,7 +1,7 @@
 import { Icon } from '@/src/components/ui/icon';
 import { saveUserRating } from '@/src/services/main_rating';
 import { usePromptsStore } from '@/src/services/slidePrompt';
-import { useAuthStore, useCourseStore, useCriteriaStore, useModulesStore, useSlidesStore } from '@/src/stores';
+import { useAuthStore, useCourseStore, useCriteriaStore, useModulesStore } from '@/src/stores';
 import { MessageCircle, Send } from 'lucide-react-native';
 import React, { useEffect, useState } from 'react';
 import { Dimensions, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
@@ -81,19 +81,17 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
           messages.length === 0,
           criteriasText
         );      
-        const currentSlideId = useSlidesStore.getState().getCurrentSlideId();
+        // const currentSlideId = useSlidesStore.getState().getCurrentSlideId();
         const currentModuleId = useModulesStore.getState().currentModule?.id;
 
-
-        if (currentSlideId && user && aiResponse.rating?.criteriaScores && currentModuleId) {
+        if ( user && aiResponse.rating?.criteriaScores && currentModuleId) {
+          console.log('user', user.id)
           const criteriaScores = aiResponse.rating.criteriaScores;
-
-          console.log('criteriaScores',criteriaScores)
 
           for (const [criteriaKey, score] of Object.entries(criteriaScores)) {
             try {
               await saveUserRating(
-                currentSlideId,
+               
                 user.id,
                 score as number,          
                 currentModuleId,

@@ -7,7 +7,7 @@ import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import CourseSwiper from '../CourseScreen/CourseSwiper';
 
 export default function ModuleSlidesScreen() {
-  const params = useLocalSearchParams<{ id?: string; courseId?: string }>(); // id модуля та courseId
+  const params = useLocalSearchParams<{ id?: string; courseId?: string }>(); 
   const { 
     slides, 
     isLoading, 
@@ -100,25 +100,6 @@ export default function ModuleSlidesScreen() {
       </View>
     );
   }
-
-  // const handleIndexChange = (index: number) => {
-  //   console.log('handleIndexChange')
-  //   if (!params.id || totalSlides === 0) return;
-    
-  //   const percent = Math.round(((index + 1) / totalSlides) * 100);
-  //   setModuleProgressSafe(params.id, percent).catch(() => {});
-    
-  //   if (user?.id && params.courseId && slides[index]?.id) {
-  //     updateLastSlideId(user.id, params.courseId, slides[index].id).catch((error) => {
-  //       console.warn('Failed to update last slide id:', error);
-  //     });
-  //   }
-  // };
-
-
-
-
-
 
   return <CourseSwiper onIndexChange={handleIndexChange} />;
 }

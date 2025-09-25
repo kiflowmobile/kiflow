@@ -1,6 +1,7 @@
 import { supabase } from '../config/supabaseClient';
 
 
+
 export interface SkillSummaryItem {
   criterion_id: string;
   criterion_name: string;
@@ -9,33 +10,50 @@ export interface SkillSummaryItem {
 
 
 export const saveUserRating = async (
-  slideId: string,
   userId: string,
   rating: string | number,
   moduleId?: string,
   key?: string
 ): Promise<{ data: any; error: any }> => {
   try {
-    if (!slideId || !userId || rating == null || !key) {
+    if (!userId || rating == null || !key) {
       throw new Error('Не передані обовʼязкові параметри для збереження оцінки');
     }
 
     const normalizedRating =
       typeof rating === 'string' ? parseInt(rating, 10) : rating;
 
-      const { data, error } = await supabase
+    const { data: existing, error: fetchError } = await supabase
+      .from('main_rating')
+      .select('rating')
+      .eq('user_id', userId)
+      .eq('criteria_key', key)
+      .eq('module_id', moduleId ?? null)
+      .single();
+
+    if (fetchError && fetchError.code !== 'PGRST116') {
+      console.error('❌ Помилка при пошуку існуючої оцінки:', fetchError.message);
+      return { data: null, error: fetchError };
+    }
+
+    let finalRating = normalizedRating;
+
+    if (existing) {
+      finalRating = (existing.rating + normalizedRating) / 2;
+    }
+
+    const { data, error } = await supabase
       .from('main_rating')
       .upsert(
         [
           {
-            slide_id: slideId,
             user_id: userId,
-            rating: normalizedRating,
+            rating: finalRating,
             module_id: moduleId,
             criteria_key: key
           }
         ],
-        { onConflict: 'slide_id, user_id, criteria_key' }
+        { onConflict: 'module_id, user_id, criteria_key' }
       )
       .select();
 
