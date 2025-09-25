@@ -27,9 +27,7 @@ export default function ModuleSlidesScreen() {
     const handleIndexChange = useCallback((index: number) => {
       if (lastIndexRef.current === index) return; 
       lastIndexRef.current = index;
-    
-          console.log('handleIndexChange')
-        if (!params.id || totalSlides === 0) return;
+      if (!params.id || totalSlides === 0) return;
         
         const percent = Math.round(((index + 1) / totalSlides) * 100);
         setModuleProgressSafe(params.id, percent).catch(() => {});
