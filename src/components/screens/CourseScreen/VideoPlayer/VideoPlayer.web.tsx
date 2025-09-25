@@ -37,7 +37,6 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ uri, mux }) => {
     const videoElement = videoRef.current;
     if (!videoElement) return;
     videoElement.playsInline = true;
-    videoElement.controls = true;
     videoElement.muted = true; // Start muted by default
     // Remove autoplay - video will only play when user clicks play button
   }, [uri]);
@@ -61,30 +60,65 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ uri, mux }) => {
     muxPlayerRef.current.muted = false;
   };
 
+  // Click-to-toggle playback for native video
+  const toggleNativePlayback = () => {
+    const videoElement = videoRef.current;
+    if (!videoElement) return;
+    if (videoElement.paused) {
+      videoElement.play();
+    } else {
+      videoElement.pause();
+    }
+  };
+
+  // Click-to-toggle playback for Mux player
+  const toggleMuxPlayback = () => {
+    const player = muxPlayerRef.current;
+    if (!player) return;
+    if (player.paused) {
+      player.play();
+    } else {
+      player.pause();
+    }
+  };
+
   return (
     <Box
       // @ts-expect-error Box component type definition issue
       ref={viewRef}
       className='relative h-full w-full flex-1 items-center justify-center bg-black'
     >
+      {/* Hide Mux control bar via shadow parts */}
+      <style>{`
+        mux-player::part(control-bar) { display: none !important; }
+        mux-player::part(bottom) { display: none !important; }
+      `}</style>
       {uri ? (
         <video
           ref={videoRef}
           src={uri || undefined}
-          style={{ width: '100%', height: '80%', objectFit: 'cover' }}
+          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
           preload='auto'
+          controls={false}
           onPlay={handleVideoPlay}
+          onClick={toggleNativePlayback}
         />
       ) : mux ? (
-        <MuxPlayer
-          ref={muxPlayerRef}
-          playbackId={mux}
-          streamType='on-demand'
-          style={{ width: '100%', height: '95%', objectFit: 'cover' }}
-          autoPlay={false}
-          muted
-          onPlay={handleMuxPlay}
-        />
+        <div style={{ position: 'relative', width: '100%', height: '100%' }}>
+          <MuxPlayer
+            ref={muxPlayerRef}
+            playbackId={mux}
+            streamType='on-demand'
+            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+            autoPlay={false}
+            muted
+            onPlay={handleMuxPlay}
+          />
+          <div
+            onClick={toggleMuxPlayback}
+            style={{ position: 'absolute', inset: 0, background: 'transparent' }}
+          />
+        </div>
       ) : null}
     </Box>
   );
