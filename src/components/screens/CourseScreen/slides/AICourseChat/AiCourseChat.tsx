@@ -46,8 +46,9 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
       const slidePrompt = prompt[slideId]?.question;
       if (!slidePrompt) return;
 
-      // Reset one-answer state on slide change
-      setAnswered(false);
+      // Restore per-slide answered state
+      const alreadyAnswered = useSlidesStore.getState().isSlideAnswered(slideId);
+      setAnswered(alreadyAnswered);
       setInput('');
 
       const aiMsg: Message = {
@@ -75,6 +76,7 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
     setInput('');
     setLoading(true);
     setAnswered(true);
+    useSlidesStore.getState().markSlideAnswered(slideId);
   
     try {
       const slidePrompt = prompt[slideId]?.prompt || "";
