@@ -41,6 +41,13 @@ export default function HomeScreen() {
             onPress={() => router.push("/courses/")}
             style={styles.navButton}
           />
+          <Button 
+            title="STATISTICS" 
+            variant="secondary" 
+            size="lg"
+            onPress={() => router.push("/statistics")}
+            style={styles.navButton}
+          />
 
           {role === "admin" && (
             <>
@@ -83,8 +90,8 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     flex: 1,
-    justifyContent: "center", // центрування по вертикалі
-    alignItems: "center", // центрування по горизонталі
+    justifyContent: "center",
+    alignItems: "center",
     paddingHorizontal: 16,
     paddingTop: 20,
   },
