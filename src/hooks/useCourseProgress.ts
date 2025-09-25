@@ -45,6 +45,7 @@ export const useCourseProgress = (course: Course) => {
   // Зберігаємо прогрес у БД
   const saveProgress = useCallback(async (progress: number) => {
     if (!user?.id || progress < 0 || progress > 100) return;
+    console.log('saveProgress')
 
     try {
       await supabase

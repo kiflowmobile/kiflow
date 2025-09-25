@@ -1,6 +1,8 @@
 import { supabase } from '@/src/config/supabaseClient';
 import { Slide } from '@/src/constants/types/slides';
+import { v4 as uuidv4 } from 'uuid';
 import { create } from 'zustand';
+
 
 interface SlidesState {
   slides: Slide[];
@@ -24,6 +26,15 @@ interface SlidesState {
 
 }
 
+type UUID = string & { readonly brand: unique symbol };
+
+
+interface DashboardSlideData {
+  // Можеш додати що потрібно для DashboardSlide
+  title: string;
+  // можливо, сюди пізніше вставиш userId або модуль
+}
+
 
 export const useSlidesStore = create<SlidesState>()(
   (set, get) => ({
@@ -35,28 +46,36 @@ export const useSlidesStore = create<SlidesState>()(
 
     fetchSlidesByModule: async (moduleId: string) => {
       set({ isLoading: true, error: null, currentModuleId: moduleId });
-      
+    
       try {
         const { data, error } = await supabase
           .from('slides')
           .select('*')
           .eq('module_id', moduleId)
           .order('slide_order', { ascending: true });
-
+    
         if (error) throw error;
-        
-        set({ 
-          slides: data || [], 
+    
+        const fetchedSlides: Slide[] = data || [];
+    
+        // Додаємо dashboard-слайд у кінець
+        const dashboardSlide: Slide = {
+          id: uuidv4() as UUID,
+          slide_type: 'dashboard',
+          slide_title: 'Твоя статистика',
+          module_id: moduleId,
+          slide_order: fetchedSlides.length,
+        };
+    
+        set({
+          slides: [...fetchedSlides, dashboardSlide],
           currentSlideIndex: 0,
-          isLoading: false, 
-          error: null 
+          isLoading: false,
+          error: null,
         });
-        
+    
       } catch (error: any) {
-        set({ 
-          error: error.message || 'Failed to fetch slides', 
-          isLoading: false 
-        });
+        set({ error: error.message || 'Failed to fetch slides', isLoading: false });
         throw error;
       }
     },

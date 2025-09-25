@@ -128,6 +128,21 @@ export const updateLastSlideId = async (
   lastSlideId: string
 ): Promise<{ error: any }> => {
   try {
+    const { data: slide, error: checkError } = await supabase
+      .from('slides')
+      .select('id')
+      .eq('id', lastSlideId);
+
+    if (checkError) {
+      console.error('Помилка перевірки слайду:', checkError);
+      return { error: checkError };
+    }
+
+    if (!slide || slide.length === 0) {
+      console.log('Слайд не знайдено, upsert не виконуємо.');
+      return { error: null };
+    }
+
     const { error } = await supabase
       .from('user_course_summaries')
       .upsert(
@@ -138,13 +153,15 @@ export const updateLastSlideId = async (
         },
         { onConflict: 'user_id,course_id' }
       );
-    
+
     return { error };
   } catch (err) {
     console.error('Error updating last slide id:', err);
     return { error: err };
   }
 };
+
+
 
 /**
  * Отримує інформацію про прогрес користувача по курсу, включаючи останній слайд
@@ -153,6 +170,7 @@ export const getUserCourseProgress = async (
   userId: string, 
   courseId: string
 ): Promise<{ data: { progress: number; last_slide_id: string | null } | null; error: any }> => {
+  console.log('getUserCourseProgress')
   try {
     const { data, error } = await supabase
       .from('user_course_summaries')

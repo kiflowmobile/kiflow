@@ -17,11 +17,8 @@ export default function ModuleSlidesScreen() {
   } = useSlidesStore();
   const { setModuleProgressSafe } = useUserProgressStore();
   const { user } = useAuthStore();
-
   const { fetchCourseById } = useCourseStore.getState();
   const { fetchModulesByCourse, getModule, setCurrentModule} = useModulesStore.getState();
-
-
   useEffect(() => {
     if (!params.courseId) return;
 
