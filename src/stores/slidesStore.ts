@@ -23,18 +23,8 @@ interface SlidesState {
   setError: (error: string | null) => void;
   setCurrentModuleId: (moduleId: string | null) => void;
   getCurrentSlideId: () => string | null;
-
 }
-
 type UUID = string & { readonly brand: unique symbol };
-
-
-interface DashboardSlideData {
-  // Можеш додати що потрібно для DashboardSlide
-  title: string;
-  // можливо, сюди пізніше вставиш userId або модуль
-}
-
 
 export const useSlidesStore = create<SlidesState>()(
   (set, get) => ({
@@ -58,7 +48,6 @@ export const useSlidesStore = create<SlidesState>()(
     
         const fetchedSlides: Slide[] = data || [];
     
-        // Додаємо dashboard-слайд у кінець
         const dashboardSlide: Slide = {
           id: uuidv4() as UUID,
           slide_type: 'dashboard',
