@@ -1,7 +1,12 @@
+import { useAuthStore } from "@/src/stores";
+import { useMainRatingStore } from "@/src/stores/mainRatingStore";
 import { MaterialIcons } from "@expo/vector-icons";
+import { useEffect } from "react";
 import { FlatList, ScrollView, StyleSheet, Text, View } from "react-native";
 
 export default function StatisticsScreen() {
+  const {average, fetchUserAverage} = useMainRatingStore();
+  const { user } = useAuthStore();
   const courses = [
     {
       id: "c1",
@@ -32,6 +37,12 @@ export default function StatisticsScreen() {
     },
   ];
 
+  useEffect(() => {
+    if (user) {
+      fetchUserAverage(user.id);
+    }
+  }, [user]);
+
   return (
     <View style={styles.screen}>
       {/* 🔹 Додаємо ScrollView */}
@@ -59,12 +70,12 @@ export default function StatisticsScreen() {
                 12 год
               </Text>
             </View>
-
-            <View style={[styles.statBox, { backgroundColor: "#dcfce7" }]}>
-              <Text style={styles.statLabel}>Середній бал</Text>
-              <Text style={[styles.statValue, { color: "#15803d" }]}>4.1 / 5</Text>
-            </View>
-
+            {average &&
+              <View style={[styles.statBox, { backgroundColor: "#dcfce7" }]}>
+                <Text style={styles.statLabel}>Середній бал</Text>
+                <Text style={[styles.statValue, { color: "#15803d" }]}>{average} / 5</Text>
+              </View>
+            }
             <View style={[styles.statBox, { backgroundColor: "#ede9fe" }]}>
               <Text style={styles.statLabel}>Курси</Text>
               <Text style={[styles.statValue, { color: "#7c3aed" }]}>

@@ -1,7 +1,7 @@
 import { Icon } from '@/src/components/ui/icon';
-import { saveUserRating } from '@/src/services/main_rating';
 import { usePromptsStore } from '@/src/services/slidePrompt';
 import { useAuthStore, useCourseStore, useCriteriaStore, useModulesStore } from '@/src/stores';
+import { useMainRatingStore } from '@/src/stores/mainRatingStore';
 import { MessageCircle, Send } from 'lucide-react-native';
 import React, { useEffect, useState } from 'react';
 import { Dimensions, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
@@ -30,8 +30,7 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
   const { prompt, fetchPromptBySlide } = usePromptsStore();
   const { criterias, isLoading, fetchCriterias } = useCriteriaStore();
   const courseId = useCourseStore((state) => state.currentCourse?.id);
-
-
+  const { saveRating } = useMainRatingStore();
   const { user } = useAuthStore(); 
 
   useEffect(() => {
@@ -81,25 +80,31 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
           messages.length === 0,
           criteriasText
         );      
-        // const currentSlideId = useSlidesStore.getState().getCurrentSlideId();
         const currentModuleId = useModulesStore.getState().currentModule?.id;
 
-        if ( user && aiResponse.rating?.criteriaScores && currentModuleId) {
-          console.log('user', user.id)
-          const criteriaScores = aiResponse.rating.criteriaScores;
+        // if ( user && aiResponse.rating?.criteriaScores && currentModuleId) {
+        //   console.log('user', user.id)
+        //   const criteriaScores = aiResponse.rating.criteriaScores;
 
-          for (const [criteriaKey, score] of Object.entries(criteriaScores)) {
-            try {
-              await saveUserRating(
+        //   for (const [criteriaKey, score] of Object.entries(criteriaScores)) {
+        //     try {
+        //       await saveUserRating(
                
-                user.id,
-                score as number,          
-                currentModuleId,
-                criteriaKey 
-              );
-            } catch (err) {
-              console.warn(`Failed to save rating for ${criteriaKey}:`, err);
-            }
+        //         user.id,
+        //         score as number,          
+        //         currentModuleId,
+        //         criteriaKey 
+        //       );
+        //     } catch (err) {
+        //       console.warn(`Failed to save rating for ${criteriaKey}:`, err);
+        //     }
+        //   }
+        // }
+
+        if (user && aiResponse.rating?.criteriaScores && currentModuleId) {
+          const criteriaScores = aiResponse.rating.criteriaScores;
+          for (const [criteriaKey, score] of Object.entries(criteriaScores)) {
+            await saveRating(user.id, score as number, currentModuleId, criteriaKey);
           }
         }
       const chatText = formatAIResponseForChat(aiResponse);
