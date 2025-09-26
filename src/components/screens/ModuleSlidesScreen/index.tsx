@@ -1,5 +1,6 @@
 
 import { updateLastSlideId } from '@/src/services/courses';
+import { sendLastSlideEmail } from '@/src/services/emailService';
 import { useAuthStore, useCourseStore, useModulesStore, useSlidesStore, useUserProgressStore } from '@/src/stores';
 import { useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef } from 'react';
@@ -17,14 +18,14 @@ export default function ModuleSlidesScreen() {
   } = useSlidesStore();
   const { setModuleProgressSafe } = useUserProgressStore();
   const { user } = useAuthStore();
-  const { fetchCourseById } = useCourseStore.getState();
-  const { fetchModulesByCourse, getModule, setCurrentModule} = useModulesStore.getState();
+  const { fetchCourseById, currentCourse } = useCourseStore.getState();
+  const { fetchModulesByCourse, getModule, setCurrentModule, currentModule} = useModulesStore.getState();
   const totalSlides = useMemo(() => slides.length || 0, [slides]);
 
 
     const lastIndexRef = useRef<number | null>(null);
 
-    const handleIndexChange = useCallback((index: number) => {
+    const handleIndexChange = useCallback(async (index: number) => {
       if (lastIndexRef.current === index) return; 
       lastIndexRef.current = index;
       if (!params.id || totalSlides === 0) return;
@@ -37,7 +38,24 @@ export default function ModuleSlidesScreen() {
             console.warn('Failed to update last slide id:', error);
           });
         }
-    }, [params.id, params.courseId, user?.id, totalSlides, slides]);
+
+        // Проверяем, является ли это последним слайдом модуля
+        if (index === totalSlides - 1 && user?.email && slides[index]) {
+          try {
+            await sendLastSlideEmail({
+              userEmail: user.email,
+              moduleTitle: currentModule?.title || 'Неизвестный модуль',
+              slide: slides[index],
+              courseTitle: currentCourse?.title,
+              userId: user.id,
+              moduleId: params.id
+            });
+            console.log('Email sent successfully for last slide');
+          } catch (error) {
+            console.warn('Failed to send email for last slide:', error);
+          }
+        }
+    }, [params.id, params.courseId, user?.id, user?.email, totalSlides, slides, currentModule, currentCourse]);
     
     
 
