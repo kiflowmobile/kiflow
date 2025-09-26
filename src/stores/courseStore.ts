@@ -71,7 +71,6 @@ export const useCourseStore = create<CourseState>()(
       
       // Перевіряємо, чи є у нас кешовані дані, які ще дійсні
       if (lastFetchTime && (now - lastFetchTime) < CACHE_DURATION && get().courses.length > 0) {
-        console.log('📚 CourseStore: Using cached courses');
         return;
       }
 
@@ -139,7 +138,6 @@ export const useCourseStore = create<CourseState>()(
           error: null 
         });
         
-        console.log(`📚 CourseStore: Loaded ${allCourses.length} courses`);
       } catch (error: any) {
         console.error('❌ CourseStore: Error fetching courses:', error);
         set({ 

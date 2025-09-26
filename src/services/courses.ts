@@ -167,7 +167,6 @@ export const getUserCourseProgress = async (
   userId: string, 
   courseId: string
 ): Promise<{ data: { progress: number; last_slide_id: string | null } | null; error: any }> => {
-  console.log('getUserCourseProgress')
   try {
     const { data, error } = await supabase
       .from('user_course_summaries')

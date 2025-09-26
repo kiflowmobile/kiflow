@@ -104,7 +104,6 @@ export const useAuthStore = create<AuthState>()(
 
           // Якщо сесії не існує, повертаємо успіх без спроби виходу
           if (!sessionData?.session) {
-            console.log('No active session found during logout');
             set({ 
               user: null, 
               session: null, 

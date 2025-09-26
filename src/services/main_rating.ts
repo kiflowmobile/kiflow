@@ -1,7 +1,5 @@
 import { supabase } from '../config/supabaseClient';
 
-
-
 export interface SkillSummaryItem {
   criterion_id: string;
   criterion_name: string;
