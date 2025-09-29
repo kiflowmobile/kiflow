@@ -19,6 +19,7 @@ interface AuthState {
   checkSession: () => Promise<void>;
   clearError: () => void;
   getUserRole: () => Promise<string | null>;
+  changePassword: (currentPassword: string, newPassword: string) => Promise<void>;
   
   // Внутрішні дії
   setUser: (user: User | null) => void;
@@ -215,6 +216,42 @@ export const useAuthStore = create<AuthState>()(
         } catch (error) {
           console.error('Error getting user role:', error);
           return null;
+        }
+      },
+
+      changePassword: async (currentPassword: string, newPassword: string) => {
+        set({ isLoading: true, error: null });
+        try {
+          // Отримуємо поточного користувача
+          const { data: { user }, error: userError } = await supabase.auth.getUser();
+          if (userError || !user || !user.email) {
+            throw new Error('Користувач не автентифікований');
+          }
+
+          // Перевіряємо поточний пароль через повторний вхід
+          const { error: signInError } = await supabase.auth.signInWithPassword({
+            email: user.email,
+            password: currentPassword,
+          });
+
+          if (signInError) {
+            throw new Error('Неправильний поточний пароль');
+          }
+
+          // Оновлюємо пароль
+          const { error: updateError } = await supabase.auth.updateUser({
+            password: newPassword
+          });
+
+          if (updateError) throw updateError;
+
+          set({ isLoading: false });
+        } catch (error: any) {
+          set({ 
+            error: error.message || 'Не вдалося змінити пароль', 
+            isLoading: false 
+          });
+          throw error;
         }
       },
 

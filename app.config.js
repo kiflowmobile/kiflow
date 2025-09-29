@@ -39,6 +39,13 @@ export default {
           resizeMode: "contain",
           backgroundColor: "#ffffff"
         }
+      ],
+      [
+        "expo-image-picker",
+        {
+          photosPermission: "Додаток використовує фото для встановлення аватара профілю.",
+          cameraPermission: "Додаток використовує камеру для створення фото профілю."
+        }
       ]
     ],
     experiments: {

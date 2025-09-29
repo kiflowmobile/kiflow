@@ -3,7 +3,7 @@ import { saveUserRating } from '@/src/services/main_rating';
 import { usePromptsStore } from '@/src/services/slidePrompt';
 import { useAuthStore, useCourseStore, useCriteriaStore, useModulesStore } from '@/src/stores';
 import { MessageCircle, Send } from 'lucide-react-native';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Dimensions, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { askGemini } from './askGemini';
@@ -31,9 +31,43 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
   const { prompt, fetchPromptBySlide } = usePromptsStore();
   const { criterias, isLoading, fetchCriterias } = useCriteriaStore();
   const courseId = useCourseStore((state) => state.currentCourse?.id);
+  const { user } = useAuthStore();
 
+  const inputRef = useRef<TextInput>(null);
+  const pageScrollLockedRef = useRef(false);
 
-  const { user } = useAuthStore(); 
+  const lockPageScroll = () => {
+    if (Platform.OS !== 'web' || pageScrollLockedRef.current) return;
+    const y = window.scrollY || 0;
+    (document.body as any).dataset.lockScrollY = String(y);
+    document.body.style.position = 'fixed';
+    document.body.style.top = `-${y}px`;
+    document.body.style.left = '0';
+    document.body.style.right = '0';
+    document.body.style.width = '100%';
+    document.body.style.overflow = 'hidden';
+    pageScrollLockedRef.current = true;
+  };
+
+  const unlockPageScroll = () => {
+    if (Platform.OS !== 'web' || !pageScrollLockedRef.current) return;
+    const y = Number((document.body as any).dataset.lockScrollY || 0);
+    document.body.style.position = '';
+    document.body.style.top = '';
+    document.body.style.left = '';
+    document.body.style.right = '';
+    document.body.style.width = '';
+    document.body.style.overflow = '';
+    delete (document.body as any).dataset.lockScrollY;
+    pageScrollLockedRef.current = false;
+    window.scrollTo(0, y);
+  };
+
+  useEffect(() => {
+    return () => {
+      unlockPageScroll();
+    };
+  }, []);
 
   useEffect(() => {
     if (slideId) {
@@ -58,60 +92,56 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
     loadInitialPrompt();
   }, [slideId, prompt]);
 
-
   useEffect(() => {
-    if(courseId) fetchCriterias(courseId);
-  }, [courseId]);
+    if (courseId) fetchCriterias(courseId);
+  }, [courseId, fetchCriterias]);
 
   const handleSend = async () => {
     if (!input.trim()) return;
-  
+
     const userMsg: Message = { id: Date.now().toString(), role: 'user', text: input.trim() };
     setMessages((prev) => [...prev, userMsg]);
     setInput('');
     setLoading(true);
-  
+
     try {
-      const slidePrompt = prompt[slideId]?.prompt || "";
+      const slidePrompt = prompt[slideId]?.prompt || '';
       const criteriasText = criterias
-        .map(item => `${item.key} - ${item.name.trim()}`)
+        .map((item) => `${item.key} - ${item.name.trim()}`)
         .join('\n');
-        const aiResponse = await askGemini(
-          [...messages, userMsg],
-          slidePrompt,
-          messages.length === 0,
-          criteriasText
-        );      
-        // const currentSlideId = useSlidesStore.getState().getCurrentSlideId();
-        const currentModuleId = useModulesStore.getState().currentModule?.id;
 
-        if ( user && aiResponse.rating?.criteriaScores && currentModuleId) {
-          console.log('user', user.id)
-          const criteriaScores = aiResponse.rating.criteriaScores;
+      const aiResponse = await askGemini(
+        [...messages, userMsg],
+        slidePrompt,
+        messages.length === 0,
+        criteriasText
+      );
 
-          for (const [criteriaKey, score] of Object.entries(criteriaScores)) {
-            try {
-              await saveUserRating(
-               
-                user.id,
-                score as number,          
-                currentModuleId,
-                criteriaKey 
-              );
-            } catch (err) {
-              console.warn(`Failed to save rating for ${criteriaKey}:`, err);
-            }
+      const currentModuleId = useModulesStore.getState().currentModule?.id;
+
+      if (user && aiResponse.rating?.criteriaScores && currentModuleId) {
+        const criteriaScores = aiResponse.rating.criteriaScores;
+        for (const [criteriaKey, score] of Object.entries(criteriaScores)) {
+          try {
+            await saveUserRating(
+              user.id,
+              score as number,
+              currentModuleId,
+              criteriaKey
+            );
+          } catch (err) {
+            console.warn(`Failed to save rating for ${criteriaKey}:`, err);
           }
         }
-      const chatText = formatAIResponseForChat(aiResponse);
+      }
 
-  
+      const chatText = formatAIResponseForChat(aiResponse);
       const aiMsg: Message = {
         id: Date.now().toString(),
         role: 'ai',
         text: chatText,
       };
-  
+
       setMessages((prev) => [...prev, aiMsg]);
     } catch (e) {
       console.error(e);
@@ -125,7 +155,22 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
       setInput(transcribedText.trim());
     }
   };
-  
+
+  const handleFocus = () => {
+    lockPageScroll();
+
+    if (Platform.OS === 'web') {
+      setTimeout(() => {
+        try {
+          (inputRef.current as any)?.focus?.({ preventScroll: true });
+        } catch {}
+      }, 0);
+    }
+  };
+
+  const handleBlur = () => {
+    unlockPageScroll();
+  };
 
   return (
     <SafeAreaView style={styles.screen}>
@@ -142,6 +187,7 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
         <ScrollView
           contentContainerStyle={styles.chatContent}
           showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
         >
           {messages.map((msg) => (
             <View
@@ -167,14 +213,18 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
 
       <View style={styles.footer}>
         <TextInput
+          ref={inputRef}
           style={styles.input}
           placeholder="Введіть відповідь..."
           value={input}
           onChangeText={setInput}
           multiline
+          onFocus={handleFocus}
+          onBlur={handleBlur}
+          inputMode="text"
         />
         <View style={styles.buttonContainer}>
-          <AudioRecorder 
+          <AudioRecorder
             onAudioProcessed={handleAudioProcessed}
             disabled={loading}
           />
