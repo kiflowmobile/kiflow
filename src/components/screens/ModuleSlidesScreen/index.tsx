@@ -1,5 +1,6 @@
+import { courseService } from '@/src/services/courses';
 
-import { updateLastSlideId } from '@/src/services/courses';
+// import { updateLastSlideId } from '@/src/services/courses';
 import { useAuthStore, useCourseStore, useModulesStore, useSlidesStore, useUserProgressStore } from '@/src/stores';
 import { useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef } from 'react';
@@ -33,7 +34,7 @@ export default function ModuleSlidesScreen() {
         setModuleProgressSafe(params.id, percent).catch(() => {});
         
         if (user?.id && params.courseId && slides[index]?.id) {
-          updateLastSlideId(user.id, params.courseId, slides[index].id).catch((error) => {
+          courseService.updateLastSlideId(user.id, params.courseId, slides[index].id).catch((error) => {
             console.warn('Failed to update last slide id:', error);
           });
         }

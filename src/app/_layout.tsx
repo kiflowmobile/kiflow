@@ -28,70 +28,18 @@ export default function RootLayout() {
   return (
 
     <SafeAreaProvider>
-      <Stack>
-        <Stack.Screen 
-          name="index" 
-          options={{ 
-            headerShown: false 
-          }} 
-        />
-        <Stack.Screen 
-          name="course-code" 
-          options={{ 
-            headerShown: false 
-          }} 
-        />
-        <Stack.Screen 
-          name="home" 
-          options={{ 
-            headerShown: false
-          }} 
-        />
-        <Stack.Screen 
-          name="statistics" 
-          options={{ 
-            headerShown: false
-          }} 
-        />
-        <Stack.Screen 
-          name="courses/index" 
-          options={{ 
-            headerShown: false 
-          }} 
-        />
-         <Stack.Screen 
-          name="module/[id]" 
-          options={{ 
-            headerShown: false 
-          }} 
-        />
-        <Stack.Screen 
-          name="courses/[id]" 
-          options={{ 
-            headerShown: false 
-          }} 
-        />
-        <Stack.Screen 
-          name="instractions" 
-          options={{ 
-            headerShown: false 
-          }} 
-        />
-        <Stack.Screen 
-          name="auth/login" 
-          options={{ 
-            headerShown: false 
-          }} 
-        />
-        <Stack.Screen 
-          name="auth/registration" 
-          options={{ 
-            headerShown: false 
-          }} 
-        />
-        <Stack.Screen name="+not-found" />
-        {/* <StatusBar style="auto" /> */}
-      </Stack>
-    </SafeAreaProvider>
+  <Stack screenOptions={{ headerShown: false }}>
+    <Stack.Screen name="index" />
+    <Stack.Screen name="course-code" />
+    <Stack.Screen name="home" />
+    <Stack.Screen name="statistics" />
+    <Stack.Screen name="courses/index" />
+    <Stack.Screen name="courses/[id]" />
+    <Stack.Screen name="instractions" />
+    <Stack.Screen name="auth/login" />
+    <Stack.Screen name="auth/registration" />
+    <Stack.Screen name="+not-found" />
+  </Stack>
+</SafeAreaProvider>
   );
 }

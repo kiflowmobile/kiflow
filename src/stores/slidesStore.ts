@@ -1,6 +1,6 @@
 import { supabase } from '@/src/config/supabaseClient';
 import { Slide } from '@/src/constants/types/slides';
-import { v4 as uuidv4 } from 'uuid';
+// import { v4 as uuidv4 } from 'uuid';
 import { create } from 'zustand';
 
 
@@ -24,7 +24,7 @@ interface SlidesState {
   setCurrentModuleId: (moduleId: string | null) => void;
   getCurrentSlideId: () => string | null;
 }
-type UUID = string & { readonly brand: unique symbol };
+// type UUID = string & { readonly brand: unique symbol };
 
 export const useSlidesStore = create<SlidesState>()(
   (set, get) => ({
@@ -48,16 +48,17 @@ export const useSlidesStore = create<SlidesState>()(
     
         const fetchedSlides: Slide[] = data || [];
     
-        const dashboardSlide: Slide = {
-          id: uuidv4() as UUID,
-          slide_type: 'dashboard',
-          slide_title: 'Твоя статистика',
-          module_id: moduleId,
-          slide_order: fetchedSlides.length,
-        };
+        // const dashboardSlide: Slide = {
+        //   // id: uuidv4() as UUID,
+        //   slide_type: 'dashboard',
+        //   slide_title: 'Твоя статистика',
+        //   module_id: moduleId,
+        //   slide_order: fetchedSlides.length,
+        // };
     
         set({
-          slides: [...fetchedSlides, dashboardSlide],
+          // slides: [...fetchedSlides, dashboardSlide],
+          slides: fetchedSlides,
           currentSlideIndex: 0,
           isLoading: false,
           error: null,
