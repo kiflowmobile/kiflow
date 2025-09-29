@@ -9,6 +9,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { askGemini } from './askGemini';
 import AudioRecorder from './AudioRecorder';
 import { formatAIResponseForChat } from './formatAIResponseForChat';
+import { KeyboardAvoidingView } from 'react-native';
 
 interface Message {
   id: string;
@@ -128,6 +129,11 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
 
   return (
     <SafeAreaView style={styles.screen}>
+       <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 80 : 0} // відступ для хедера, можна підіграти
+    >
       <View style={styles.header}>
         <Text style={styles.headerTitle}>{title}</Text>
       </View>
@@ -177,6 +183,7 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
           </TouchableOpacity>
         </View>
       </View>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 };

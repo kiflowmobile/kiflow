@@ -75,23 +75,23 @@ const CourseSwiper: React.FC<CourseSwiperProps> = ({
           </View>
         );
 
-      case "video": {
-        const { uri, mux } = slide.slide_data.video || {};
-        const hasVideo = !!uri || !!mux;
-        return (
-          <View key={key} className="flex-1 bg-white dark:bg-neutral-900">
-            {hasVideo ? (
-              <VideoPlayer
-                uri={uri ?? undefined}
-                mux={mux ?? undefined}
-                isActive={isActive}
-              />
-            ) : (
-              <MediaPlaceholder />
-            )}
-          </View>
-        );
-      }
+      // case "video": {
+      //   const { uri, mux } = slide.slide_data.video || {};
+      //   const hasVideo = !!uri || !!mux;
+      //   return (
+      //     <View key={key} className="flex-1 bg-white dark:bg-neutral-900">
+      //       {hasVideo ? (
+      //         <VideoPlayer
+      //           uri={uri ?? undefined}
+      //           mux={mux ?? undefined}
+      //           isActive={isActive}
+      //         />
+      //       ) : (
+      //         <MediaPlaceholder />
+      //       )}
+      //     </View>
+      //   );
+      // }
 
       case "quiz":
         return (
@@ -111,26 +111,26 @@ const CourseSwiper: React.FC<CourseSwiperProps> = ({
           </View>
         );
 
-      case "content":
-        return (
-          <View key={key} style={{ width, height }}>
-            <ContentWithExample
-              title={slide.slide_title}
-              mainPoint={slide.slide_data.mainPoint}
-              tips={slide.slide_data.tips}
-              example={slide.slide_data.example}
-            />
-          </View>
-        );
+      // case "content":
+      //   return (
+      //     <View key={key} style={{ width, height }}>
+      //       <ContentWithExample
+      //         title={slide.slide_title}
+      //         mainPoint={slide.slide_data.mainPoint}
+      //         tips={slide.slide_data.tips}
+      //         example={slide.slide_data.example}
+      //       />
+      //     </View>
+      //   );
 
-        case "dashboard":
-          return (
-            <View key={key} style={{ width, height }}>
-              <DashboardSlide
-                title={slide.slide_title}
-              />
-            </View>
-          );
+      //   case "dashboard":
+      //     return (
+      //       <View key={key} style={{ width, height }}>
+      //         <DashboardSlide
+      //           title={slide.slide_title}
+      //         />
+      //       </View>
+      //     );
   
 
       default:
