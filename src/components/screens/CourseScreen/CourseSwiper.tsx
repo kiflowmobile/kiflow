@@ -5,12 +5,9 @@ import {
   Dimensions,
   StyleSheet,
   View,
-  useWindowDimensions,
+  FlatList,
+  ViewToken,
 } from "react-native";
-import Animated, {
-  runOnJS,
-  useAnimatedScrollHandler,
-} from "react-native-reanimated";
 import AICourseChat from "./slides/AICourseChat/AiCourseChat";
 import ContentWithExample from "./slides/ContentWithExample";
 import DashboardSlide from "./slides/DashboardSlide";
@@ -23,88 +20,77 @@ interface CourseSwiperProps {
   slides?: Slide[];
   initialIndex?: number;
   onIndexChange?: (index: number) => void;
-  totalSlides?: number;
 }
+
+const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get("window");
 
 const CourseSwiper: React.FC<CourseSwiperProps> = ({
   slides: propSlides,
   initialIndex = 0,
   onIndexChange,
-  totalSlides: propTotalSlides,
 }) => {
-  const { width, height } = useWindowDimensions();
-  const scrollRef = useRef<Animated.ScrollView | null>(null);
+  const flatListRef = useRef<FlatList<Slide>>(null);
   const {
     slides: storeSlides,
     currentSlideIndex,
     setCurrentSlideIndex,
   } = useSlidesStore();
 
-  const PAGE_H = Dimensions.get("screen").height;
-
   const slides = useMemo(
     () => (storeSlides.length > 0 ? storeSlides : propSlides || []),
     [storeSlides, propSlides]
   );
 
-  const totalSlides = propTotalSlides || slides.length;
-  const currentIndex = currentSlideIndex;
-
-  const didInitRef = useRef(false);
-
-  const onScroll = useAnimatedScrollHandler({
-    onScroll: (event) => {
-      const viewH = event.layoutMeasurement?.height || PAGE_H;
-      const idx = Math.round(event.contentOffset.y / viewH);
-      runOnJS(setCurrentSlideIndex)(idx);
-      if (onIndexChange) runOnJS(onIndexChange)(idx);
-    },
-  });
-
+  // Инициализация позиции FlatList
   useEffect(() => {
     if (slides.length === 0) return;
-
     const safeIndex = Math.min(Math.max(0, initialIndex), slides.length - 1);
-
-    if (!didInitRef.current) {
-      didInitRef.current = true;
-      setCurrentSlideIndex(safeIndex);
-      requestAnimationFrame(() => {
-        scrollRef.current?.scrollTo({ y: safeIndex * PAGE_H, animated: false });
-      });
-    }
+    setCurrentSlideIndex(safeIndex);
+    requestAnimationFrame(() => {
+      flatListRef.current?.scrollToIndex({ index: safeIndex, animated: false });
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [slides.length, initialIndex]);
 
   useEffect(() => {
     if (!slides.length) return;
-    requestAnimationFrame(() => {
-      scrollRef.current?.scrollTo({
-        y: currentIndex * PAGE_H,
-        animated: false,
-      });
+    flatListRef.current?.scrollToIndex({
+      index: currentSlideIndex,
+      animated: false,
     });
-  }, [currentIndex, slides.length]);
+  }, [currentSlideIndex, slides.length]);
 
-  const renderSlide = (slide: Slide, index: number) => {
-    const isActive = index === currentIndex;
-    const key = `${slide.id}-${index}`;
-    switch (slide.slide_type) {
+  const onViewableItemsChanged = useRef(
+    (info: { viewableItems: Array<ViewToken<Slide>> }) => {
+      if (info.viewableItems.length > 0) {
+        const idx = info.viewableItems[0].index;
+        if (typeof idx === "number" && idx !== currentSlideIndex) {
+          setCurrentSlideIndex(idx);
+          if (onIndexChange) onIndexChange(idx);
+        }
+      }
+    }
+  ).current;
+
+  const viewabilityConfig = useRef({
+    itemVisiblePercentThreshold: 60,
+  }).current;
+
+  // Рендер одного слайда
+  const renderSlide = ({ item, index }: { item: Slide; index: number }) => {
+    const isActive = index === currentSlideIndex;
+    switch (item.slide_type) {
       case "text":
         return (
-          <View key={key} style={{ width, height }}>
-            <TextSlide
-              title={slide.slide_title}
-              data={slide.slide_data ?? ""}
-            />
+          <View style={{ width: SCREEN_W, height: SCREEN_H }}>
+            <TextSlide title={item.slide_title} data={item.slide_data ?? ""} />
           </View>
         );
-
       case "video": {
-        const { uri, mux } = slide.slide_data.video || {};
+        const { uri, mux } = item.slide_data.video || {};
         const hasVideo = !!uri || !!mux;
         return (
-          <View key={key} className="flex-1 bg-white dark:bg-neutral-900">
+          <View style={{ width: SCREEN_W, height: SCREEN_H, backgroundColor: "#fff" }}>
             {hasVideo ? (
               <VideoPlayer
                 uri={uri ?? undefined}
@@ -117,53 +103,47 @@ const CourseSwiper: React.FC<CourseSwiperProps> = ({
           </View>
         );
       }
-
       case "quiz":
         return (
-          <View key={key} style={{ width, height }}>
-            <QuizSlide title={slide.slide_title} quiz={slide.slide_data} />
+          <View style={{ width: SCREEN_W, height: SCREEN_H }}>
+            <QuizSlide title={item.slide_title} quiz={item.slide_data} />
           </View>
         );
-
       case "ai":
         return (
-          <View key={key} style={{ width, height }}>
-            <AICourseChat title={slide.slide_title} slideId={slide.id} />
+          <View style={{ width: SCREEN_W, height: SCREEN_H }}>
+            <AICourseChat title={item.slide_title} slideId={item.id} />
           </View>
         );
-
       case "content":
         return (
-          <View key={key} style={{ width, height }}>
+          <View style={{ width: SCREEN_W, height: SCREEN_H }}>
             <ContentWithExample
-              title={slide.slide_title}
-              mainPoint={slide.slide_data.mainPoint}
-              tips={slide.slide_data.tips}
-              example={slide.slide_data.example}
+              title={item.slide_title}
+              mainPoint={item.slide_data.mainPoint}
+              tips={item.slide_data.tips}
+              example={item.slide_data.example}
             />
           </View>
         );
-
       case "dashboard":
         return (
-          <View key={key} style={{ width, height }}>
-            <DashboardSlide title={slide.slide_title} />
+          <View style={{ width: SCREEN_W, height: SCREEN_H }}>
+            <DashboardSlide title={item.slide_title} />
           </View>
         );
-
       default:
         return (
           <View
-            key={slide.id}
             style={{
-              width,
-              height,
+              width: SCREEN_W,
+              height: SCREEN_H,
               justifyContent: "center",
               alignItems: "center",
             }}
           >
             <MediaPlaceholder
-              message={`Слайд типу "${slide.slide_type}" ще не підтримується`}
+              message={`Слайд типу "${item.slide_type}" ще не підтримується`}
             />
           </View>
         );
@@ -172,23 +152,34 @@ const CourseSwiper: React.FC<CourseSwiperProps> = ({
 
   return (
     <View style={styles.wrapper}>
-      <Animated.ScrollView
-        key={slides.length}
-        ref={scrollRef}
+      <FlatList
+        ref={flatListRef}
+        data={slides}
+        keyExtractor={(item, idx) => `${item.id}-${idx}`}
+        renderItem={renderSlide}
         pagingEnabled
-        onScroll={onScroll}
-        scrollEventThrottle={16}
+        horizontal={false}
         showsVerticalScrollIndicator={false}
-        automaticallyAdjustKeyboardInsets={false}
-      >
-        {slides.map((s, i) => renderSlide(s, i))}
-      </Animated.ScrollView>
-
+        getItemLayout={(_, index) => ({
+          length: SCREEN_H,
+          offset: SCREEN_H * index,
+          index,
+        })}
+        initialScrollIndex={currentSlideIndex}
+        style={{ flex: 1 }}
+        keyboardShouldPersistTaps="handled"
+        removeClippedSubviews
+        onViewableItemsChanged={onViewableItemsChanged}
+        viewabilityConfig={viewabilityConfig}
+      />
       <View
-        style={[styles.pagination, { top: height * 0.2, height: height * 0.6 }]}
+        style={[
+          styles.pagination,
+          { top: SCREEN_H * 0.2, height: SCREEN_H * 0.6 },
+        ]}
       >
         {slides.map((_, i) => {
-          const active = i === currentIndex;
+          const active = i === currentSlideIndex;
           return (
             <View
               key={i}
@@ -214,6 +205,7 @@ const styles = StyleSheet.create({
     right: 16,
     justifyContent: "center",
     alignItems: "center",
+    zIndex: 10,
   },
   dot: {
     width: 10,
@@ -221,6 +213,6 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     marginVertical: 6,
   },
-  dotActive: { backgroundColor: "#4CAF50" },
+  dotActive: { backgroundColor: "#000000" },
   dotInactive: { backgroundColor: "#CFCFCF" },
 });

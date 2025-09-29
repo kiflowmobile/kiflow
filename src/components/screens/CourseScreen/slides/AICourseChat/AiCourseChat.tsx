@@ -4,12 +4,11 @@ import { usePromptsStore } from '@/src/services/slidePrompt';
 import { useAuthStore, useCourseStore, useCriteriaStore, useModulesStore } from '@/src/stores';
 import { MessageCircle, Send } from 'lucide-react-native';
 import React, { useEffect, useRef, useState } from 'react';
-import { Dimensions, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Dimensions, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View, KeyboardAvoidingView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { askGemini } from './askGemini';
 import AudioRecorder from './AudioRecorder';
 import { formatAIResponseForChat } from './formatAIResponseForChat';
-import { KeyboardAvoidingView } from 'react-native';
 
 interface Message {
   id: string;
@@ -29,7 +28,7 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const { prompt, fetchPromptBySlide } = usePromptsStore();
-  const { criterias, isLoading, fetchCriterias } = useCriteriaStore();
+  const { criterias, fetchCriterias } = useCriteriaStore();
   const courseId = useCourseStore((state) => state.currentCourse?.id);
   const { user } = useAuthStore();
 
@@ -177,7 +176,7 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
        <KeyboardAvoidingView
       style={{ flex: 1 }}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 80 : 0} // відступ для хедера, можна підіграти
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 80 : 0}
     >
       <View style={styles.header}>
         <Text style={styles.headerTitle}>{title}</Text>
@@ -274,8 +273,6 @@ const styles = StyleSheet.create({
   messageText: { fontSize: 16, color: '#0f172a', lineHeight: 22 },
   footer: { 
     paddingTop: 8,
-    paddingBottom: Platform.OS === 'web' ? 60 : 8,
-    marginBottom: Platform.OS === 'web' ? 20 : 0,
   },
   input: {
     minHeight: 40,
