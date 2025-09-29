@@ -1,6 +1,7 @@
 import { Icon } from '@/src/components/ui/icon';
 import { usePromptsStore } from '@/src/services/slidePrompt';
 import { useAuthStore, useCourseStore, useCriteriaStore, useModulesStore } from '@/src/stores';
+import { useMainRatingStore } from '@/src/stores/mainRatingStore';
 import { MessageCircle, Send } from 'lucide-react-native';
 import React, { useEffect, useState, useRef } from 'react';
 import { Dimensions, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View, Keyboard } from 'react-native';
