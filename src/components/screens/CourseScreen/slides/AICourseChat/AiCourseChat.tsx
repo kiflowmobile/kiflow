@@ -1,15 +1,15 @@
 import { Icon } from '@/src/components/ui/icon';
-import { saveUserRating } from '@/src/services/main_rating';
 import { usePromptsStore } from '@/src/services/slidePrompt';
 import { useAuthStore, useCourseStore, useCriteriaStore, useModulesStore } from '@/src/stores';
 import { MessageCircle, Send } from 'lucide-react-native';
-import React, { useEffect, useState } from 'react';
-import { Dimensions, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import React, { useEffect, useState, useRef } from 'react';
+import { Dimensions, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View, Keyboard } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { askGemini } from './askGemini';
-import AudioRecorder from './AudioRecorder';
-import { formatAIResponseForChat } from './formatAIResponseForChat';
 import { KeyboardAvoidingView } from 'react-native';
+import { formatAIResponseForChat } from './formatAIResponseForChat';
+
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 interface Message {
   id: string;
@@ -22,167 +22,93 @@ interface AICourseChatProps {
   slideId: string;
 }
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
-
 const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
+  const scrollRef = useRef<ScrollView>(null);
+
   const { prompt, fetchPromptBySlide } = usePromptsStore();
-  const { criterias, isLoading, fetchCriterias } = useCriteriaStore();
+  const { criterias, fetchCriterias } = useCriteriaStore();
   const courseId = useCourseStore((state) => state.currentCourse?.id);
-
-
   const { user } = useAuthStore(); 
-
+  
   useEffect(() => {
-    if (slideId) {
-      fetchPromptBySlide(slideId);
+    if (Platform.OS !== 'web') {
+      const show = Keyboard.addListener('keyboardDidShow', e => setKeyboardHeight(e.endCoordinates.height));
+      const hide = Keyboard.addListener('keyboardDidHide', () => setKeyboardHeight(0));
+      return () => { show.remove(); hide.remove(); };
     }
-  }, [slideId, fetchPromptBySlide]);
+  }, []);
+
+  useEffect(() => { if (slideId) fetchPromptBySlide(slideId); }, [slideId, fetchPromptBySlide]);
 
   useEffect(() => {
-    const loadInitialPrompt = async () => {
-      const slidePrompt = prompt[slideId]?.question;
-      if (!slidePrompt) return;
-
-      const aiMsg: Message = {
-        id: Date.now().toString(),
-        role: 'ai',
-        text: slidePrompt,
-      };
-
-      setMessages([aiMsg]);
-    };
-
-    loadInitialPrompt();
+    const slidePrompt = prompt[slideId]?.question;
+    if (slidePrompt) setMessages([{ id: Date.now().toString(), role: 'ai', text: slidePrompt }]);
   }, [slideId, prompt]);
 
-
-  useEffect(() => {
-    if(courseId) fetchCriterias(courseId);
-  }, [courseId]);
+  useEffect(() => { if(courseId) fetchCriterias(courseId); }, [courseId]);
 
   const handleSend = async () => {
     if (!input.trim()) return;
-  
     const userMsg: Message = { id: Date.now().toString(), role: 'user', text: input.trim() };
-    setMessages((prev) => [...prev, userMsg]);
+    setMessages(prev => [...prev, userMsg]);
     setInput('');
     setLoading(true);
-  
+
     try {
       const slidePrompt = prompt[slideId]?.prompt || "";
-      const criteriasText = criterias
-        .map(item => `${item.key} - ${item.name.trim()}`)
-        .join('\n');
-        const aiResponse = await askGemini(
-          [...messages, userMsg],
-          slidePrompt,
-          messages.length === 0,
-          criteriasText
-        );      
-        // const currentSlideId = useSlidesStore.getState().getCurrentSlideId();
-        const currentModuleId = useModulesStore.getState().currentModule?.id;
-
-        if ( user && aiResponse.rating?.criteriaScores && currentModuleId) {
-          console.log('user', user.id)
-          const criteriaScores = aiResponse.rating.criteriaScores;
-
-          for (const [criteriaKey, score] of Object.entries(criteriaScores)) {
-            try {
-              await saveUserRating(
-               
-                user.id,
-                score as number,          
-                currentModuleId,
-                criteriaKey 
-              );
-            } catch (err) {
-              console.warn(`Failed to save rating for ${criteriaKey}:`, err);
-            }
-          }
-        }
-      const chatText = formatAIResponseForChat(aiResponse);
-
-  
-      const aiMsg: Message = {
-        id: Date.now().toString(),
-        role: 'ai',
-        text: chatText,
-      };
-  
-      setMessages((prev) => [...prev, aiMsg]);
-    } catch (e) {
-      console.error(e);
+      const criteriasText = criterias.map(item => `${item.key} - ${item.name.trim()}`).join('\n');
+      const aiResponse = await askGemini([...messages, userMsg], slidePrompt, messages.length === 0, criteriasText);
+      const aiMsg: Message = { id: Date.now().toString(), role: 'ai', text: formatAIResponseForChat(aiResponse) };
+      setMessages(prev => [...prev, aiMsg]);
     } finally {
       setLoading(false);
+      scrollRef.current?.scrollToEnd({ animated: true });
     }
   };
-
-  const handleAudioProcessed = (transcribedText: string) => {
-    if (transcribedText.trim()) {
-      setInput(transcribedText.trim());
-    }
-  };
-  
 
   return (
     <SafeAreaView style={styles.screen}>
-       <KeyboardAvoidingView
-      style={{ flex: 1 }}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 80 : 0} // відступ для хедера, можна підіграти
-    >
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>{title}</Text>
-      </View>
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
+      >
+        <View style={styles.header}>
+          <Text style={styles.headerTitle}>{title}</Text>
+        </View>
 
-      <View style={styles.chatBox}>
         <ScrollView
-          contentContainerStyle={styles.chatContent}
+          ref={scrollRef}
+          contentContainerStyle={[styles.chatContent, { paddingBottom: 16 + keyboardHeight }]}
           showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
         >
-          {messages.map((msg) => (
-            <View
-              key={msg.id}
-              style={[
-                styles.messageBubble,
-                msg.role === 'ai' ? styles.aiBubble : styles.userBubble,
-              ]}
-            >
-              {msg.role === 'ai' && (
-                <Icon as={MessageCircle} size={20} color="#0f172a" style={styles.messageIcon} />
-              )}
+          {messages.map(msg => (
+            <View key={msg.id} style={[styles.messageBubble, msg.role === 'ai' ? styles.aiBubble : styles.userBubble]}>
+              {msg.role === 'ai' && <Icon as={MessageCircle} size={18} color="#0f172a" style={styles.messageIcon} />}
               <Text style={styles.messageText}>{msg.text}</Text>
             </View>
           ))}
-          {loading && (
-            <View style={[styles.messageBubble, styles.aiBubble]}>
-              <Text style={styles.messageText}>AI думає...</Text>
-            </View>
-          )}
+          {loading && <View style={[styles.messageBubble, styles.aiBubble]}><Text style={styles.messageText}>AI думає...</Text></View>}
         </ScrollView>
-      </View>
 
-      <View style={styles.footer}>
-        <TextInput
-          style={styles.input}
-          placeholder="Введіть відповідь..."
-          value={input}
-          onChangeText={setInput}
-          multiline
-        />
-        <View style={styles.buttonContainer}>
-          <AudioRecorder 
-            onAudioProcessed={handleAudioProcessed}
-            disabled={loading}
+        <View style={[styles.footer, { paddingBottom: Platform.OS === 'web' ? 16 : keyboardHeight + 8 }]}>
+          <TextInput
+            style={styles.input}
+            placeholder="Введіть повідомлення..."
+            value={input}
+            onChangeText={setInput}
+            multiline
+            {...(Platform.OS === 'web' ? { tabIndex: 0 } : {})}
           />
-          <TouchableOpacity onPress={handleSend} disabled={loading}>
+          <TouchableOpacity onPress={handleSend} disabled={loading} style={styles.sendButton}>
             <Icon as={Send} size={24} color={loading ? '#94a3b8' : '#0f172a'} />
           </TouchableOpacity>
         </View>
-      </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
@@ -191,58 +117,16 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
 export default AICourseChat;
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: '#f8fafc', padding: 16 },
-  header: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 12 },
-  headerTitle: { fontSize: 20, fontWeight: '700', color: '#0f172a', flexShrink: 1 },
-  chatBox: {
-    flex: 1,
-    borderRadius: 16,
-    padding: 12,
-    backgroundColor: '#ffffff',
-    shadowColor: '#000',
-    shadowOpacity: 0.03,
-    shadowRadius: 6,
-    elevation: 2,
-    marginVertical: 8,
-  },
-  chatContent: { paddingVertical: 8 },
-  messageBubble: {
-    maxWidth: SCREEN_WIDTH * 0.75,
-    paddingVertical: 10,
-    paddingHorizontal: 14,
-    borderRadius: 16,
-    marginVertical: 6,
-  },
-  aiBubble: {
-    backgroundColor: '#e0f2fe',
-    alignSelf: 'flex-start',
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
+  screen: { flex: 1, backgroundColor: '#f8fafc' },
+  header: { paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#e2e8f0', paddingHorizontal: 16 },
+  headerTitle: { fontSize: 18, fontWeight: '600', color: '#0f172a' },
+  chatContent: { paddingHorizontal: 16, paddingTop: 16 },
+  messageBubble: { maxWidth: SCREEN_WIDTH * 0.75, paddingVertical: 10, paddingHorizontal: 14, borderRadius: 20, marginBottom: 8 },
+  aiBubble: { backgroundColor: '#e0f2fe', alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center' },
   userBubble: { backgroundColor: '#f1f5f9', alignSelf: 'flex-end' },
   messageIcon: { marginRight: 6 },
   messageText: { fontSize: 16, color: '#0f172a', lineHeight: 22 },
-  footer: { 
-    paddingTop: 8,
-    paddingBottom: Platform.OS === 'web' ? 60 : 8,
-    marginBottom: Platform.OS === 'web' ? 20 : 0,
-  },
-  input: {
-    minHeight: 40,
-    maxHeight: 100,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#cbd5e1',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    fontSize: 16,
-    backgroundColor: '#fff',
-    marginBottom: 8,
-  },
-  buttonContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: 8,
-  },
+  footer: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingTop: 8, borderTopWidth: 1, borderTopColor: '#e2e8f0', backgroundColor: '#ffffff' },
+  input: { flex: 1, minHeight: 40, maxHeight: 120, borderRadius: 20, borderWidth: 1, borderColor: '#cbd5e1', paddingHorizontal: 16, paddingVertical: 8, fontSize: 16, backgroundColor: '#f9fafb', marginRight: 8 },
+  sendButton: { padding: 8, justifyContent: 'center', alignItems: 'center' },
 });

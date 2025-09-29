@@ -1,7 +1,7 @@
 import { Slide } from "@/src/constants/types/slides";
 import { useSlidesStore } from "@/src/stores";
-import React, { useEffect, useMemo, useRef } from "react";
-import { StyleSheet, View, useWindowDimensions } from "react-native";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { Platform, StyleSheet, View, useWindowDimensions } from "react-native";
 import Animated, {
   runOnJS,
   useAnimatedScrollHandler,
@@ -13,6 +13,7 @@ import MediaPlaceholder from "./slides/MediaPlaceholder";
 import QuizSlide from "./slides/QuizeSlide";
 import TextSlide from "./slides/TextSlide";
 import VideoPlayer from "./VideoPlayer";
+import { useSlideHeight } from "./useSlideHeight";
 
 interface CourseSwiperProps {
   slides?: Slide[];
@@ -34,17 +35,40 @@ const CourseSwiper: React.FC<CourseSwiperProps> = ({
     currentSlideIndex,
     setCurrentSlideIndex,
   } = useSlidesStore();
+  // Use viewport height for snapping to avoid Safari toolbar resizing issues
+  const [isKeyboardOpen, setKeyboardOpen] = useState(false);
+
+
+  useEffect(() => {
+    if (Platform.OS === 'web') {
+      const handleFocus = () => setKeyboardOpen(true);
+      const handleBlur = () => setKeyboardOpen(false);
+      window.addEventListener('focusin', handleFocus);
+      window.addEventListener('focusout', handleBlur);
+      return () => {
+        window.removeEventListener('focusin', handleFocus);
+        window.removeEventListener('focusout', handleBlur);
+      };
+    }
+  }, []);
+
+
+  
+  const pageHeight = useSlideHeight();
 
   const slides = useMemo(
     () => (storeSlides.length > 0 ? storeSlides : propSlides || []),
     [storeSlides, propSlides]
   );
-  const totalSlides = propTotalSlides || slides.length;
+
   const currentIndex = currentSlideIndex;
+
+  const didInitRef = useRef(false);
 
   const onScroll = useAnimatedScrollHandler({
     onScroll: (event) => {
-      const idx = Math.round(event.contentOffset.y / height);
+      const viewH = event.layoutMeasurement?.height || pageHeight;
+      const idx = Math.round(event.contentOffset.y / viewH);
       runOnJS(setCurrentSlideIndex)(idx);
       if (onIndexChange) runOnJS(onIndexChange)(idx);
     },
@@ -54,12 +78,28 @@ const CourseSwiper: React.FC<CourseSwiperProps> = ({
     if (slides.length === 0) return;
 
     const safeIndex = Math.min(Math.max(0, initialIndex), slides.length - 1);
-    setCurrentSlideIndex(safeIndex);
 
+    if (!didInitRef.current) {
+      didInitRef.current = true;
+      setCurrentSlideIndex(safeIndex);
+      requestAnimationFrame(() => {
+        scrollRef.current?.scrollTo({ y: safeIndex * pageHeight, animated: false });
+      });
+    }
+  }, [slides.length, initialIndex, pageHeight, setCurrentSlideIndex]);
+
+
+  useEffect(() => {
+    if (!slides.length) return;
     requestAnimationFrame(() => {
-      scrollRef.current?.scrollTo({ y: safeIndex * height, animated: false });
+      scrollRef.current?.scrollTo({
+        y: currentIndex * pageHeight,
+        animated: false,
+      });
     });
-  }, [slides, height, initialIndex, setCurrentSlideIndex]);
+  }, [currentIndex, slides.length, pageHeight]);
+
+  
 
   const renderSlide = (slide: Slide, index: number) => {
     const isActive = index === currentIndex;
@@ -75,23 +115,23 @@ const CourseSwiper: React.FC<CourseSwiperProps> = ({
           </View>
         );
 
-      case "video": {
-        const { uri, mux } = slide.slide_data.video || {};
-        const hasVideo = !!uri || !!mux;
-        return (
-          <View key={key} className="flex-1 bg-white dark:bg-neutral-900">
-            {hasVideo ? (
-              <VideoPlayer
-                uri={uri ?? undefined}
-                mux={mux ?? undefined}
-                isActive={isActive}
-              />
-            ) : (
-              <MediaPlaceholder />
-            )}
-          </View>
-        );
-      }
+      // case "video": {
+      //   const { uri, mux } = slide.slide_data.video || {};
+      //   const hasVideo = !!uri || !!mux;
+      //   return (
+      //     <View key={key} className="flex-1 bg-white dark:bg-neutral-900">
+      //       {hasVideo ? (
+      //         <VideoPlayer
+      //           uri={uri ?? undefined}
+      //           mux={mux ?? undefined}
+      //           isActive={isActive}
+      //         />
+      //       ) : (
+      //         <MediaPlaceholder />
+      //       )}
+      //     </View>
+      //   );
+      // }
 
       case "quiz":
         return (
@@ -102,36 +142,29 @@ const CourseSwiper: React.FC<CourseSwiperProps> = ({
 
       case "ai":
         return (
-          <View key={key} style={{ width, height }}>
-            <AICourseChat
-              title={slide.slide_title}
-              slideId={slide.id}
-
-            />
+          <View key={key} style={{width, height , touchAction: 'manipulation' }}>
+            <AICourseChat title={slide.slide_title} slideId={slide.id} />
           </View>
         );
 
-      case "content":
+      // case "content":
+      //   return (
+      //     <View key={key} style={{ width, height }}>
+      //       <ContentWithExample
+      //         title={slide.slide_title}
+      //         mainPoint={slide.slide_data.mainPoint}
+      //         tips={slide.slide_data.tips}
+      //         example={slide.slide_data.example}
+      //       />
+      //     </View>
+      //   );
+
+      case "dashboard":
         return (
           <View key={key} style={{ width, height }}>
-            <ContentWithExample
-              title={slide.slide_title}
-              mainPoint={slide.slide_data.mainPoint}
-              tips={slide.slide_data.tips}
-              example={slide.slide_data.example}
-            />
+            <DashboardSlide title={slide.slide_title} />
           </View>
         );
-
-        case "dashboard":
-          return (
-            <View key={key} style={{ width, height }}>
-              <DashboardSlide
-                title={slide.slide_title}
-              />
-            </View>
-          );
-  
 
       default:
         return (
@@ -161,6 +194,19 @@ const CourseSwiper: React.FC<CourseSwiperProps> = ({
         onScroll={onScroll}
         scrollEventThrottle={16}
         showsVerticalScrollIndicator={false}
+        automaticallyAdjustKeyboardInsets={false}
+        // Improve Safari behavior
+        // snapToInterval={pageHeight}
+        snapToInterval={Platform.OS === 'web' && isKeyboardOpen ? undefined : pageHeight}
+
+        snapToAlignment="start"
+        decelerationRate="fast"
+        disableIntervalMomentum
+        overScrollMode="never"
+        directionalLockEnabled
+        keyboardShouldPersistTaps="handled"  // дозволяє тапу на інпут проходити
+        contentContainerStyle={{ touchAction: 'manipulation' }} // Safari iOS
+      
       >
         {slides.map((s, i) => renderSlide(s, i))}
       </Animated.ScrollView>
@@ -189,7 +235,7 @@ const CourseSwiper: React.FC<CourseSwiperProps> = ({
 export default CourseSwiper;
 
 const styles = StyleSheet.create({
-  wrapper: { flex: 1, backgroundColor: "#fff" },
+  wrapper: {flex: 1, backgroundColor: "pink" },
   pagination: {
     position: "absolute",
     right: 16,
@@ -202,6 +248,6 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     marginVertical: 6,
   },
-  dotActive: { backgroundColor: '#4CAF50' },
-  dotInactive: { backgroundColor: '#CFCFCF' },
+  dotActive: { backgroundColor: "#4CAF50" },
+  dotInactive: { backgroundColor: "#CFCFCF" },
 });
