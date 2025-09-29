@@ -1,13 +1,6 @@
-import { supabase } from '@/src/config/supabaseClient';
 import { create } from 'zustand';
-
-interface Criteria {
-  id: string;
-  course_id: string;
-  name: string;
-  key: string;
-  description: string;
-}
+import { criteriaService } from '../services/criteriaService';
+import { Criteria } from '../constants/types/criteria';
 
 interface CriteriaState {
   criterias: Criteria[];
@@ -26,11 +19,7 @@ export const useCriteriaStore = create<CriteriaState>((set) => ({
   fetchCriterias: async (courseId: string) => {
     set({ isLoading: true, error: null });
     try {
-      const { data, error } = await supabase
-        .from('criterias')
-        .select('*')
-        .eq('course_id', courseId);
-
+      const { data, error } = await criteriaService.getCriteriasByCourse(courseId);
       if (error) throw error;
 
       set({ criterias: data || [], isLoading: false });
@@ -41,3 +30,4 @@ export const useCriteriaStore = create<CriteriaState>((set) => ({
 
   clear: () => set({ criterias: [], error: null }),
 }));
+

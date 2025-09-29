@@ -43,13 +43,13 @@ export const courseService = {
       .single();
   },
 
-  // нова функція для отримання компаній користувача
   getUserCompanyIds: async (userId: string): Promise<{ data: { company_id: string }[] | null; error: any }> => {
     return await supabase
       .from('company_members')
       .select('company_id')
       .eq('user_id', userId);
   },
+
   updateLastSlideId: async (userId: string, courseId: string, slideId: string) => {
     return await supabase
       .from('user_course_summaries')
@@ -57,5 +57,5 @@ export const courseService = {
         { user_id: userId, course_id: courseId, last_slide_id: slideId },
         { onConflict: 'user_id,course_id' }
       );
-  }
+  },
 };
