@@ -20,7 +20,6 @@ const DashboardSlide: React.FC<DashboardSlideProps> = ({ title }) => {
   const { user } = useAuthStore();
   const currentModuleId = useModulesStore.getState().currentModule?.id;
 
-  // підключаємо store
   const {
     average,
     skills,
