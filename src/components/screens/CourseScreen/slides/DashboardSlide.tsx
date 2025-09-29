@@ -2,7 +2,7 @@ import { getAverageUserRating, getUserSkillsSummary } from '@/src/services/main_
 import { useAuthStore, useModulesStore } from '@/src/stores';
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useEffect, useState } from 'react';
-import { Platform, StyleSheet, Text, View } from 'react-native';
+import { Platform, StyleSheet, Text, View, ScrollView} from 'react-native';
 import {
   PolarAngleAxis,
   PolarGrid,
@@ -63,6 +63,8 @@ const DashboardSlide: React.FC<DashboardSlideProps> = ({ title }) => {
   return (
     <View style={styles.screen}>
       <View style={styles.card}>
+      <ScrollView contentContainerStyle={{ paddingBottom: 16 }}>
+
         <View style={styles.iconWrapper}>
           <MaterialIcons name="insert-chart" size={40} color="#7c3aed" />
         </View>
@@ -116,6 +118,7 @@ const DashboardSlide: React.FC<DashboardSlideProps> = ({ title }) => {
             </Text>
           )}
         </View>
+        </ScrollView>
       </View>
     </View>
   );
@@ -126,7 +129,6 @@ export default DashboardSlide;
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: '#f8fafc',
     padding: 16,
     alignItems: 'center',
     justifyContent: 'center',
@@ -134,6 +136,7 @@ const styles = StyleSheet.create({
   card: {
     width: '100%',
     maxWidth: 480,
+    height: '80%', 
     borderRadius: 20,
     padding: 24,
     backgroundColor: '#ffffff',

@@ -235,7 +235,7 @@ const CourseSwiper: React.FC<CourseSwiperProps> = ({
 export default CourseSwiper;
 
 const styles = StyleSheet.create({
-  wrapper: {flex: 1, backgroundColor: "pink" },
+  wrapper: {flex: 1},
   pagination: {
     position: "absolute",
     right: 16,
