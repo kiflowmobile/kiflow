@@ -58,8 +58,7 @@
     "react-native-svg": "^15.12.1",
     "react-native-web": "^0.21.0",
     "react-native-webview": "13.15.0",
-    "zustand": "^5.0.8",
-    "expo-image-picker": "~17.0.8"
+    "expo-image-picker": "~17.0.8",
     "recharts": "^3.2.1",
     "uuid": "^13.0.0",
     "victory-native": "^41.20.1",
