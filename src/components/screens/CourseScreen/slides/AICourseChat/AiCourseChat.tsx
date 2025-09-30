@@ -1,6 +1,6 @@
 import { Icon } from '@/src/components/ui/icon';
 import { usePromptsStore } from '@/src/services/slidePrompt';
-import { useAuthStore, useCourseStore, useCriteriaStore, useModulesStore } from '@/src/stores';
+import { useAuthStore, useCourseStore, useCriteriaStore, useModulesStore, useSlidesStore } from '@/src/stores';
 import { useMainRatingStore } from '@/src/stores/mainRatingStore';
 import { MessageCircle, Send } from 'lucide-react-native';
 import React, { useEffect, useState, useRef } from 'react';
@@ -58,18 +58,43 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
     setMessages(prev => [...prev, userMsg]);
     setInput('');
     setLoading(true);
-
+  
     try {
       const slidePrompt = prompt[slideId]?.prompt || "";
       const criteriasText = criterias.map(item => `${item.key} - ${item.name.trim()}`).join('\n');
       const aiResponse = await askGemini([...messages, userMsg], slidePrompt, messages.length === 0, criteriasText);
       const aiMsg: Message = { id: Date.now().toString(), role: 'ai', text: formatAIResponseForChat(aiResponse) };
       setMessages(prev => [...prev, aiMsg]);
+  
+      const currentSlideId = useSlidesStore.getState().getCurrentSlideId();
+      const currentModuleId = useModulesStore.getState().currentModule?.id;
+  
+      if (currentSlideId && user && aiResponse.rating?.criteriaScores && currentModuleId) {
+        const criteriaScores = aiResponse.rating.criteriaScores;
+  
+        // проходимо по всіх критеріях та зберігаємо оцінки
+        for (const [criteriaKey, score] of Object.entries(criteriaScores)) {
+          try {
+            await useMainRatingStore.getState().saveRating(
+              user.id,
+              score as number,
+              currentModuleId,
+              criteriaKey,
+              courseId || "" // передаємо courseId
+            );
+          } catch (err) {
+            console.warn(`Failed to save rating for ${criteriaKey}:`, err);
+          }
+        }
+      }
+  
+    } catch (err) {
+      console.error('AI request failed:', err);
     } finally {
       setLoading(false);
-      scrollRef.current?.scrollToEnd({ animated: true });
     }
   };
+  
 
   return (
     <SafeAreaView style={styles.screen}>

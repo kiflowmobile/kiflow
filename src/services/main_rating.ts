@@ -21,10 +21,10 @@ export const fetchRating = async (userId: string, moduleId: string, key: string)
 };
 
 // вставка / апдейт
-export const upsertRating = async (userId: string, rating: number, moduleId: string, key: string) => {
+export const upsertRating = async (userId: string, rating: number, moduleId: string, key: string, courseId: string) => {
   return await supabase
     .from('main_rating')
-    .upsert([{ user_id: userId, rating, module_id: moduleId, criteria_key: key }], {
+    .upsert([{ user_id: userId, rating, module_id: moduleId, criteria_key: key, course_id: courseId }], {
       onConflict: 'module_id, user_id, criteria_key',
     })
     .select();
@@ -34,7 +34,7 @@ export const upsertRating = async (userId: string, rating: number, moduleId: str
 export const fetchAllRatings = async (userId: string) => {
   return await supabase
     .from('main_rating')
-    .select('rating')
+    .select('id, user_id, module_id, criteria_key, rating')
     .eq('user_id', userId);
 };
 

@@ -4,4 +4,6 @@ export interface Criteria {
     name: string;
     key: string;
     description: string;
+    average_score?: number; // додаємо опційне поле
+
   }

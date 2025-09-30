@@ -8,6 +8,7 @@ interface CriteriaState {
   error: string | null;
 
   fetchCriterias: (courseId: string) => Promise<void>;
+  fetchAllCriterias: () => Promise<void>;
   clear: () => void;
 }
 
@@ -20,6 +21,18 @@ export const useCriteriaStore = create<CriteriaState>((set) => ({
     set({ isLoading: true, error: null });
     try {
       const { data, error } = await criteriaService.getCriteriasByCourse(courseId);
+      if (error) throw error;
+
+      set({ criterias: data || [], isLoading: false });
+    } catch (err: any) {
+      set({ error: err.message || 'Failed to fetch criterias', isLoading: false });
+    }
+  },
+
+  fetchAllCriterias: async () => {
+    set({ isLoading: true, error: null });
+    try {
+      const { data, error } = await criteriaService.getCriteriasByCourse();
       if (error) throw error;
 
       set({ criterias: data || [], isLoading: false });
