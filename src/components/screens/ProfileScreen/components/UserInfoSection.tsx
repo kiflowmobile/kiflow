@@ -24,13 +24,31 @@ export default function UserInfoSection({
 
   return (
     <VStack space="md" style={styles.infoSection}>
-      <ProfileField
-        label="Fullname"
-        value={editMode ? formData.full_name : (user?.full_name || '')}
-        placeholder="Enter fullname"
-        editMode={editMode}
-        onValueChange={(value) => onFormDataChange('full_name', value)}
-      />
+      {editMode ? (
+        <>
+          <ProfileField
+            label="First name"
+            value={formData.first_name || ''}
+            placeholder="Enter first name"
+            editMode={editMode}
+            onValueChange={(value) => onFormDataChange('first_name', value)}
+          />
+          <ProfileField
+            label="Last name"
+            value={formData.last_name || ''}
+            placeholder="Enter last name"
+            editMode={editMode}
+            onValueChange={(value) => onFormDataChange('last_name', value)}
+          />
+        </>
+      ) : (
+        <ProfileField
+          label="Fullname"
+          value={`${user?.first_name || ''} ${user?.last_name || ''}`.trim()}
+          placeholder="Enter fullname"
+          editMode={false}
+        />
+      )}
 
       <ProfileField
         label="Email"

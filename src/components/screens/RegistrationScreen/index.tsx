@@ -22,12 +22,13 @@ interface AuthError {
 }
 
 export default function RegisterScreen() {
-  const [name, setName] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [errors, setErrors] = useState<{ name?: string; email?: string; password?: string; confirmPassword?: string }>({});
-  const [touched, setTouched] = useState<{ name?: boolean; email?: boolean; password?: boolean; confirmPassword?: boolean }>({});
+  const [errors, setErrors] = useState<{ firstName?: string; lastName?: string; email?: string; password?: string; confirmPassword?: string }>({});
+  const [touched, setTouched] = useState<{ firstName?: boolean; lastName?: boolean; email?: boolean; password?: boolean; confirmPassword?: boolean }>({});
   const router = useRouter();
   
   // Zustand store
@@ -38,22 +39,22 @@ export default function RegisterScreen() {
   const validate = () => {
     const newErrors: typeof errors = {};
 
-    if (!name.trim()) {
-      newErrors.name = 'Name is required';
+    if (!firstName.trim()) {
+      newErrors.firstName = 'First name is required';
     }
-
+    if (!lastName.trim()) {
+      newErrors.lastName = 'Last name is required';
+    }
     if (!email) {
       newErrors.email = 'Email is required';
     } else if (!/\S+@\S+\.\S+/.test(email)) {
       newErrors.email = 'Invalid email format';
     }
-
     if (!password) {
       newErrors.password = 'Password is required';
     } else if (password.length < 6) {
       newErrors.password = 'Password must be at least 6 characters';
     }
-
     if (!confirmPassword) {
       newErrors.confirmPassword = 'Please confirm your password';
     } else if (password !== confirmPassword) {
@@ -74,14 +75,14 @@ export default function RegisterScreen() {
     if (error) {
       clearError();
     }
-  }, [name, email, password, confirmPassword, error, clearError]);
+  }, [firstName, lastName, email, password, confirmPassword, error, clearError]);
 
   const handleRegister = async () => {
-    setTouched({ name: true, email: true, password: true, confirmPassword: true });
+    setTouched({ firstName: true, lastName: true, email: true, password: true, confirmPassword: true });
     if (!validate()) return;
 
     try {
-      await signUp(email, password, name);
+      await signUp(email, password, firstName, lastName);
       Alert.alert('Success', 'Account created successfully');
       router.replace('/course-code');
     } catch (err: unknown) {
@@ -107,24 +108,43 @@ export default function RegisterScreen() {
           <Text style={styles.title}>Sign up</Text>
 
           <View style={styles.form}>
-            {/* Name */}
+            {/* First Name */}
             <Input
               variant="outline"
               size="xl"
               style={[
                 styles.input,
-                touched.name && errors.name && styles.inputError
+                touched.firstName && errors.firstName && styles.inputError
               ]}
             >
               <InputField
-                placeholder="Full name"
+                placeholder="First name"
                 autoCapitalize="words"
-                value={name}
-                onChangeText={setName}
-                onBlur={() => handleBlur('name')}
+                value={firstName}
+                onChangeText={setFirstName}
+                onBlur={() => handleBlur('firstName')}
               />
             </Input>
-            {touched.name && errors.name && <Text style={styles.errorText}>{errors.name}</Text>}
+            {touched.firstName && errors.firstName && <Text style={styles.errorText}>{errors.firstName}</Text>}
+
+            {/* Last Name */}
+            <Input
+              variant="outline"
+              size="xl"
+              style={[
+                styles.input,
+                touched.lastName && errors.lastName && styles.inputError
+              ]}
+            >
+              <InputField
+                placeholder="Last name"
+                autoCapitalize="words"
+                value={lastName}
+                onChangeText={setLastName}
+                onBlur={() => handleBlur('lastName')}
+              />
+            </Input>
+            {touched.lastName && errors.lastName && <Text style={styles.errorText}>{errors.lastName}</Text>}
 
             {/* Email */}
             <Input
