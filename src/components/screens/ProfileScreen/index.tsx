@@ -28,6 +28,8 @@ export default function ProfileScreen() {
     full_name: '',
     email: '',
     avatar_url: '',
+    first_name: '',
+    last_name: '',
   });
 
 
@@ -61,6 +63,8 @@ export default function ProfileScreen() {
           full_name: data.full_name || '',
           email: data.email || '',
           avatar_url: data.avatar_url || '',
+          first_name: data.first_name || '',
+          last_name: data.last_name || '',
         });
       }
     } catch (error) {
@@ -83,6 +87,8 @@ export default function ProfileScreen() {
       const updateData = {
         full_name: formData.full_name,
         avatar_url: formData.avatar_url,
+        first_name: formData.first_name,
+        last_name: formData.last_name,
       };
       
       const { data, error } = await updateCurrentUserProfile(updateData);
@@ -124,6 +130,8 @@ export default function ProfileScreen() {
         ...prev,
         full_name: user.full_name || '',
         avatar_url: user.avatar_url || '',
+        first_name: user.first_name || '',
+        last_name: user.last_name || '',
       }));
     }
     setEditMode(false);
@@ -131,7 +139,16 @@ export default function ProfileScreen() {
 
   // Хендлери для дочірніх компонентів
   const handleFormDataChange = (field: keyof UserUpdateData, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData(prev => {
+      const next = { ...prev, [field]: value } as UserUpdateData;
+      if (field === 'first_name' || field === 'last_name') {
+        const first = field === 'first_name' ? value : (prev.first_name || '');
+        const last = field === 'last_name' ? value : (prev.last_name || '');
+        const full = `${first ?? ''} ${last ?? ''}`.trim();
+        next.full_name = full;
+      }
+      return next;
+    });
   };
 
   const handleEdit = () => {
