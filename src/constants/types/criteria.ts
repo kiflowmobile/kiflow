@@ -1,4 +1,5 @@
 export interface Criteria {
+    module_id: string;
     id: string;
     course_id: string;
     name: string;
