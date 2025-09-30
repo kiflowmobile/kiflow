@@ -36,6 +36,8 @@ const CourseSwiper: React.FC<CourseSwiperProps> = ({
     setCurrentSlideIndex,
   } = useSlidesStore();
 
+  const PAGE_H = Dimensions.get("screen").height;
+
   const slides = useMemo(
     () => (storeSlides.length > 0 ? storeSlides : propSlides || []),
     [storeSlides, propSlides]
