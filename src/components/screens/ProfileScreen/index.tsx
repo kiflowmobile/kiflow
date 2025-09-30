@@ -172,9 +172,6 @@ export default function ProfileScreen() {
             editMode={editMode}
             onFormDataChange={handleFormDataChange}
           />
-
-          <PasswordSection />
-
           <ActionButtons
             editMode={editMode}
             updating={updating}
@@ -182,6 +179,7 @@ export default function ProfileScreen() {
             onSave={handleSave}
             onCancel={handleCancel}
           />
+          <PasswordSection />
 
           <SignOutSection />
         </View>
