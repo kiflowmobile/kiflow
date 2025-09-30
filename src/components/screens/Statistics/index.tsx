@@ -8,9 +8,9 @@ import { useAuthStore, useModulesStore } from "@/src/stores";
 import { useRouter } from "expo-router";
 
 export default function StatisticsScreen() {
-  const { width } = useWindowDimensions(); // 👈 ширина екрану
-  const isLargeScreen = width >= 768; // планшети та великі екрани
-  const isXLargeScreen = width >= 1024; // десктоп / iPad Pro
+  const { width } = useWindowDimensions(); 
+  const isLargeScreen = width >= 768; 
+  const isXLargeScreen = width >= 1024;
 
   const { courses, fetchCourses, isLoading: coursesLoading } = useCourseStore();
   const { criterias, fetchAllCriterias } = useCriteriaStore();
