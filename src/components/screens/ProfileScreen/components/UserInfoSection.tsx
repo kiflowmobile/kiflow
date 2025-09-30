@@ -24,7 +24,6 @@ export default function UserInfoSection({
 
   return (
     <VStack space="md" style={styles.infoSection}>
-      {editMode ? (
         <>
           <ProfileField
             label="First name"
@@ -41,14 +40,6 @@ export default function UserInfoSection({
             onValueChange={(value) => onFormDataChange('last_name', value)}
           />
         </>
-      ) : (
-        <ProfileField
-          label="Fullname"
-          value={`${user?.first_name || ''} ${user?.last_name || ''}`.trim()}
-          placeholder="Enter fullname"
-          editMode={false}
-        />
-      )}
 
       <ProfileField
         label="Email"
