@@ -39,7 +39,6 @@ const CourseSwiper: React.FC<CourseSwiperProps> = ({
     [storeSlides, propSlides],
   );
 
-  // инициализация позиции один раз
   useEffect(() => {
     if (!slides.length) return;
     const safe = Math.min(Math.max(0, initialIndex), slides.length - 1);
@@ -52,7 +51,6 @@ const CourseSwiper: React.FC<CourseSwiperProps> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [slides.length]);
 
-  // активная точка меняется во время скролла
   const handleScroll = useCallback(
     (e: NativeSyntheticEvent<NativeScrollEvent>) => {
       if (isProgrammatic.current) return;
@@ -66,7 +64,6 @@ const CourseSwiper: React.FC<CourseSwiperProps> = ({
     [SCREEN_H, currentSlideIndex, onIndexChange, setCurrentSlideIndex],
   );
 
-  // на всякий случай фиксируем итоговый индекс после инерции
   const handleMomentumEnd = useCallback(
     (e: NativeSyntheticEvent<NativeScrollEvent>) => {
       if (isProgrammatic.current) return;
@@ -156,7 +153,7 @@ const CourseSwiper: React.FC<CourseSwiperProps> = ({
       <FlatList
         ref={flatListRef}
         data={slides}
-        keyExtractor={(item) => String(item.id)} // стабильные ключи
+        keyExtractor={(item) => String(item.id)}
         renderItem={renderSlide}
         pagingEnabled
         horizontal={false}
@@ -170,12 +167,9 @@ const CourseSwiper: React.FC<CourseSwiperProps> = ({
         style={{ flex: 1 }}
         keyboardShouldPersistTaps="handled"
         removeClippedSubviews={false}
-        // индекс обновляется в процессе скролла
         onScroll={handleScroll}
         scrollEventThrottle={16}
-        // и дублируем на конец инерции для надёжности
         onMomentumScrollEnd={handleMomentumEnd}
-        // стабильный «page» скролл
         snapToInterval={SCREEN_H}
         disableIntervalMomentum
         decelerationRate="fast"
@@ -184,14 +178,13 @@ const CourseSwiper: React.FC<CourseSwiperProps> = ({
         }}
       />
 
-      {/* только индикатор, без кликов */}
       <View style={[styles.pagination, { top: SCREEN_H * 0.2, height: SCREEN_H * 0.6 }]}>
         {slides.map((_, i) => {
           const active = i === currentSlideIndex;
           return (
             <View
               key={String(i)}
-              pointerEvents="none" // гарантированно не кликается
+              pointerEvents="none"
               style={[
                 styles.dot,
                 active ? styles.dotActive : styles.dotInactive,
