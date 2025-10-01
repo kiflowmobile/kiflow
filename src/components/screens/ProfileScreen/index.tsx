@@ -14,6 +14,7 @@ import LoadingState from './components/LoadingState';
 import PasswordSection from './components/PasswordSection';
 import SignOutSection from './components/SignOutSection';
 import UserInfoSection from './components/UserInfoSection';
+import CompanyCode from './components/CompanyCode';
 
 export default function ProfileScreen() {
   const router = useRouter();
@@ -155,6 +156,9 @@ export default function ProfileScreen() {
     setEditMode(true);
   };
 
+  const handleCourseCodePress = () => {
+    router.push('/course-code');
+  }
   if (loading) {
     return <LoadingState />;
   }
@@ -162,10 +166,8 @@ export default function ProfileScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
-        <View  style={styles.content}>
-          <AvatarSection
-            fullName={formData.full_name || user?.full_name || ''}
-          />
+        <View style={styles.content}>
+          <AvatarSection fullName={formData.full_name || user?.full_name || ''} />
           <UserInfoSection
             user={user}
             formData={formData}
@@ -180,7 +182,7 @@ export default function ProfileScreen() {
             onCancel={handleCancel}
           />
           <PasswordSection />
-
+          <CompanyCode onPress={handleCourseCodePress} />
           <SignOutSection />
         </View>
       </ScrollView>
