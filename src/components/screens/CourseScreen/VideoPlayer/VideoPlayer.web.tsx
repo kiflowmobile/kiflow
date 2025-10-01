@@ -3,6 +3,7 @@ import type MuxPlayerElement from '@mux/mux-player';
 import MuxPlayer from '@mux/mux-player-react';
 import React, { useEffect, useRef, useState } from 'react';
 import { useInView } from './useInView';
+import { Text } from 'react-native-svg';
 
 interface VideoPlayerProps {
   uri?: string;
@@ -80,120 +81,121 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ uri, mux }) => {
   };
 
   return (
-    <Box
-      // @ts-expect-error Box component type definition issue
-      ref={viewRef}
-      className="relative h-full w-full flex-1 items-center justify-center bg-black"
-    >
-      <style>{`
-      .mux-no-controls {
-        --controls: none;
-        --top: none;
-        --bottom: none;
-        --play-button: none;
-        --time-range: none;
-        --mute-button: none;
-        --captions-button: none;
-      }
-      video::-webkit-media-controls-enclosure,
-      video::-webkit-media-controls-panel,
-      video::-webkit-media-controls { display: none !important; }
-    `}</style>
+    <Text>відео</Text>
+    // <Box
+    //   // @ts-expect-error Box component type definition issue
+    //   ref={viewRef}
+    //   className="relative h-full w-full flex-1 items-center justify-center bg-black"
+    // >
+    //   <style>{`
+    //   .mux-no-controls {
+    //     --controls: none;
+    //     --top: none;
+    //     --bottom: none;
+    //     --play-button: none;
+    //     --time-range: none;
+    //     --mute-button: none;
+    //     --captions-button: none;
+    //   }
+    //   video::-webkit-media-controls-enclosure,
+    //   video::-webkit-media-controls-panel,
+    //   video::-webkit-media-controls { display: none !important; }
+    // `}</style>
 
-      {uri ? (
-        <div style={{ position: 'relative', width: '100%', height: '100%' }}>
-          <video
-            ref={videoRef}
-            src={uri || undefined}
-            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-            preload="auto"
-            controls={false}
-            onPlay={handleVideoPlay}
-            onPause={handleVideoPause}
-          />
-          <button
-            onClick={toggleNativePlayback}
-            aria-label={isPlaying ? 'Pause' : 'Play'}
-            style={{
-              position: 'absolute',
-              top: '50%',
-              left: '50%',
-              transform: 'translate(-50%, -50%)',
-              width: 80,
-              height: 80,
-              borderRadius: '50%',
-              border: '3px solid rgba(255,255,255,0.8)',
-              background: 'rgba(0,0,0,0.45)',
-              cursor: 'pointer',
-              zIndex: 2,
-              transition: 'opacity 200ms ease',
-              opacity: isPlaying ? 0 : 1,
-            }}
-          >
-            <span
-              style={{
-                position: 'absolute',
-                top: '50%',
-                left: '50%',
-                transform: 'translate(-50%, -50%)',
-                fontSize: 36,
-                color: 'white',
-                lineHeight: 1,
-              }}
-            >
-              {isPlaying ? '❚❚' : '▶'}
-            </span>
-          </button>
-        </div>
-      ) : mux ? (
-        <div style={{ position: 'relative', width: '100%', height: '100%' }}>
-          <MuxPlayer
-            ref={muxPlayerRef}
-            playbackId={mux}
-            streamType="on-demand"
-            className="mux-no-controls"
-            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-            autoPlay={false}
-            muted
-            onPlay={handleMuxPlay}
-            onPause={handleMuxPause}
-          />
-          <button
-            onClick={toggleMuxPlayback}
-            aria-label={isPlaying ? 'Pause' : 'Play'}
-            style={{
-              position: 'absolute',
-              top: '50%',
-              left: '50%',
-              transform: 'translate(-50%, -50%)',
-              width: 140,
-              height: 140,
-              borderRadius: '50%',
-              background: 'rgba(0,0,0,0.45)',
-              border: 'none',
-              cursor: 'pointer',
-              zIndex: 2,
-              transition: 'opacity 200ms ease',
-              opacity: isPlaying ? 0 : 1,
-            }}
-          >
-            <span
-              style={{
-                position: 'absolute',
-                top: '50%',
-                left: '50%',
-                transform: 'translate(-50%, -50%)',
-                fontSize: 64,
-                color: 'white',
-                lineHeight: 1,
-              }}
-            >
-              {isPlaying ? '❚❚' : '▶'}
-            </span>
-          </button>
-        </div>
-      ) : null}
-    </Box>
+    //   {uri ? (
+    //     <div style={{ position: 'relative', width: '100%', height: '100%' }}>
+    //       <video
+    //         ref={videoRef}
+    //         src={uri || undefined}
+    //         style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+    //         preload="auto"
+    //         controls={false}
+    //         onPlay={handleVideoPlay}
+    //         onPause={handleVideoPause}
+    //       />
+    //       <button
+    //         onClick={toggleNativePlayback}
+    //         aria-label={isPlaying ? 'Pause' : 'Play'}
+    //         style={{
+    //           position: 'absolute',
+    //           top: '50%',
+    //           left: '50%',
+    //           transform: 'translate(-50%, -50%)',
+    //           width: 80,
+    //           height: 80,
+    //           borderRadius: '50%',
+    //           border: '3px solid rgba(255,255,255,0.8)',
+    //           background: 'rgba(0,0,0,0.45)',
+    //           cursor: 'pointer',
+    //           zIndex: 2,
+    //           transition: 'opacity 200ms ease',
+    //           opacity: isPlaying ? 0 : 1,
+    //         }}
+    //       >
+    //         <span
+    //           style={{
+    //             position: 'absolute',
+    //             top: '50%',
+    //             left: '50%',
+    //             transform: 'translate(-50%, -50%)',
+    //             fontSize: 36,
+    //             color: 'white',
+    //             lineHeight: 1,
+    //           }}
+    //         >
+    //           {isPlaying ? '❚❚' : '▶'}
+    //         </span>
+    //       </button>
+    //     </div>
+    //   ) : mux ? (
+    //     <div style={{ position: 'relative', width: '100%', height: '100%' }}>
+    //       <MuxPlayer
+    //         ref={muxPlayerRef}
+    //         playbackId={mux}
+    //         streamType="on-demand"
+    //         className="mux-no-controls"
+    //         style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+    //         autoPlay={false}
+    //         muted
+    //         onPlay={handleMuxPlay}
+    //         onPause={handleMuxPause}
+    //       />
+    //       <button
+    //         onClick={toggleMuxPlayback}
+    //         aria-label={isPlaying ? 'Pause' : 'Play'}
+    //         style={{
+    //           position: 'absolute',
+    //           top: '50%',
+    //           left: '50%',
+    //           transform: 'translate(-50%, -50%)',
+    //           width: 140,
+    //           height: 140,
+    //           borderRadius: '50%',
+    //           background: 'rgba(0,0,0,0.45)',
+    //           border: 'none',
+    //           cursor: 'pointer',
+    //           zIndex: 2,
+    //           transition: 'opacity 200ms ease',
+    //           opacity: isPlaying ? 0 : 1,
+    //         }}
+    //       >
+    //         <span
+    //           style={{
+    //             position: 'absolute',
+    //             top: '50%',
+    //             left: '50%',
+    //             transform: 'translate(-50%, -50%)',
+    //             fontSize: 64,
+    //             color: 'white',
+    //             lineHeight: 1,
+    //           }}
+    //         >
+    //           {isPlaying ? '❚❚' : '▶'}
+    //         </span>
+    //       </button>
+    //     </div>
+    //   ) : null}
+    // </Box>
   );
 };
 
