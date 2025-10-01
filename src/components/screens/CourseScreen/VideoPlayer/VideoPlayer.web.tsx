@@ -147,7 +147,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ uri, mux }) => {
         </div>
       ) : mux ? (
         <div style={{ position: 'relative', width: '100%', height: '100%' }}>
-          <MuxPlayer
+          {/* <MuxPlayer
             ref={muxPlayerRef}
             playbackId={mux}
             streamType="on-demand"
@@ -157,7 +157,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ uri, mux }) => {
             muted
             onPlay={handleMuxPlay}
             onPause={handleMuxPause}
-          />
+          /> */}
           <button
             onClick={toggleMuxPlayback}
             aria-label={isPlaying ? 'Pause' : 'Play'}

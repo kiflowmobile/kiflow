@@ -32,7 +32,7 @@ export const useModulesStore = create<ModulesState>()(
 
     // Actions
     fetchModulesByCourse: async (courseId: string) => {
-      set({ isLoading: true, error: null });
+      set({ isLoading: true, error: null, });
 
       try {
         const { data, error } = await modulesService.getModulesByCourse(courseId);
