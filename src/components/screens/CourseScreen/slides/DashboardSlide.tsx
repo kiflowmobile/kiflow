@@ -53,10 +53,7 @@ const DashboardSlide: React.FC<DashboardSlideProps> = ({ title }) => {
         <View style={styles.statsCard}>
           <Text style={styles.statsTitle}>Статистика</Text>
           <View style={styles.statsRow}>
-            <View style={[styles.statBox, { backgroundColor: '#dbeafe' }]}>
-              <Text style={styles.statLabel}>Час навчання</Text>
-              <Text style={[styles.statValue, { color: '#1d4ed8' }]}>12 год</Text>
-            </View>
+
 
             {average !== null && (
               <View style={[styles.statBox, { backgroundColor: '#dcfce7' }]}>
@@ -67,14 +64,16 @@ const DashboardSlide: React.FC<DashboardSlideProps> = ({ title }) => {
               </View>
             )}
 
-            <View style={[styles.statBox, { backgroundColor: '#ede9fe' }]}>
+            {/* <View style={[styles.statBox, { backgroundColor: '#ede9fe' }]}>
               <Text style={styles.statLabel}>Курси</Text>
               <Text style={[styles.statValue, { color: '#7c3aed' }]}>5</Text>
-            </View>
+            </View> */}
           </View>
         </View>
 
-        <View style={styles.skillsCard}>
+        {average !== null?
+
+        (<View style={styles.skillsCard}>
           <Text style={styles.statsTitle}>Порівняння навичок</Text>
           {Platform.OS === 'web' ? (
             <ResponsiveContainer width="100%" height={300}>
@@ -96,7 +95,12 @@ const DashboardSlide: React.FC<DashboardSlideProps> = ({ title }) => {
               📊 Графік доступний лише у веб-версії
             </Text>
           )}
-        </View>
+        </View>)
+        : (
+          <Text style={styles.noScoresText}>😔 Ви ще не маєте оцінок</Text>
+        )
+
+}
         </ScrollView>
       </View>
     </View>
@@ -196,6 +200,13 @@ const styles = StyleSheet.create({
   chartPlaceholderText: {
     color: '#64748b',
     textAlign: 'center',
+  },
+  noScoresText: {
+    fontSize: 16,
+    color: '#9ca3af', // сірий відтінок
+    textAlign: 'center',
+    marginTop: 20,
+    fontStyle: 'italic',
   },
 });
 
