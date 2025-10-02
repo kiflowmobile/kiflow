@@ -3,21 +3,20 @@ import { Slide } from '@/src/constants/types/slides';
 import { v4 as uuidv4 } from 'uuid';
 import { create } from 'zustand';
 
-
 interface SlidesState {
   slides: Slide[];
   currentSlideIndex: number;
   currentModuleId: string | null;
   isLoading: boolean;
   error: string | null;
-  
+
   fetchSlidesByModule: (moduleId: string) => Promise<void>;
   setCurrentSlideIndex: (index: number) => void;
   nextSlide: () => void;
   previousSlide: () => void;
   clearError: () => void;
   clearSlides: () => void;
-  
+
   setSlides: (slides: Slide[]) => void;
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
@@ -26,88 +25,86 @@ interface SlidesState {
 }
 type UUID = string & { readonly brand: unique symbol };
 
-export const useSlidesStore = create<SlidesState>()(
-  (set, get) => ({
-    slides: [],
-    currentSlideIndex: 0,
-    currentModuleId: null,
-    isLoading: false,
-    error: null,
+export const useSlidesStore = create<SlidesState>()((set, get) => ({
+  slides: [],
+  currentSlideIndex: 0,
+  currentModuleId: null,
+  isLoading: false,
+  error: null,
 
-    fetchSlidesByModule: async (moduleId: string) => {
-      set({ isLoading: true, error: null, currentModuleId: moduleId });
-    
-      try {
-        const { data, error } = await supabase
-          .from('slides')
-          .select('*')
-          .eq('module_id', moduleId)
-          .order('slide_order', { ascending: true });
-    
-        if (error) throw error;
-    
-        const fetchedSlides: Slide[] = data || [];
-    
-        const dashboardSlide: Slide = {
-          id: uuidv4() as UUID,
-          slide_type: 'dashboard',
-          slide_title: 'Твоя статистика',
-          module_id: moduleId,
-          slide_order: fetchedSlides.length,
-        };
-    
-        set({
-          slides: [...fetchedSlides, dashboardSlide],
-          // slides: fetchedSlides,
-          currentSlideIndex: 0,
-          isLoading: false,
-          error: null,
-        });
-    
-      } catch (error: any) {
-        set({ error: error.message || 'Failed to fetch slides', isLoading: false });
-        throw error;
-      }
-    },
+  fetchSlidesByModule: async (moduleId: string) => {
+    set({ isLoading: true, error: null, currentModuleId: moduleId });
 
-    setCurrentSlideIndex: (index: number) => {
-      const { slides } = get();
-      const safeIndex = Math.max(0, Math.min(index, slides.length - 1));
-      set({ currentSlideIndex: safeIndex });
-    },
+    try {
+      const { data, error } = await supabase
+        .from('slides')
+        .select('*')
+        .eq('module_id', moduleId)
+        .order('slide_order', { ascending: true });
 
-    nextSlide: () => {
-      const { currentSlideIndex, slides } = get();
-      const nextIndex = currentSlideIndex + 1;
-      if (nextIndex < slides.length) {
-        set({ currentSlideIndex: nextIndex });
-      }
-    },
+      if (error) throw error;
 
-    previousSlide: () => {
-      const { currentSlideIndex } = get();
-      const prevIndex = currentSlideIndex - 1;
-      if (prevIndex >= 0) {
-        set({ currentSlideIndex: prevIndex });
-      }
-    },
+      const fetchedSlides: Slide[] = data || [];
 
-    clearError: () => set({ error: null }),
+      const dashboardSlide: Slide = {
+        id: uuidv4() as UUID,
+        slide_type: 'dashboard',
+        slide_title: 'Твоя статистика',
+        module_id: moduleId,
+        slide_order: fetchedSlides.length,
+      };
 
-    clearSlides: () => set({ 
-      slides: [], 
-      currentSlideIndex: 0, 
-      currentModuleId: null
+      set({
+        slides: [...fetchedSlides, dashboardSlide],
+        // slides: fetchedSlides,
+        currentSlideIndex: 0,
+        isLoading: false,
+        error: null,
+      });
+    } catch (error: any) {
+      set({ error: error.message || 'Failed to fetch slides', isLoading: false });
+      throw error;
+    }
+  },
+
+  setCurrentSlideIndex: (index: number) => {
+    const { slides } = get();
+    const safeIndex = Math.max(0, Math.min(index, slides.length - 1));
+    set({ currentSlideIndex: safeIndex });
+  },
+
+  nextSlide: () => {
+    const { currentSlideIndex, slides } = get();
+    const nextIndex = currentSlideIndex + 1;
+    if (nextIndex < slides.length) {
+      set({ currentSlideIndex: nextIndex });
+    }
+  },
+
+  previousSlide: () => {
+    const { currentSlideIndex } = get();
+    const prevIndex = currentSlideIndex - 1;
+    if (prevIndex >= 0) {
+      set({ currentSlideIndex: prevIndex });
+    }
+  },
+
+  clearError: () => set({ error: null }),
+
+  clearSlides: () =>
+    set({
+      slides: [],
+      currentSlideIndex: 0,
+      currentModuleId: null,
     }),
 
-    setSlides: (slides: Slide[]) => set({ slides }),
-    setLoading: (loading: boolean) => set({ isLoading: loading }),
-    setError: (error: string | null) => set({ error }),
-    setCurrentModuleId: (moduleId: string | null) => set({ currentModuleId: moduleId }),
+  setSlides: (slides: Slide[]) => set({ slides }),
+  setLoading: (loading: boolean) => set({ isLoading: loading }),
+  setError: (error: string | null) => set({ error }),
+  setCurrentModuleId: (moduleId: string | null) => set({ currentModuleId: moduleId }),
 
-    getCurrentSlideId: () => {
-      const { slides, currentSlideIndex } = get();
-      return slides[currentSlideIndex]?.id ?? null;
-    },
-  })
-);
+  getCurrentSlideId: () => {
+    const { slides, currentSlideIndex } = get();
+    return slides[currentSlideIndex]?.id ?? null;
+  },
+}));

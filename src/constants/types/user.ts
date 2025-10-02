@@ -14,5 +14,5 @@ export interface UserUpdateData {
   avatar_url?: string;
   first_name?: string;
   last_name?: string;
+  current_code?: string | null;
 }
-

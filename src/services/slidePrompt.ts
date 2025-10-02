@@ -49,6 +49,3 @@ export const usePromptsStore = create<PromptsState>((set) => ({
     }
   },
 }));
-
-
-
