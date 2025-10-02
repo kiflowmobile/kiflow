@@ -23,71 +23,69 @@ interface ModulesState {
   getModule: (id: string) => Module | null;
 }
 
-export const useModulesStore = create<ModulesState>()(
-  (set, get) => ({
-    modules: [],
-    currentModule: null,
-    isLoading: false,
-    error: null,
+export const useModulesStore = create<ModulesState>()((set, get) => ({
+  modules: [],
+  currentModule: null,
+  isLoading: false,
+  error: null,
 
-    // Actions
-    fetchModulesByCourse: async (courseId: string) => {
-      set({ isLoading: true, error: null, });
+  // Actions
+  fetchModulesByCourse: async (courseId: string) => {
+    set({ isLoading: true, error: null });
 
-      try {
-        const { data, error } = await modulesService.getModulesByCourse(courseId);
+    try {
+      const { data, error } = await modulesService.getModulesByCourse(courseId);
 
-        if (error) throw error;
+      if (error) throw error;
 
-        set({
-          modules: data,
-          isLoading: false,
-          error: null,
-        });
-      } catch (error: any) {
-        console.error('❌ ModulesStore: Error fetching modules:', error);
-        set({
-          error: error.message || 'Failed to fetch modules',
-          isLoading: false,
-        });
-        throw error;
-      }
-    },
-
-    fetchMyModulesByCourses: async (courseIds: string[]) => {
-      set({ isLoading: true, error: null });
-      try {
-        const { data, error } = await modulesService.getMyModulesByCourses(courseIds);
-        if (error) throw error;
-  
-        set({
-          modules: data || [],
-          isLoading: false,
-        });
-      } catch (err: any) {
-        set({ error: err.message || 'Failed to fetch modules', isLoading: false });
-      }
-    },
-
-    setCurrentModule: (module: Module | null) => {
-      set({ currentModule: module });
-    },
-
-    clearError: () => set({ error: null }),
-
-    clearModules: () =>
       set({
-        modules: [],
-        currentModule: null,
-      }),
+        modules: data,
+        isLoading: false,
+        error: null,
+      });
+    } catch (error: any) {
+      console.error('❌ ModulesStore: Error fetching modules:', error);
+      set({
+        error: error.message || 'Failed to fetch modules',
+        isLoading: false,
+      });
+      throw error;
+    }
+  },
 
-    // Internal actions
-    setModules: (modules: Module[]) => set({ modules }),
-    setLoading: (loading: boolean) => set({ isLoading: loading }),
-    setError: (error: string | null) => set({ error }),
-    getModule: (id: string) => {
-      const module = get().modules.find((m) => m.id === id);
-      return module || null;
-    },
-  })
-);
+  fetchMyModulesByCourses: async (courseIds: string[]) => {
+    set({ isLoading: true, error: null });
+    try {
+      const { data, error } = await modulesService.getMyModulesByCourses(courseIds);
+      if (error) throw error;
+
+      set({
+        modules: data || [],
+        isLoading: false,
+      });
+    } catch (err: any) {
+      set({ error: err.message || 'Failed to fetch modules', isLoading: false });
+    }
+  },
+
+  setCurrentModule: (module: Module | null) => {
+    set({ currentModule: module });
+  },
+
+  clearError: () => set({ error: null }),
+
+  clearModules: () =>
+    set({
+      modules: [],
+      currentModule: null,
+    }),
+
+  // Internal actions
+  setModules: (modules: Module[]) => set({ modules }),
+  setLoading: (loading: boolean) => set({ isLoading: loading }),
+  setError: (error: string | null) => set({ error }),
+  getModule: (id: string) => {
+    const module = get().modules.find((m) => m.id === id);
+    return module || null;
+  },
+}));

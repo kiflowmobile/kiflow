@@ -43,4 +43,3 @@ export const useCriteriaStore = create<CriteriaState>((set) => ({
 
   clear: () => set({ criterias: [], error: null }),
 }));
-

@@ -1,30 +1,18 @@
 import { SafeAreaView } from '@/src/components/ui/safe-area-view';
 import { Text } from '@/src/components/ui/text';
 import { useCourseStore } from '@/src/stores';
-import { useRouter } from 'expo-router';
-import { useEffect } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import CourseCard from './components/CourseCard';
-
+import { useEffect } from 'react';
 
 const CoursesScreen = () => {
-  const router = useRouter();
-  const { 
-    courses, 
-    isLoading, 
-    error, 
-    fetchCourses, 
-    clearError 
-  } = useCourseStore();
+  const { courses, isLoading, error, fetchCourses, clearError } = useCourseStore();
 
   useEffect(() => {
-    fetchCourses().catch(err => {
+    fetchCourses().catch((err) => {
       console.error('Непередбачена помилка при завантаженні курсів:', err);
     });
   }, [fetchCourses]);
-  
-  const defaultAvatarUrl =
-    'https://www.shutterstock.com/image-vector/blank-avatar-photo-place-holder-600nw-1095249842.jpg';
 
   return (
     <SafeAreaView style={styles.container}>
@@ -32,10 +20,13 @@ const CoursesScreen = () => {
         {error ? (
           <View style={styles.errorContainer}>
             <Text style={styles.errorText}>Помилка: {error}</Text>
-            <Text style={styles.retryText} onPress={() => {
-              clearError();
-              fetchCourses();
-            }}>
+            <Text
+              style={styles.retryText}
+              onPress={() => {
+                clearError();
+                fetchCourses();
+              }}
+            >
               Спробувати знову
             </Text>
           </View>
@@ -45,7 +36,7 @@ const CoursesScreen = () => {
           <Text style={styles.loadingText}>Курси не знайдено</Text>
         ) : (
           <View style={styles.cardsContainer}>
-            {courses.map(course => (
+            {courses.map((course) => (
               <CourseCard key={course.id} course={course} />
             ))}
           </View>
