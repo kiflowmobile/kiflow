@@ -7,21 +7,14 @@ import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 export default function CourseScreen() {
   const params = useLocalSearchParams<{ id?: string }>();
   const router = useRouter();
-  const { 
-    modules, 
-    isLoading, 
-    error, 
-    fetchModulesByCourse, 
-    clearError 
-  } = useModulesStore();
+  const { modules, isLoading, error, fetchModulesByCourse, clearError } = useModulesStore();
   const { getModuleProgress } = useUserProgressStore();
   const { setCurrentModule } = useModulesStore.getState();
-
 
   useEffect(() => {
     if (!params.id) return;
 
-    fetchModulesByCourse(params.id).catch(err => {
+    fetchModulesByCourse(params.id).catch((err) => {
       console.error('Unexpected error fetching modules:', err);
     });
   }, [params.id, fetchModulesByCourse]);
@@ -30,10 +23,10 @@ export default function CourseScreen() {
     setCurrentModule(module);
     router.push({
       pathname: '/module/[id]',
-      params: { 
+      params: {
         id: module.id,
-        courseId: params.id 
-      }, 
+        courseId: params.id,
+      },
     });
   };
 
@@ -42,12 +35,15 @@ export default function CourseScreen() {
       {error ? (
         <View style={styles.errorContainer}>
           <Text style={styles.errorText}>Помилка: {error}</Text>
-          <Text style={styles.retryText} onPress={() => {
-            clearError();
-            if (params.id) {
-              fetchModulesByCourse(params.id);
-            }
-          }}>
+          <Text
+            style={styles.retryText}
+            onPress={() => {
+              clearError();
+              if (params.id) {
+                fetchModulesByCourse(params.id);
+              }
+            }}
+          >
             Спробувати знову
           </Text>
         </View>
@@ -58,7 +54,7 @@ export default function CourseScreen() {
       ) : (
         <FlatList
           data={modules}
-          keyExtractor={item => item.id.toString()}
+          keyExtractor={(item) => item.id.toString()}
           renderItem={({ item }) => (
             <Pressable style={styles.moduleItem} onPress={() => handleModulePress(item)}>
               <Text style={styles.moduleTitle}>{item.title}</Text>

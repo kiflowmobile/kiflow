@@ -7,12 +7,8 @@ import { supabase } from '../config/supabaseClient';
  */
 export const getUserById = async (userId: string): Promise<{ data: User | null; error: any }> => {
   try {
-    const { data, error } = await supabase
-      .from('users')
-      .select('*')
-      .eq('id', userId)
-      .single();
-    
+    const { data, error } = await supabase.from('users').select('*').eq('id', userId).single();
+
     return { data, error };
   } catch (err) {
     console.error('Error fetching user by id:', err);
@@ -26,11 +22,11 @@ export const getUserById = async (userId: string): Promise<{ data: User | null; 
 export const getCurrentUserProfile = async (): Promise<{ data: User | null; error: any }> => {
   try {
     const authUser = await getCurrentUser();
-    
+
     if (!authUser) {
       return { data: null, error: 'Користувач не автентифікований' };
     }
-    
+
     return await getUserById(authUser.id);
   } catch (err) {
     console.error('Error fetching current user profile:', err);
@@ -42,8 +38,8 @@ export const getCurrentUserProfile = async (): Promise<{ data: User | null; erro
  * Обновляет данные пользователя
  */
 export const updateUserProfile = async (
-  userId: string, 
-  updateData: UserUpdateData
+  userId: string,
+  updateData: UserUpdateData,
 ): Promise<{ data: User | null; error: any }> => {
   try {
     const { data, error } = await supabase
@@ -52,7 +48,7 @@ export const updateUserProfile = async (
       .eq('id', userId)
       .select()
       .single();
-    
+
     return { data, error };
   } catch (err) {
     console.error('Error updating user profile:', err);
@@ -64,15 +60,15 @@ export const updateUserProfile = async (
  * Обновляет данные текущего пользователя
  */
 export const updateCurrentUserProfile = async (
-  updateData: UserUpdateData
+  updateData: UserUpdateData,
 ): Promise<{ data: User | null; error: any }> => {
   try {
     const authUser = await getCurrentUser();
-    
+
     if (!authUser) {
       return { data: null, error: 'Користувач не автентифікований' };
     }
-    
+
     return await updateUserProfile(authUser.id, updateData);
   } catch (err) {
     console.error('Error updating current user profile:', err);
@@ -85,7 +81,7 @@ export const updateCurrentUserProfile = async (
  */
 export const upsertUserProfile = async (
   userId: string,
-  userData: Partial<User>
+  userData: Partial<User>,
 ): Promise<{ data: User | null; error: any }> => {
   try {
     const { data, error } = await supabase
@@ -95,14 +91,35 @@ export const upsertUserProfile = async (
           id: userId,
           ...userData,
         },
-        { onConflict: 'id' }
+        { onConflict: 'id' },
       )
       .select()
       .single();
-    
+
     return { data, error };
   } catch (err) {
     console.error('Error upserting user profile:', err);
     return { data: null, error: err };
+  }
+};
+
+/**
+ * Получает current_code текущего пользователя
+ */
+export const getCurrentUserCode = async (): Promise<{ code: string | null; error: any }> => {
+  try {
+    const user = await getCurrentUser();
+    if (!user) {
+      return { code: null, error: 'Користувач не автентифікований' };
+    }
+    const { data, error } = await supabase
+      .from('users')
+      .select('current_code')
+      .eq('id', user.id)
+      .single();
+    return { code: data?.current_code ?? null, error };
+  } catch (err) {
+    console.error('Error fetching current_code:', err);
+    return { code: null, error: err };
   }
 };

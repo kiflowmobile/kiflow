@@ -11,7 +11,7 @@ export async function POST(request: Request) {
     if (!genAI || !API_KEY) {
       return Response.json(
         { error: 'Gemini API не ініціалізовано. Перевірте налаштування сервера.' },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
@@ -22,7 +22,7 @@ export async function POST(request: Request) {
     if (!audioData) {
       return Response.json(
         { error: 'Неправильний формат запиту. Очікуються аудіо дані.' },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -60,7 +60,7 @@ export async function POST(request: Request) {
         error: 'Помилка при обробці аудіо через Gemini API',
         details: error instanceof Error ? error.message : String(error),
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

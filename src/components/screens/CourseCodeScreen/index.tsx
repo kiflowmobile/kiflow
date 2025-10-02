@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import React, { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Alert,
   Animated,
@@ -8,11 +8,13 @@ import {
   SafeAreaView,
   StyleSheet,
   Text,
-  View
+  View,
 } from 'react-native';
 import { joinCompanyByCode } from '../../../services/company';
 import Button from '../../ui/button';
 import { Input, InputField } from '../../ui/input';
+import { getCurrentUserCode, updateCurrentUserProfile } from '../../../services/users';
+import { useCourseStore } from '@/src/stores/courseStore';
 
 export default function CourseCodeScreen() {
   const [courseCode, setCourseCode] = useState('');
@@ -20,6 +22,17 @@ export default function CourseCodeScreen() {
   const [error, setError] = useState('');
   const [errorAnimation] = useState(new Animated.Value(0));
   const router = useRouter();
+  const fetchCourses = useCourseStore((state) => state.fetchCourses);
+
+  useEffect(() => {
+    const fetchCurrentCode = async () => {
+      const { code } = await getCurrentUserCode();
+      if (code) {
+        setCourseCode(code);
+      }
+    };
+    fetchCurrentCode();
+  }, []);
 
   const showError = (message: string) => {
     setError(message);
@@ -48,40 +61,55 @@ export default function CourseCodeScreen() {
       return;
     }
 
-    // Скрываем предыдущую ошибку
     hideError();
     setLoading(true);
-    
+
     try {
       const result = await joinCompanyByCode(courseCode.trim());
-      
+
       if (result.success) {
-        const message = result.alreadyMember 
+        await fetchCourses(); // обновить курсы после успешного действия
+
+        const message = result.alreadyMember
           ? `Ви вже є членом компанії "${result.company?.name}". Вам доступні курси цієї компанії.`
           : `Ви успішно приєдналися до компанії "${result.company?.name}". Тепер вам доступні курси цієї компанії.`;
-          
+
         Alert.alert('Успіх!', message, [
           {
             text: 'OK',
-              onPress: () => {
-                // Переходимо на головну сторінку
-                console.log('Navigating to /home');
-                router.replace('/home');
-              }
-          }
+            onPress: async () => {
+              await fetchCourses();
+              router.push('/home'); // заменено
+            },
+          },
         ]);
-        
-        // Автоматичне перенаправлення через 3 секунди
-        setTimeout(() => {
-          console.log('Auto-navigating to /home');
-          router.replace('/home');
+
+        setTimeout(async () => {
+          await fetchCourses();
+          router.push('/home'); // заменено
         }, 1000);
       } else {
         showError('Невірний код курсу. Перевірте правильність введення та спробуйте ще раз.');
       }
     } catch (error) {
       console.error('Error joining company:', error);
-      showError('Сталася помилка при приєднанні до компанії. Перевірте підключення до інтернету та спробуйте ще раз.');
+      showError(
+        'Сталася помилка при приєднанні до компанії. Перевірте підключення до інтернету та спробуйте ще раз.',
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSkip = async () => {
+    setLoading(true);
+    try {
+      await updateCurrentUserProfile({ current_code: null });
+      await fetchCourses(); // обновить курсы после пропуска
+      router.push('/home'); // заменено
+    } catch (err) {
+      console.error('Error skipping company code:', err);
+      showError('Сталася помилка при пропуску. Спробуйте ще раз.');
     } finally {
       setLoading(false);
     }
@@ -89,7 +117,6 @@ export default function CourseCodeScreen() {
 
   const handleTextChange = (text: string) => {
     setCourseCode(text);
-    // Очищаем ошибку при изменении текста
     if (error) {
       hideError();
     }
@@ -98,7 +125,7 @@ export default function CourseCodeScreen() {
   return (
     <View style={styles.container}>
       <SafeAreaView style={styles.safeArea}>
-        <KeyboardAvoidingView 
+        <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           style={styles.keyboardView}
         >
@@ -111,14 +138,7 @@ export default function CourseCodeScreen() {
             </View>
 
             <View style={styles.formSection}>
-              <Input
-                variant="outline"
-                size="xl"
-                style={[
-                  styles.input,
-                  error && styles.inputError
-                ]}
-              >
+              <Input variant="outline" size="xl" style={[styles.input, error && styles.inputError]}>
                 <InputField
                   placeholder="Код компанії"
                   value={courseCode}
@@ -161,6 +181,14 @@ export default function CourseCodeScreen() {
                 size="lg"
                 onPress={handleConfirm}
                 disabled={loading || !courseCode.trim()}
+                style={styles.button}
+              />
+              <Button
+                title="Пропустити"
+                variant="secondary"
+                size="lg"
+                onPress={handleSkip}
+                disabled={loading}
                 style={styles.button}
               />
             </View>

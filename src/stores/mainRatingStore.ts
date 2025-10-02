@@ -1,5 +1,11 @@
 import { create } from 'zustand';
-import { fetchAllRatings, fetchCriteriasByKeys, fetchRating, fetchRatings, upsertRating } from '../services/main_rating';
+import {
+  fetchAllRatings,
+  fetchCriteriasByKeys,
+  fetchRating,
+  fetchRatings,
+  upsertRating,
+} from '../services/main_rating';
 
 interface RatingItem {
   id: string;
@@ -24,8 +30,14 @@ interface MainRatingState {
 
   fetchAverage: (userId: string, moduleId: string) => Promise<void>;
   fetchSkills: (userId: string, moduleId: string) => Promise<void>;
-  saveRating: (userId: string, rating: number, moduleId: string, key: string, courseId: string) => Promise<void>;
-  fetchUserAverage: (userId: string) => Promise<void>; 
+  saveRating: (
+    userId: string,
+    rating: number,
+    moduleId: string,
+    key: string,
+    courseId: string,
+  ) => Promise<void>;
+  fetchUserAverage: (userId: string) => Promise<void>;
   fetchUserRatings: (userId: string) => Promise<void>; // 🔥 новий метод
 
   clear: () => void;
@@ -83,13 +95,13 @@ export const useMainRatingStore = create<MainRatingState>((set) => ({
     try {
       const { data: existing, error: fetchError } = await fetchRating(userId, moduleId, key);
       if (fetchError && fetchError.code !== 'PGRST116') throw fetchError;
-  
+
       const normalized = typeof rating === 'string' ? parseInt(rating, 10) : rating;
       const final = existing ? (existing.rating + normalized) / 2 : normalized;
-  
+
       // передаємо courseId
       await upsertRating(userId, final, moduleId, key, courseId);
-  
+
       await useMainRatingStore.getState().fetchAverage(userId, moduleId);
       await useMainRatingStore.getState().fetchSkills(userId, moduleId);
     } catch (err: any) {
@@ -112,8 +124,9 @@ export const useMainRatingStore = create<MainRatingState>((set) => ({
     }
   },
 
-  fetchUserRatings: async (userId) => { // 🔥 новий метод
-    
+  fetchUserRatings: async (userId) => {
+    // 🔥 новий метод
+
     set({ isLoading: true, error: null });
     try {
       const { data, error } = await fetchAllRatings(userId);
