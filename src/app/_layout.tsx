@@ -25,16 +25,27 @@ export default function RootLayout() {
 
   return (
     <SafeAreaProvider>
-      <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="index" />
-        <Stack.Screen name="course-code" />
-        <Stack.Screen name="home" />
-        <Stack.Screen name="courses/index" />
-        <Stack.Screen name="courses/[id]" />
-        <Stack.Screen name="instractions" />
-        <Stack.Screen name="auth/login" />
-        <Stack.Screen name="auth/registration" />
-        <Stack.Screen name="+not-found" />
+      <Stack>
+        <Stack.Screen name="index" options={{ headerShown: false }} />
+        <Stack.Screen name="course-code" options={{ headerShown: false }} />
+        <Stack.Screen name="home" options={{ headerShown: false }} />
+        <Stack.Screen name="courses/index" options={{ headerShown: true, title: 'Courses' }} />
+        <Stack.Screen name="courses/[id]" options={{ headerShown: true, title: 'Modules' }} />
+        <Stack.Screen name="instractions" options={{ headerShown: true, title: 'Instructions' }} />
+        <Stack.Screen name="profile" options={{ headerShown: true, title: 'Profile' }} />
+        <Stack.Screen name="auth/login" options={{ headerShown: false }} />
+        <Stack.Screen name="auth/registration" options={{ headerShown: false }} />
+        <Stack.Screen name="+not-found" options={{ headerShown: false }} />
+        <Stack.Screen name="module/[id]" options={{ headerShown: true, title: 'Module' }} />
+        <Stack.Screen name="slide" options={{ headerShown: true, title: 'Slide' }} />
+        <Stack.Screen
+          name="statistics/index"
+          options={{ headerShown: true, title: 'Results' }}
+        />
+        <Stack.Screen
+          name="statistics/[id]"
+          options={{ headerShown: true, title: 'Results Details' }}
+        />
       </Stack>
     </SafeAreaProvider>
   );
