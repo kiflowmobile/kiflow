@@ -13,7 +13,7 @@ import {
 import { joinCompanyByCode } from '../../../services/company';
 import Button from '../../ui/button';
 import { Input, InputField } from '../../ui/input';
-import { getCurrentUserCode, updateCurrentUserProfile } from '../../../services/users';
+import { getCurrentUserCode, } from '../../../services/users';
 import { useCourseStore } from '@/src/stores/courseStore';
 
 export default function CourseCodeScreen() {
@@ -68,7 +68,7 @@ export default function CourseCodeScreen() {
       const result = await joinCompanyByCode(courseCode.trim());
 
       if (result.success) {
-        await fetchCourses(); // обновить курсы после успешного действия
+        await fetchCourses();
 
         const message = result.alreadyMember
           ? `Ви вже є членом компанії "${result.company?.name}". Вам доступні курси цієї компанії.`
@@ -79,14 +79,14 @@ export default function CourseCodeScreen() {
             text: 'OK',
             onPress: async () => {
               await fetchCourses();
-              router.push('/home'); // заменено
+              router.push('/home'); 
             },
           },
         ]);
 
         setTimeout(async () => {
           await fetchCourses();
-          router.push('/home'); // заменено
+          router.push('/home');
         }, 1000);
       } else {
         showError('Невірний код курсу. Перевірте правильність введення та спробуйте ще раз.');
@@ -104,9 +104,8 @@ export default function CourseCodeScreen() {
   const handleSkip = async () => {
     setLoading(true);
     try {
-      await updateCurrentUserProfile({ current_code: null });
-      await fetchCourses(); // обновить курсы после пропуска
-      router.push('/home'); // заменено
+      await fetchCourses();
+      router.push('/home');
     } catch (err) {
       console.error('Error skipping company code:', err);
       showError('Сталася помилка при пропуску. Спробуйте ще раз.');
