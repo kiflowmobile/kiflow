@@ -100,22 +100,23 @@ export default function RegisterScreen() {
 
   const handleBlur = async (field: keyof typeof touched) => {
     setTouched((t) => ({ ...t, [field]: true }));
-    const ok = validate();
 
-    if (field === 'email' && ok && checkEmailExists) {
+    if (
+      field === 'email' &&
+      checkEmailExists &&
+      emailRegex.test(normalizeEmail(email))
+    ) {
       const e = normalizeEmail(email);
-      if (emailRegex.test(e)) {
-        try {
-          setCheckingEmail(true);
-          const exists = await checkEmailExists(e);
-          setErrors((prev) => ({
-            ...prev,
-            email: exists ? 'Email is already registered' : undefined,
-          }));
-        } catch {
-        } finally {
-          setCheckingEmail(false);
-        }
+      try {
+        setCheckingEmail(true);
+        const exists = await checkEmailExists(e);
+        setErrors((prev) => ({
+          ...prev,
+          email: exists ? 'Email is already registered' : undefined,
+        }));
+      } catch {
+      } finally {
+        setCheckingEmail(false);
       }
     }
   };
