@@ -50,7 +50,7 @@ export default function RegisterScreen() {
   const [checkingEmail, setCheckingEmail] = useState(false);
 
   const router = useRouter();
-  const { signUp, isLoading, error, clearError, checkEmailExists } = useAuthStore();
+  const { signUp, isLoading, error, clearError } = useAuthStore();
   const windowWidth = Dimensions.get('window').width;
 
   const normalizeEmail = (v: string) => v.trim().toLowerCase();
@@ -96,24 +96,7 @@ export default function RegisterScreen() {
   const handleBlur = async (field: keyof typeof touched) => {
     setTouched((t) => ({ ...t, [field]: true }));
 
-    if (
-      field === 'email' &&
-      checkEmailExists &&
-      emailRegex.test(normalizeEmail(email))
-    ) {
-      const e = normalizeEmail(email);
-      try {
-        setCheckingEmail(true);
-        const exists = await checkEmailExists(e);
-        setErrors((prev) => ({
-          ...prev,
-          email: exists ? 'Email is already registered' : undefined,
-        }));
-      } catch {
-      } finally {
-        setCheckingEmail(false);
-      }
-    }
+    // Email existence check removed due to missing checkEmailExists in authStore
   };
 
   useEffect(() => {
