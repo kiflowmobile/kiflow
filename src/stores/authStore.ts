@@ -81,19 +81,34 @@ export const useAuthStore = create<AuthState>()(
               }
             }
           });
-          
+      
           if (error) throw error;
-          
-          // Create or update user profile row in users table
+      
           if (data.user) {
+            // створюємо профіль
             await upsertUserProfile(data.user.id, {
               email: data.user.email || email,
               full_name: firstName && lastName ? `${firstName} ${lastName}` : null,
               first_name: firstName || undefined,
               last_name: lastName || undefined,
             });
+      
+            // отримуємо всі курси
+            const { data: courses } = await supabase.from('courses').select('id');
+            console.log('courses', courses)
+      
+            if (courses) {
+              const progressRows = courses.map(c => ({
+                user_id: data.user!.id,
+                course_id: c.id,
+                progress: 0,
+              }));
+      
+              // вставляємо прогрес по дефолту
+              await supabase.from('user_course_summaries').upsert(progressRows);
+            }
           }
-          
+      
           const isGuest = !data.session || !data.session.user || data.session.user.is_anonymous;
           set({ 
             user: data.user, 
@@ -109,6 +124,7 @@ export const useAuthStore = create<AuthState>()(
           throw error;
         }
       },
+      
 
       signOut: async () => {
         set({ isLoading: true, error: null });

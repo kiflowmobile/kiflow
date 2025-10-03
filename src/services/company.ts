@@ -119,43 +119,77 @@ export const getUserCompanies = async (userId: string): Promise<{ data: Company[
  * Приєднатися до компанії за кодом
  */
 export const joinCompanyByCode = async (code: string): Promise<{ success: boolean; error?: any; company?: Company; alreadyMember?: boolean }> => {
+  console.log("joinCompanyByCode", joinCompanyByCode)  
   try {
-    // Отримуємо поточного користувача
     const user = await getCurrentUser();
-    
     if (!user) {
       return { success: false, error: 'User not authenticated' };
     }
 
-    // Знаходимо компанію за кодом
+  //   // 1. Отримуємо компанію
     const { data: company, error: companyError } = await getCompanyByCode(code);
-    
     if (companyError || !company) {
       return { success: false, error: 'Company not found' };
     }
 
-    // Перевіряємо, чи не є користувач уже членом цієї компанії
+    // 2. Перевіряємо членство
     const { data: existingMember, error: checkError } = await isUserMemberOfCompany(user.id, company.id);
-    
     if (checkError) {
       console.error('Error checking existing membership:', checkError);
       return { success: false, error: checkError };
     }
-    
+
     if (existingMember) {
-      return { success: true, company, alreadyMember: true }; // Вже член компанії
+      return { success: true, company, alreadyMember: true };
     }
 
-    // Додаємо користувача до компанії
+    // 3. Додаємо користувача в компанію
     const { error: addError } = await addUserToCompany(user.id, company.id, code);
-    
     if (addError) {
       return { success: false, error: addError };
     }
+
+    // 4. Витягуємо курси компанії і створюємо прогрес = 0
+    // Отримуємо всі курси компанії
+    console.log('company.id', company.id)
+      const { data: companyCourses, error: ccError } = await supabase
+      .from('company_courses')
+      .select('course_id')
+      .eq('company_id', company.id);
+
+      if (ccError) throw ccError;
+
+      console.log('companyCourses', companyCourses)
+
+      if (companyCourses && companyCourses.length > 0) {
+      const progressRows = companyCourses.map(c => ({
+        user_id: user.id,
+        course_id: c.course_id,
+        progress: 0,
+      }));
+
+      await supabase.from('user_course_summaries')
+      .upsert(progressRows, { onConflict: 'user_id,course_id' });
+      }
+
+
+
+
+      
 
     return { success: true, company };
   } catch (err) {
     console.error('Error joining company by code:', err);
     return { success: false, error: err };
   }
+};
+
+export const updateCourseProgress = async (userId: string, courseId: string, progress: number) => {
+  const { error } = await supabase
+    .from('user_course_summaries')
+    .update({ progress })
+    .eq('user_id', userId)
+    .eq('course_id', courseId);
+
+  if (error) throw error;
 };

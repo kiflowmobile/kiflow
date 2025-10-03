@@ -1,21 +1,31 @@
-import { HStack } from '@/src/components/ui/hstack';
 import { VStack } from '@/src/components/ui/vstack';
 import type { Course } from '@/src/constants/types/course';
 import { useCourseProgress } from '@/src/hooks/useCourseProgress';
 import { navigateToCourse } from '@/src/utils/courseNavigation';
 import { useRouter } from 'expo-router';
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Image, StyleSheet, Text, View } from 'react-native';
 import Button from '../../../ui/button';
 import CourseProgressSection from '../../../ui/course-progress';
+import { MaterialIcons } from '@expo/vector-icons';
+import { useAuthStore, useUserProgressStore } from '@/src/stores';
+import { HStack } from '@/src/components/ui/hstack';
 
 interface CourseCardProps {
   course: Course;
 }
 
 const CourseCard: React.FC<CourseCardProps> = ({ course }) => {
+  const { user } = useAuthStore();
+  const { fetchUserProgress } = useUserProgressStore();
+  const { courseProgress, lastSlideId } = useCourseProgress(course.id);
   const router = useRouter();
-  const { courseProgress, lastSlideId } = useCourseProgress(course);
+
+  useEffect(() => {
+    if (user) {
+      fetchUserProgress(user.id);
+    }
+  }, [user]);
 
   const handleStartCourse = () => {
     navigateToCourse(router, course.id, lastSlideId);
@@ -36,13 +46,32 @@ const CourseCard: React.FC<CourseCardProps> = ({ course }) => {
         <CourseProgressSection progress={courseProgress} />
         
         <HStack style={styles.button_block}>
-          <Button
-            title={courseProgress > 0 ? "ПРОДОВЖИТИ" : "ПОЧАТИ КУРС"}
-            variant="primary"
-            size="md"
-            onPress={handleStartCourse}
-            style={styles.button}
-          />
+          {courseProgress === 0 && (
+            <Button
+              title="ПОЧАТИ КУРС"
+              variant="primary"
+              size="md"
+              onPress={handleStartCourse}
+              style={styles.button}
+            />
+          )}
+
+          {courseProgress > 0 && courseProgress < 100 && (
+            <Button
+              title="ПРОДОВЖИТИ"
+              variant="primary"
+              size="md"
+              onPress={handleStartCourse}
+              style={styles.button}
+            />
+          )}
+
+          {courseProgress === 100 && (
+            <View style={styles.completedWrapper}>
+              <MaterialIcons name="check-circle" size={28} color="#22c55e" />
+              <Text style={styles.completedText}>Курс завершено</Text>
+            </View>
+          )}
         </HStack>
       </VStack>
     </View>
@@ -89,5 +118,16 @@ const styles = StyleSheet.create({
     display: "flex", 
     alignItems: 'center', 
     justifyContent: 'center'
-  }
+  },
+  completedWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 16,
+    gap: 6,
+  },
+  completedText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#22c55e',
+  },
 });

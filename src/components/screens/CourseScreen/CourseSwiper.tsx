@@ -33,6 +33,7 @@ const CourseSwiper: React.FC<CourseSwiperProps> = ({
   const isProgrammatic = useRef(false);
 
   const { slides: storeSlides, currentSlideIndex, setCurrentSlideIndex } = useSlidesStore();
+  
 
   const slides = useMemo(
     () => (storeSlides.length > 0 ? storeSlides : propSlides || []),
@@ -76,6 +77,9 @@ const CourseSwiper: React.FC<CourseSwiperProps> = ({
     },
     [SCREEN_H, currentSlideIndex, onIndexChange, setCurrentSlideIndex],
   );
+
+  console.log('slides',slides)
+
 
   const renderSlide = ({ item, index }: { item: Slide; index: number }) => {
     const isActive = index === currentSlideIndex;

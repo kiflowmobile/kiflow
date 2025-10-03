@@ -1,14 +1,13 @@
 import { courseService } from '@/src/services/courses';
-
-// import { updateLastSlideId } from '@/src/services/courses';
 import { useAuthStore, useCourseStore, useModulesStore, useSlidesStore, useUserProgressStore } from '@/src/stores';
 import { useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import CourseSwiper from '../CourseScreen/CourseSwiper';
+import { useRoute } from '@react-navigation/native';
 
 export default function ModuleSlidesScreen() {
-  const params = useLocalSearchParams<{ id?: string; courseId?: string }>(); 
+  const params = useLocalSearchParams<{ id?: string; courseId?: string; slideId?:string}>(); 
   const { 
     slides, 
     isLoading, 
@@ -21,43 +20,64 @@ export default function ModuleSlidesScreen() {
   const { fetchCourseById } = useCourseStore.getState();
   const { fetchModulesByCourse, getModule, setCurrentModule} = useModulesStore.getState();
   const totalSlides = useMemo(() => slides.length || 0, [slides]);
+  const router = useRoute();
+
+
 
 
     const lastIndexRef = useRef<number | null>(null);
 
-    const handleIndexChange = useCallback((index: number) => {
-      if (lastIndexRef.current === index) return; 
+    const handleIndexChange = useCallback(async (index: number) => {
+      if (lastIndexRef.current === index) return;
       lastIndexRef.current = index;
       if (!params.id || totalSlides === 0) return;
-        
-        const percent = Math.round(((index + 1) / totalSlides) * 100);
-        setModuleProgressSafe(params.id, percent).catch(() => {});
-        
-        if (user?.id && params.courseId && slides[index]?.id) {
-          courseService.updateLastSlideId(user.id, params.courseId, slides[index].id).catch((error) => {
-            console.warn('Failed to update last slide id:', error);
+    
+      const percent = Math.round(((index + 1) / totalSlides) * 100);
+    
+      // --- оновлюємо локально у Zustand ---
+      setModuleProgressSafe(params.id, percent).catch(console.error);
+    
+      // --- оновлюємо progress і last_slide_id у БД ---
+      if (user?.id && params.courseId && slides[index]?.id) {
+        try {
+          const slideId = slides[index].id;
+    
+          await courseService.updateLastSlideId(user.id, params.courseId, slideId);
+          await courseService.updateCourseProgress(user.id, params.courseId, percent);
+
+
+          console.log('slideId',slideId)
+    
+          // --- оновлюємо URL без перезавантаження ---
+          router.replace({
+            pathname: `/module/${params.id}`,
+            params: { courseId: params.courseId, slideId },
           });
+        } catch (error) {
+          console.warn('Failed to update course progress or last slide id:', error);
         }
-    }, [params.id, params.courseId, user?.id, totalSlides, slides]);
-    
-    
-
-  useEffect(() => {
-    if (!params.courseId) return;
-
-    fetchCourseById(params.courseId).catch((err) => {
-      console.error('❌ Error fetching course:', err);
-    });
-
-    fetchModulesByCourse(params.courseId)
-    .then(() => {
-      if (params.id) {
-        const module = getModule(params.id);
-        setCurrentModule(module); 
       }
-    })
-    .catch(console.error);
-  }, [params.courseId]);
+    }, [params.id, params.courseId,user?.id, totalSlides, slides]);
+    
+    
+    
+
+  // useEffect(() => {
+  //   if (!params.courseId) return;
+
+  //   fetchCourseById(params.courseId).catch((err) => {
+  //     console.error('❌ Error fetching course:', err);
+  //   });
+
+  //   fetchModulesByCourse(params.courseId)
+  //   .then(() => {
+  //     if (params.id) {
+  //       const module = getModule(params.id);
+  //       setCurrentModule(module); 
+  //     }
+  //   })
+  //   .catch(console.error);
+  // }, [params.courseId]);
 
 
   useEffect(() => {

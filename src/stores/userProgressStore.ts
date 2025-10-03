@@ -1,132 +1,108 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'zustand';
+import { supabase } from '../config/supabaseClient';
+import { useSlidesStore } from './slidesStore';
+import { useModulesStore } from './modulesStore';
+import { useAuthStore } from './authStore';
+import { useCourseStore } from './courseStore';
 
-type ProgressMap = Record<string, number>;
-
-interface UserProgressState {
-  // Стан
-  progressByModule: ProgressMap;
-  isHydrated: boolean;
-  isSaving: boolean;
-  error: string | null;
-
-  // Похідні геттери
-  getModuleProgress: (moduleId: string) => number;
-  getCourseProgress: (moduleIds: string[]) => number;
-
-  // Дії
-  setModuleProgress: (moduleId: string, progressPercent: number) => Promise<void>;
-  setModuleProgressSafe: (moduleId: string, progressPercent: number) => Promise<void>;
-  incrementModuleProgress: (moduleId: string, deltaPercent: number) => Promise<void>;
-  resetModuleProgress: (moduleId: string) => Promise<void>;
-  clearAllProgress: () => Promise<void>;
-
-  // Внутрішні методи
-  hydrateFromStorage: () => Promise<void>;
-  persistToStorage: () => Promise<void>;
+interface UserCourseSummary {
+  course_id: string;
+  progress: number;
+  last_slide_id: string | null;
 }
 
-const STORAGE_KEY = 'user_progress_v1';
+interface UserProgressStore {
+  courses: UserCourseSummary[];
+  isLoading: boolean;
+  error: string | null;
 
-export const useUserProgressStore = create<UserProgressState>()((set, get) => ({
-  // Початковий стан
-  progressByModule: {},
-  isHydrated: false,
-  isSaving: false,
+  fetchUserProgress: (userId: string) => Promise<void>;
+  setCourseProgress: (courseId: string, progress: number, lastSlideId?: string | null) => void;
+  getCourseProgress: (courseId: string) => number;
+  
+  /** нове — робота з модулями */
+  setModuleProgressSafe: (moduleId: string, percent: number) => Promise<void>;
+  getModuleProgress: (moduleId: string) => number;
+}
+
+export const useUserProgressStore = create<UserProgressStore>((set, get) => ({
+  courses: [],
+  isLoading: false,
   error: null,
 
-  // Похідні геттери
-  getModuleProgress: (moduleId: string) => {
-    const { progressByModule } = get();
-    return Math.max(0, Math.min(100, progressByModule[moduleId] ?? 0));
-  },
-
-  getCourseProgress: (moduleIds: string[]) => {
-    if (moduleIds.length === 0) return 0;
-    
-    const { progressByModule } = get();
-    const totalProgress = moduleIds.reduce((sum, moduleId) => {
-      return sum + (progressByModule[moduleId] ?? 0);
-    }, 0);
-    
-    const averageProgress = totalProgress / moduleIds.length;
-    return Math.max(0, Math.min(100, Math.round(averageProgress)));
-  },
-
-  // Дії
-  setModuleProgress: async (moduleId: string, progressPercent: number) => {
-    const safe = Math.max(0, Math.min(100, Math.round(progressPercent)));
-    set(state => ({
-      progressByModule: { ...state.progressByModule, [moduleId]: safe },
-      error: null,
-    }));
-    await get().persistToStorage();
-  },
-
-  setModuleProgressSafe: async (moduleId: string, progressPercent: number) => {
-    const safe = Math.max(0, Math.min(100, Math.round(progressPercent)));
-    const current = get().getModuleProgress(moduleId);
-    
-    // Якщо модуль вже завершено на 100%, не зменшуємо прогрес
-    if (current >= 100 && safe < 100) {
-      return; // Не оновлюємо прогрес, але last_slide_id буде оновлено окремо
-    }
-    
-    set(state => ({
-      progressByModule: { ...state.progressByModule, [moduleId]: safe },
-      error: null,
-    }));
-    await get().persistToStorage();
-  },
-
-  incrementModuleProgress: async (moduleId: string, deltaPercent: number) => {
-    const current = get().getModuleProgress(moduleId);
-    const next = current + deltaPercent;
-    await get().setModuleProgress(moduleId, next);
-  },
-
-  resetModuleProgress: async (moduleId: string) => {
-    set(state => {
-      const copy = { ...state.progressByModule };
-      delete copy[moduleId];
-      return { progressByModule: copy } as Partial<UserProgressState> as UserProgressState;
-    });
-    await get().persistToStorage();
-  },
-
-  clearAllProgress: async () => {
-    set({ progressByModule: {} });
-    await get().persistToStorage();
-  },
-
-  // Внутрішні методи
-  hydrateFromStorage: async () => {
+  fetchUserProgress: async (userId: string) => {
+    set({ isLoading: true, error: null });
     try {
-      const raw = await AsyncStorage.getItem(STORAGE_KEY);
-      if (raw) {
-        const parsed = JSON.parse(raw) as ProgressMap;
-        set({ progressByModule: parsed, isHydrated: true, error: null });
-      } else {
-        set({ isHydrated: true, error: null });
-      }
-    } catch (e: any) {
-      set({ isHydrated: true, error: e?.message ?? 'Failed to load progress' });
+      const { data, error } = await supabase
+        .from('user_course_summaries')
+        .select('course_id, progress, last_slide_id')
+        .eq('user_id', userId);
+
+      if (error) throw error;
+      set({ courses: data || [] });
+    } catch (err: any) {
+      set({ error: err.message });
+    } finally {
+      set({ isLoading: false });
     }
   },
 
-  persistToStorage: async () => {
+  setCourseProgress: (courseId, progress, lastSlideId = null) => {
+    set(state => ({
+      courses: state.courses.map(c =>
+        c.course_id === courseId
+          ? { ...c, progress, last_slide_id: lastSlideId }
+          : c
+      ),
+    }));
+  },
+
+  getCourseProgress: (courseId) => {
+    return get().courses.find(c => c.course_id === courseId)?.progress ?? 0;
+  },
+
+  /** тут ми додаємо оновлення прогресу модуля */
+  setModuleProgressSafe: async (moduleId: string, percent: number) => {
+    const { user } = useAuthStore.getState(); 
+    const { currentCourse } = useCourseStore.getState(); 
+    const { slides } = useSlidesStore.getState();
+  
+    if (!user || !currentCourse) return;
+  
+    // оновлюємо локально
+    set(state => ({
+      courses: state.courses.map(c =>
+        c.course_id === currentCourse.id
+          ? { ...c, progress: percent }
+          : c
+      )
+    }));
+  
     try {
-      set({ isSaving: true });
-      const { progressByModule } = get();
-      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(progressByModule));
-      set({ isSaving: false, error: null });
-    } catch (e: any) {
-      set({ isSaving: false, error: e?.message ?? 'Failed to save progress' });
+      // last_slide_id беремо з останнього слайду модуля, якщо потрібно
+      const lastSlideId = slides.length ? slides[slides.length - 1].id : null;
+  
+      // await supabase
+      //   .from('user_course_summaries')
+      //   .upsert(
+      //     {
+      //       user_id: user.id,
+      //       course_id: currentCourse.id,
+      //       module_id: moduleId,
+      //       progress: percent,
+      //       last_slide_id: lastSlideId
+      //     },
+      //     { onConflict: 'user_id,course_id,module_id' }
+      //   );
+    } catch (error) {
+      console.error('❌ setModuleProgressSafe error', error);
     }
+  },  
+  
+
+  getModuleProgress: (moduleId) => {
+    // Якщо ти не зберігаєш прогрес модулів окремо в store — тут можна обчислювати
+    // напр. на основі slides viewed / totalSlides
+    return 0; // 👈 тимчасово заглушка
   },
 }));
-
-// Запускаємо гідратацію при імпорті
-useUserProgressStore.getState().hydrateFromStorage();
-
-

@@ -27,12 +27,14 @@ export default function CourseScreen() {
   }, [params.id, fetchModulesByCourse]);
 
   const handleModulePress = (module: any) => {
+    // console.log('handleModulePress')
     setCurrentModule(module);
     router.push({
       pathname: '/module/[id]',
       params: { 
         id: module.id,
-        courseId: params.id 
+        courseId: params.id,
+        slideOrder: '1'
       }, 
     });
   };
