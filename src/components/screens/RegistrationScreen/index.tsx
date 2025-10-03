@@ -118,10 +118,11 @@ export default function RegisterScreen() {
 
   useEffect(() => {
     if (formError) setFormError(null);
-    if (error) clearError();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [firstName, lastName, email, password, confirmPassword]);
 
+  useEffect(() => {
+    if (error) clearError();
+  }, [error, clearError]);
   const mapAuthErrorToMessage = (err: AuthError): string => {
     const status = err?.status;
     const msg = (err?.message || '').toLowerCase();
