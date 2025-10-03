@@ -50,12 +50,7 @@ export default function RegisterScreen() {
   const [checkingEmail, setCheckingEmail] = useState(false);
 
   const router = useRouter();
-  const { signUp, isLoading, error, clearError } = useAuthStore();
-
-  const checkEmailExists = (
-    useAuthStore() as unknown as { checkEmailExists?: (email: string) => Promise<boolean> }
-  )?.checkEmailExists;
-
+  const { signUp, isLoading, error, clearError, checkEmailExists } = useAuthStore();
   const windowWidth = Dimensions.get('window').width;
 
   const normalizeEmail = (v: string) => v.trim().toLowerCase();
