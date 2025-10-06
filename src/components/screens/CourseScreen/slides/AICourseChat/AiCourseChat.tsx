@@ -1,7 +1,7 @@
 import { Icon } from '@/src/components/ui/icon';
-import { saveUserRating } from '@/src/services/main_rating';
+import { upsertRating } from '@/src/services/main_rating';
 import { usePromptsStore } from '@/src/services/slidePrompt';
-import { useAuthStore, useCourseStore, useCriteriaStore, useModulesStore } from '@/src/stores';
+import { useAuthStore, useCourseStore, useCriteriaStore, useModulesStore, useSlidesStore } from '@/src/stores';
 import { MessageCircle, Send } from 'lucide-react-native';
 import React, { useEffect, useRef, useState } from 'react';
 import { Dimensions, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View, KeyboardAvoidingView } from 'react-native';
@@ -130,11 +130,12 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
         const criteriaScores = aiResponse.rating.criteriaScores;
         for (const [criteriaKey, score] of Object.entries(criteriaScores)) {
           try {
-            await saveUserRating(
+            await upsertRating(
               user.id,
               score as number,
               currentModuleId,
-              criteriaKey
+              criteriaKey,
+              useCourseStore.getState().currentCourse?.id || ''
             );
           } catch (err) {
             console.warn(`Failed to save rating for ${criteriaKey}:`, err);
@@ -226,6 +227,8 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
           placeholder="Введіть відповідь..."
           value={input}
           onChangeText={setInput}
+          onFocus={handleFocus}
+          onBlur={handleBlur}
           multiline
           editable={!answered && !loading}
         />

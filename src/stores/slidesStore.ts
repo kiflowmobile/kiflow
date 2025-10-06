@@ -9,6 +9,8 @@ interface SlidesState {
   currentModuleId: string | null;
   isLoading: boolean;
   error: string | null;
+  // Track which slides have been answered (one answer per AI slide)
+  answeredBySlideId: Record<string, boolean>;
 
   fetchSlidesByModule: (moduleId: string) => Promise<void>;
   setCurrentSlideIndex: (index: number) => void;
@@ -22,6 +24,8 @@ interface SlidesState {
   setError: (error: string | null) => void;
   setCurrentModuleId: (moduleId: string | null) => void;
   getCurrentSlideId: () => string | null;
+  isSlideAnswered: (slideId: string) => boolean;
+  markSlideAnswered: (slideId: string) => void;
 }
 type UUID = string & { readonly brand: unique symbol };
 
@@ -31,6 +35,7 @@ export const useSlidesStore = create<SlidesState>()((set, get) => ({
   currentModuleId: null,
   isLoading: false,
   error: null,
+  answeredBySlideId: {},
 
   fetchSlidesByModule: async (moduleId: string) => {
     set({ isLoading: true, error: null, currentModuleId: moduleId });
@@ -96,6 +101,7 @@ export const useSlidesStore = create<SlidesState>()((set, get) => ({
       slides: [],
       currentSlideIndex: 0,
       currentModuleId: null,
+      answeredBySlideId: {},
     }),
 
   setSlides: (slides: Slide[]) => set({ slides }),
@@ -106,5 +112,16 @@ export const useSlidesStore = create<SlidesState>()((set, get) => ({
   getCurrentSlideId: () => {
     const { slides, currentSlideIndex } = get();
     return slides[currentSlideIndex]?.id ?? null;
+  },
+
+  isSlideAnswered: (slideId: string) => {
+    return Boolean(get().answeredBySlideId[slideId]);
+  },
+
+  markSlideAnswered: (slideId: string) => {
+    if (!slideId) return;
+    set((state) => ({
+      answeredBySlideId: { ...state.answeredBySlideId, [slideId]: true },
+    }));
   },
 }));
