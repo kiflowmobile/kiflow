@@ -27,6 +27,7 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const [answered, setAnswered] = useState(false);
   const { prompt, fetchPromptBySlide } = usePromptsStore();
   const { criterias, fetchCriterias } = useCriteriaStore();
   const courseId = useCourseStore((state) => state.currentCourse?.id);
@@ -79,6 +80,11 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
       const slidePrompt = prompt[slideId]?.question;
       if (!slidePrompt) return;
 
+      // Restore per-slide answered state
+      const alreadyAnswered = useSlidesStore.getState().isSlideAnswered(slideId);
+      setAnswered(alreadyAnswered);
+      setInput('');
+
       const aiMsg: Message = {
         id: Date.now().toString(),
         role: 'ai',
@@ -96,13 +102,15 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
   }, [courseId, fetchCriterias]);
 
   const handleSend = async () => {
-    if (!input.trim()) return;
-
+    if (!input.trim() || answered || loading) return;
+  
     const userMsg: Message = { id: Date.now().toString(), role: 'user', text: input.trim() };
     setMessages((prev) => [...prev, userMsg]);
     setInput('');
     setLoading(true);
-
+    setAnswered(true);
+    useSlidesStore.getState().markSlideAnswered(slideId);
+  
     try {
       const slidePrompt = prompt[slideId]?.prompt || '';
       const criteriasText = criterias
@@ -150,6 +158,7 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
   };
 
   const handleAudioProcessed = (transcribedText: string) => {
+    if (answered) return;
     if (transcribedText.trim()) {
       setInput(transcribedText.trim());
     }
@@ -218,17 +227,15 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
           value={input}
           onChangeText={setInput}
           multiline
-          onFocus={handleFocus}
-          onBlur={handleBlur}
-          inputMode="text"
+          editable={!answered && !loading}
         />
         <View style={styles.buttonContainer}>
           <AudioRecorder
             onAudioProcessed={handleAudioProcessed}
-            disabled={loading}
+            disabled={loading || answered}
           />
-          <TouchableOpacity onPress={handleSend} disabled={loading}>
-            <Icon as={Send} size={24} color={loading ? '#94a3b8' : '#0f172a'} />
+          <TouchableOpacity onPress={handleSend} disabled={loading || answered}>
+            <Icon as={Send} size={24} color={(loading || answered) ? '#94a3b8' : '#0f172a'} />
           </TouchableOpacity>
         </View>
       </View>
