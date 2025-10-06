@@ -27,21 +27,20 @@ export default function CourseScreen() {
   }, [params.id, fetchModulesByCourse]);
 
   const handleModulePress = (module: any) => {
-    // console.log('handleModulePress')
     setCurrentModule(module);
     router.push({
-      pathname: '/module/[id]',
+      pathname: '/module/[moduleId]',
       params: { 
-        id: module.id,
+        moduleId: module.id,   
         courseId: params.id,
-        slideOrder: '1'
-      }, 
+      },
     });
   };
 
+
   return (
     <View style={styles.container}>
-      {error ? (
+     {error ? (
         <View style={styles.errorContainer}>
           <Text style={styles.errorText}>Помилка: {error}</Text>
           <Text style={styles.retryText} onPress={() => {
@@ -69,14 +68,14 @@ export default function CourseScreen() {
               ) : null}
               <View style={styles.progressRow}>
                 <View style={styles.progressBarWrapper}>
-                  <ProgressBar percent={getModuleProgress(item.id)} />
+                  {params.id && <ProgressBar percent={getModuleProgress(params.id, item.id)} />}
                 </View>
-                <Text style={styles.progressText}>{getModuleProgress(item.id)}%</Text>
+                {params.id && <Text style={styles.progressText}>{getModuleProgress(params.id, item.id)}%</Text>}
               </View>
             </Pressable>
           )}
         />
-      )}
+      )} 
     </View>
   );
 }

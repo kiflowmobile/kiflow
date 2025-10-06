@@ -25,8 +25,3 @@ export const modulesService = {
 };
 
 
-// export const myModulesService = {
-
-//   };
-
-

@@ -58,6 +58,7 @@ export const courseService = {
         { onConflict: 'user_id,course_id' }
       );
   },
+  
   updateCourseProgress: async (userId: string, courseId: string, progress: number) => {
     const { error } = await supabase
       .from('user_course_summaries')
