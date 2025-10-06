@@ -33,7 +33,6 @@ type UUID = string & { readonly brand: unique symbol };
 
 const STORAGE_KEY = 'slides-store-answeredBySlideId';
 
-// Helpers: storage read/write without using import.meta (works with Metro/Expo)
 const readPersistedAnswered = async (): Promise<Record<string, boolean>> => {
   try {
     if (Platform.OS === 'web') {
@@ -133,7 +132,6 @@ export const useSlidesStore = create<SlidesState>()(
       currentModuleId: null,
       answeredBySlideId: {},
     });
-    // Also clear persisted answered map
     writePersistedAnswered({});
   },
 
@@ -155,7 +153,6 @@ export const useSlidesStore = create<SlidesState>()(
     if (!slideId) return;
     set((state) => {
       const next = { ...state.answeredBySlideId, [slideId]: true };
-      // Persist asynchronously (fire-and-forget)
       writePersistedAnswered(next);
       return { answeredBySlideId: next };
     });
@@ -163,7 +160,6 @@ export const useSlidesStore = create<SlidesState>()(
   })
 );
 
-// Hydrate answered map on startup (no import.meta usage)
 (async () => {
   const initial = await readPersistedAnswered();
   if (initial && typeof initial === 'object') {
