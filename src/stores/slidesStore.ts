@@ -2,6 +2,8 @@ import { supabase } from '@/src/config/supabaseClient';
 import { Slide } from '@/src/constants/types/slides';
 import { v4 as uuidv4 } from 'uuid';
 import { create } from 'zustand';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Platform } from 'react-native';
 
 interface SlidesState {
   slides: Slide[];
@@ -9,6 +11,8 @@ interface SlidesState {
   currentModuleId: string | null;
   isLoading: boolean;
   error: string | null;
+  // Track which slides have been answered (one answer per AI slide)
+  answeredBySlideId: Record<string, boolean>;
 
   fetchSlidesByModule: (moduleId: string) => Promise<void>;
   setCurrentSlideIndex: (index: number) => void;
@@ -22,15 +26,45 @@ interface SlidesState {
   setError: (error: string | null) => void;
   setCurrentModuleId: (moduleId: string | null) => void;
   getCurrentSlideId: () => string | null;
+  isSlideAnswered: (slideId: string) => boolean;
+  markSlideAnswered: (slideId: string) => void;
 }
 type UUID = string & { readonly brand: unique symbol };
 
-export const useSlidesStore = create<SlidesState>()((set, get) => ({
+const STORAGE_KEY = 'slides-store-answeredBySlideId';
+
+const readPersistedAnswered = async (): Promise<Record<string, boolean>> => {
+  try {
+    if (Platform.OS === 'web') {
+      const raw = window.localStorage.getItem(STORAGE_KEY);
+      return raw ? JSON.parse(raw) : {};
+    }
+    const raw = await AsyncStorage.getItem(STORAGE_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch {
+    return {};
+  }
+};
+
+const writePersistedAnswered = async (value: Record<string, boolean>): Promise<void> => {
+  try {
+    const serialized = JSON.stringify(value);
+    if (Platform.OS === 'web') {
+      window.localStorage.setItem(STORAGE_KEY, serialized);
+      return;
+    }
+    await AsyncStorage.setItem(STORAGE_KEY, serialized);
+  } catch {}
+};
+
+export const useSlidesStore = create<SlidesState>()(
+  (set, get) => ({
   slides: [],
   currentSlideIndex: 0,
   currentModuleId: null,
   isLoading: false,
   error: null,
+      answeredBySlideId: {},
 
   fetchSlidesByModule: async (moduleId: string) => {
     set({ isLoading: true, error: null, currentModuleId: moduleId });
@@ -91,12 +125,15 @@ export const useSlidesStore = create<SlidesState>()((set, get) => ({
 
   clearError: () => set({ error: null }),
 
-  clearSlides: () =>
+  clearSlides: () => {
     set({
       slides: [],
       currentSlideIndex: 0,
       currentModuleId: null,
-    }),
+      answeredBySlideId: {},
+    });
+    writePersistedAnswered({});
+  },
 
   setSlides: (slides: Slide[]) => set({ slides }),
   setLoading: (loading: boolean) => set({ isLoading: loading }),
@@ -107,4 +144,25 @@ export const useSlidesStore = create<SlidesState>()((set, get) => ({
     const { slides, currentSlideIndex } = get();
     return slides[currentSlideIndex]?.id ?? null;
   },
-}));
+
+  isSlideAnswered: (slideId: string) => {
+    return Boolean(get().answeredBySlideId[slideId]);
+  },
+
+  markSlideAnswered: (slideId: string) => {
+    if (!slideId) return;
+    set((state) => {
+      const next = { ...state.answeredBySlideId, [slideId]: true };
+      writePersistedAnswered(next);
+      return { answeredBySlideId: next };
+    });
+  },
+  })
+);
+
+(async () => {
+  const initial = await readPersistedAnswered();
+  if (initial && typeof initial === 'object') {
+    useSlidesStore.setState({ answeredBySlideId: initial });
+  }
+})();

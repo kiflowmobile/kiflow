@@ -21,14 +21,37 @@ export const fetchRating = async (userId: string, moduleId: string, key: string)
 };
 
 // вставка / апдейт
-export const upsertRating = async (userId: string, rating: number, moduleId: string, key: string, courseId: string) => {
-  return await supabase
+export const upsertRating = async (
+  userId: string,
+  rating: number,
+  moduleId: string,
+  key: string,
+  courseId: string,
+) => {
+  const value = Number(rating);
+  if (!Number.isFinite(value)) throw new Error('Rating is not a number');
+  if (!userId || !moduleId || !key || !courseId) throw new Error('Missing ids');
+
+  const { data, error } = await supabase
     .from('main_rating')
-    .upsert([{ user_id: userId, rating, module_id: moduleId, criteria_key: key, course_id: courseId }], {
-      onConflict: 'module_id, user_id, criteria_key',
-    })
+    .upsert(
+      [
+        {
+          user_id: userId,
+          rating: value,
+          module_id: moduleId,
+          criteria_key: key,
+          course_id: courseId,
+        },
+      ],
+      { onConflict: 'user_id,module_id,criteria_key,course_id' },
+    )
     .select();
+
+  if (error) throw error;
+  return data;
 };
+
 
 // всі оцінки користувача без обмеження по модулю
 export const fetchAllRatings = async (userId: string) => {
