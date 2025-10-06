@@ -1,13 +1,6 @@
-import { supabase } from '@/src/config/supabaseClient';
 import { create } from 'zustand';
-
-interface Criteria {
-  id: string;
-  course_id: string;
-  name: string;
-  key: string;
-  description: string;
-}
+import { criteriaService } from '../services/criteriaService';
+import { Criteria } from '../constants/types/criteria';
 
 interface CriteriaState {
   criterias: Criteria[];
@@ -15,6 +8,7 @@ interface CriteriaState {
   error: string | null;
 
   fetchCriterias: (courseId: string) => Promise<void>;
+  fetchAllCriterias: () => Promise<void>;
   clear: () => void;
 }
 
@@ -26,11 +20,19 @@ export const useCriteriaStore = create<CriteriaState>((set) => ({
   fetchCriterias: async (courseId: string) => {
     set({ isLoading: true, error: null });
     try {
-      const { data, error } = await supabase
-        .from('criterias')
-        .select('*')
-        .eq('course_id', courseId);
+      const { data, error } = await criteriaService.getCriteriasByCourse(courseId);
+      if (error) throw error;
 
+      set({ criterias: data || [], isLoading: false });
+    } catch (err: any) {
+      set({ error: err.message || 'Failed to fetch criterias', isLoading: false });
+    }
+  },
+
+  fetchAllCriterias: async () => {
+    set({ isLoading: true, error: null });
+    try {
+      const { data, error } = await criteriaService.getCriteriasByCourse();
       if (error) throw error;
 
       set({ criterias: data || [], isLoading: false });

@@ -1,4 +1,5 @@
 import { supabase } from '@/src/config/supabaseClient';
+import { upsertUserProfile } from '@/src/services/users';
 import { Session, User } from '@supabase/supabase-js';
 import { create } from 'zustand';
 // import { devtools } from 'zustand/middleware';
@@ -13,12 +14,13 @@ interface AuthState {
   
   // Дії
   signIn: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string, name?: string) => Promise<void>;
+  signUp: (email: string, password: string, firstName?: string, lastName?: string) => Promise<void>;
   signOut: () => Promise<void>;
   signInWithGoogle: () => Promise<void>;
   checkSession: () => Promise<void>;
   clearError: () => void;
   getUserRole: () => Promise<string | null>;
+  changePassword: (currentPassword: string, newPassword: string) => Promise<void>;
   
   // Внутрішні дії
   setUser: (user: User | null) => void;
@@ -64,7 +66,7 @@ export const useAuthStore = create<AuthState>()(
         }
       },
 
-      signUp: async (email: string, password: string, name?: string) => {
+      signUp: async (email: string, password: string, firstName?: string, lastName?: string) => {
         set({ isLoading: true, error: null });
         try {
           const { data, error } = await supabase.auth.signUp({
@@ -72,13 +74,25 @@ export const useAuthStore = create<AuthState>()(
             password,
             options: {
               data: {
-                full_name: name || null,
+                full_name: firstName && lastName ? `${firstName} ${lastName}` : null,
+                first_name: firstName || null,
+                last_name: lastName || null,
                 role: 'user'
               }
             }
           });
           
           if (error) throw error;
+          
+          // Create or update user profile row in users table
+          if (data.user) {
+            await upsertUserProfile(data.user.id, {
+              email: data.user.email || email,
+              full_name: firstName && lastName ? `${firstName} ${lastName}` : null,
+              first_name: firstName || undefined,
+              last_name: lastName || undefined,
+            });
+          }
           
           const isGuest = !data.session || !data.session.user || data.session.user.is_anonymous;
           set({ 
@@ -104,7 +118,6 @@ export const useAuthStore = create<AuthState>()(
 
           // Якщо сесії не існує, повертаємо успіх без спроби виходу
           if (!sessionData?.session) {
-            console.log('No active session found during logout');
             set({ 
               user: null, 
               session: null, 
@@ -216,6 +229,42 @@ export const useAuthStore = create<AuthState>()(
         } catch (error) {
           console.error('Error getting user role:', error);
           return null;
+        }
+      },
+
+      changePassword: async (currentPassword: string, newPassword: string) => {
+        set({ isLoading: true, error: null });
+        try {
+          // Отримуємо поточного користувача
+          const { data: { user }, error: userError } = await supabase.auth.getUser();
+          if (userError || !user || !user.email) {
+            throw new Error('Користувач не автентифікований');
+          }
+
+          // Перевіряємо поточний пароль через повторний вхід
+          const { error: signInError } = await supabase.auth.signInWithPassword({
+            email: user.email,
+            password: currentPassword,
+          });
+
+          if (signInError) {
+            throw new Error('Неправильний поточний пароль');
+          }
+
+          // Оновлюємо пароль
+          const { error: updateError } = await supabase.auth.updateUser({
+            password: newPassword
+          });
+
+          if (updateError) throw updateError;
+
+          set({ isLoading: false });
+        } catch (error: any) {
+          set({ 
+            error: error.message || 'Не вдалося змінити пароль', 
+            isLoading: false 
+          });
+          throw error;
         }
       },
 

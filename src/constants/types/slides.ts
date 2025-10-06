@@ -68,9 +68,6 @@ export interface CompletionSlide extends BaseSlide {
 
 export interface DashboardSlide extends BaseSlide {
   slide_type: 'dashboard';
-  slide_data: {
-    prompt: string;
-  };
 }
 
 

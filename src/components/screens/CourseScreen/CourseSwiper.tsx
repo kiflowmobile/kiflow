@@ -1,178 +1,190 @@
-import { Slide } from "@/src/constants/types/slides";
-import { useSlidesStore } from "@/src/stores";
-import React, { useEffect, useMemo, useRef } from "react";
-import { StyleSheet, View, useWindowDimensions } from "react-native";
-import Animated, {
-  runOnJS,
-  useAnimatedScrollHandler,
-} from "react-native-reanimated";
-import AICourseChat from "./slides/AICourseChat/AiCourseChat";
-import ContentWithExample from "./slides/ContentWithExample";
-import DashboardSlide from "./slides/DashboardSlide";
-import MediaPlaceholder from "./slides/MediaPlaceholder";
-import QuizSlide from "./slides/QuizeSlide";
-import TextSlide from "./slides/TextSlide";
-import VideoPlayer from "./VideoPlayer";
+import React, { useMemo, useRef, useEffect, useCallback } from 'react';
+import {
+  useWindowDimensions,
+  StyleSheet,
+  View,
+  FlatList,
+  NativeSyntheticEvent,
+  NativeScrollEvent,
+} from 'react-native';
+import { Slide } from '@/src/constants/types/slides';
+import { useSlidesStore } from '@/src/stores';
+import AICourseChat from './slides/AICourseChat/AiCourseChat';
+import ContentWithExample from './slides/ContentWithExample';
+import DashboardSlide from './slides/DashboardSlide';
+import MediaPlaceholder from './slides/MediaPlaceholder';
+import QuizSlide from './slides/QuizeSlide';
+import TextSlide from './slides/TextSlide';
+import VideoPlayer from './VideoPlayer';
 
 interface CourseSwiperProps {
   slides?: Slide[];
   initialIndex?: number;
   onIndexChange?: (index: number) => void;
-  totalSlides?: number;
 }
 
 const CourseSwiper: React.FC<CourseSwiperProps> = ({
   slides: propSlides,
   initialIndex = 0,
   onIndexChange,
-  totalSlides: propTotalSlides,
 }) => {
-  const { width, height } = useWindowDimensions();
-  const scrollRef = useRef<Animated.ScrollView | null>(null);
-  const {
-    slides: storeSlides,
-    currentSlideIndex,
-    setCurrentSlideIndex,
-  } = useSlidesStore();
+  const { height: SCREEN_H, width: SCREEN_W } = useWindowDimensions();
+  const flatListRef = useRef<FlatList<Slide>>(null);
+  const isProgrammatic = useRef(false);
+
+  const { slides: storeSlides, currentSlideIndex, setCurrentSlideIndex } = useSlidesStore();
 
   const slides = useMemo(
     () => (storeSlides.length > 0 ? storeSlides : propSlides || []),
-    [storeSlides, propSlides]
+    [storeSlides, propSlides],
   );
-  const totalSlides = propTotalSlides || slides.length;
-  const currentIndex = currentSlideIndex;
-
-  const onScroll = useAnimatedScrollHandler({
-    onScroll: (event) => {
-      const idx = Math.round(event.contentOffset.y / height);
-      runOnJS(setCurrentSlideIndex)(idx);
-      if (onIndexChange) runOnJS(onIndexChange)(idx);
-    },
-  });
 
   useEffect(() => {
-    if (slides.length === 0) return;
-
-    const safeIndex = Math.min(Math.max(0, initialIndex), slides.length - 1);
-    setCurrentSlideIndex(safeIndex);
-
+    if (!slides.length) return;
+    const safe = Math.min(Math.max(0, initialIndex), slides.length - 1);
+    setCurrentSlideIndex(safe);
+    isProgrammatic.current = true;
     requestAnimationFrame(() => {
-      scrollRef.current?.scrollTo({ y: safeIndex * height, animated: false });
+      flatListRef.current?.scrollToIndex({ index: safe, animated: false });
+      requestAnimationFrame(() => (isProgrammatic.current = false));
     });
-  }, [slides, height, initialIndex, setCurrentSlideIndex]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [slides.length]);
 
-  const renderSlide = (slide: Slide, index: number) => {
-    const isActive = index === currentIndex;
-    const key = `${slide.id}-${index}`;
-    switch (slide.slide_type) {
-      case "text":
+  const handleScroll = useCallback(
+    (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+      if (isProgrammatic.current) return;
+      const y = e.nativeEvent.contentOffset.y;
+      const idx = Math.round(y / SCREEN_H);
+      if (idx !== currentSlideIndex) {
+        setCurrentSlideIndex(idx);
+        onIndexChange?.(idx);
+      }
+    },
+    [SCREEN_H, currentSlideIndex, onIndexChange, setCurrentSlideIndex],
+  );
+
+  const handleMomentumEnd = useCallback(
+    (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+      if (isProgrammatic.current) return;
+      const y = e.nativeEvent.contentOffset.y;
+      const idx = Math.round(y / SCREEN_H);
+      if (idx !== currentSlideIndex) {
+        setCurrentSlideIndex(idx);
+        onIndexChange?.(idx);
+      }
+    },
+    [SCREEN_H, currentSlideIndex, onIndexChange, setCurrentSlideIndex],
+  );
+
+  const renderSlide = ({ item, index }: { item: Slide; index: number }) => {
+    const isActive = index === currentSlideIndex;
+    switch (item.slide_type) {
+      case 'text':
         return (
-          <View key={key} style={{ width, height }}>
-            <TextSlide
-              title={slide.slide_title}
-              data={slide.slide_data ?? ""}
-            />
+          <View style={{ width: SCREEN_W, height: SCREEN_H }}>
+            <TextSlide title={item.slide_title} data={item.slide_data ?? ''} />
           </View>
         );
-
-      case "video": {
-        const { uri, mux } = slide.slide_data.video || {};
+      case 'video': {
+        const { uri, mux } = item.slide_data?.video || {};
         const hasVideo = !!uri || !!mux;
         return (
-          <View key={key} className="flex-1 bg-white dark:bg-neutral-900">
+          <View style={{ width: SCREEN_W, height: SCREEN_H, backgroundColor: '#fff' }}>
             {hasVideo ? (
-              <VideoPlayer
-                uri={uri ?? undefined}
-                mux={mux ?? undefined}
-                isActive={isActive}
-              />
+              <VideoPlayer uri={uri ?? undefined} mux={mux ?? undefined} isActive={isActive} />
             ) : (
               <MediaPlaceholder />
             )}
           </View>
         );
       }
-
-      case "quiz":
+      case 'quiz':
         return (
-          <View key={key} style={{ width, height }}>
-            <QuizSlide title={slide.slide_title} quiz={slide.slide_data} />
+          <View style={{ width: SCREEN_W, height: SCREEN_H }}>
+            <QuizSlide title={item.slide_title} quiz={item.slide_data} />
           </View>
         );
-
-      case "ai":
+      case 'ai':
         return (
-          <View key={key} style={{ width, height }}>
-            <AICourseChat
-              title={slide.slide_title}
-              slideId={slide.id}
-
-            />
+          <View style={{ width: SCREEN_W, height: SCREEN_H }}>
+            <AICourseChat title={item.slide_title} slideId={item.id} />
           </View>
         );
-
-      case "content":
+      case 'content':
         return (
-          <View key={key} style={{ width, height }}>
+          <View style={{ width: SCREEN_W, height: SCREEN_H }}>
             <ContentWithExample
-              title={slide.slide_title}
-              mainPoint={slide.slide_data.mainPoint}
-              tips={slide.slide_data.tips}
-              example={slide.slide_data.example}
+              title={item.slide_title}
+              mainPoint={item.slide_data?.mainPoint}
+              tips={item.slide_data?.tips}
+              example={item.slide_data?.example}
             />
           </View>
         );
-
-        case "dashboard":
-          return (
-            <View key={key} style={{ width, height }}>
-              <DashboardSlide
-                title={slide.slide_title}
-              />
-            </View>
-          );
-  
-
+      case 'dashboard':
+        return (
+          <View style={{ width: SCREEN_W, height: SCREEN_H }}>
+            <DashboardSlide title={item.slide_title} />
+          </View>
+        );
       default:
         return (
           <View
-            key={slide.id}
             style={{
-              width,
-              height,
-              justifyContent: "center",
-              alignItems: "center",
+              width: SCREEN_W,
+              height: SCREEN_H,
+              justifyContent: 'center',
+              alignItems: 'center',
             }}
           >
-            <MediaPlaceholder
-              message={`Слайд типу "${slide.slide_type}" ще не підтримується`}
-            />
+            <MediaPlaceholder message={`Слайд типу "${item.slide_type}" ще не підтримується`} />
           </View>
         );
     }
   };
 
+  if (!slides.length) return null;
+
+  const safeInitial = Math.min(Math.max(0, initialIndex), slides.length - 1);
+
   return (
     <View style={styles.wrapper}>
-      <Animated.ScrollView
-        key={slides.length}
-        ref={scrollRef}
+      <FlatList
+        ref={flatListRef}
+        data={slides}
+        keyExtractor={(item) => String(item.id)}
+        renderItem={renderSlide}
         pagingEnabled
-        onScroll={onScroll}
-        scrollEventThrottle={16}
+        horizontal={false}
         showsVerticalScrollIndicator={false}
-      >
-        {slides.map((s, i) => renderSlide(s, i))}
-      </Animated.ScrollView>
+        getItemLayout={(_, index) => ({
+          length: SCREEN_H,
+          offset: SCREEN_H * index,
+          index,
+        })}
+        initialScrollIndex={safeInitial}
+        style={{ flex: 1 }}
+        keyboardShouldPersistTaps="handled"
+        removeClippedSubviews={false}
+        onScroll={handleScroll}
+        scrollEventThrottle={16}
+        onMomentumScrollEnd={handleMomentumEnd}
+        snapToInterval={SCREEN_H}
+        disableIntervalMomentum
+        decelerationRate="fast"
+        onScrollToIndexFailed={({ index }) => {
+          flatListRef.current?.scrollToOffset({ offset: index * SCREEN_H, animated: false });
+        }}
+      />
 
-      <View
-        style={[styles.pagination, { top: height * 0.2, height: height * 0.6 }]}
-      >
+      <View style={[styles.pagination, { top: SCREEN_H * 0.2, height: SCREEN_H * 0.6 }]}>
         {slides.map((_, i) => {
-          const active = i === currentIndex;
+          const active = i === currentSlideIndex;
           return (
             <View
-              key={i}
+              key={String(i)}
+              pointerEvents="none"
               style={[
                 styles.dot,
                 active ? styles.dotActive : styles.dotInactive,
@@ -189,12 +201,13 @@ const CourseSwiper: React.FC<CourseSwiperProps> = ({
 export default CourseSwiper;
 
 const styles = StyleSheet.create({
-  wrapper: { flex: 1, backgroundColor: "#fff" },
+  wrapper: { flex: 1, backgroundColor: '#fff' },
   pagination: {
-    position: "absolute",
+    position: 'absolute',
     right: 16,
-    justifyContent: "center",
-    alignItems: "center",
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 10,
   },
   dot: {
     width: 10,
@@ -202,6 +215,6 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     marginVertical: 6,
   },
-  dotActive: { backgroundColor: '#4CAF50' },
+  dotActive: { backgroundColor: '#000' },
   dotInactive: { backgroundColor: '#CFCFCF' },
 });

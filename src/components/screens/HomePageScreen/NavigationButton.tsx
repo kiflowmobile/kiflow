@@ -14,6 +14,7 @@ export type AppRoute =
   | '/profile'
   | '/real-estate-simulator'
   | '/+not-found'
+  | '/statistics'
   | '/company-dashboard';
 
 interface NavigationButtonProps {

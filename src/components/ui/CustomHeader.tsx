@@ -1,75 +1,52 @@
 // src/components/CustomHeader.tsx
 import { useAuthStore } from "@/src/stores/authStore";
 import { Href, useRouter } from "expo-router";
-import { Image, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { AppRoute } from "../screens/HomePageScreen/NavigationButton";
-import Button from "./button";
-import { HStack } from "./hstack";
+// import { AppRoute } from "../screens/HomePageScreen/NavigationButton";
 
 export default function CustomHeader() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
 
   // Zustand store
-  const { isGuest, signOut } = useAuthStore();
+  const { user } = useAuthStore();
 
-  const defaultAvatarUrl =
-    "https://www.shutterstock.com/image-vector/blank-avatar-photo-place-holder-600nw-1095249842.jpg";
+  // derive initial from user name/email
+  const userInitial = ((
+    ((user as any)?.user_metadata?.full_name as string) ||
+    (user?.email ? user.email.split('@')[0] : '') ||
+    'User'
+  ).trim().charAt(0).toUpperCase()) || '?';
 
-  const handleLogout = async () => {
-    try {
-      await signOut();
-      console.log("Successfully logged out");
-    } catch (error) {
-      console.error("Unexpected logout error:", error);
-    }
-  };
+  // no extra handlers
 
-  const navigateTo = (route: AppRoute) => {
-    router.push(route as Href);
+  // navigation helpers
+
+  const navigateToProfile = () => {
+    router.push('/profile' as Href);
   };
 
   return (
     <View style={[styles.headerContainer, { paddingTop: insets.top }]}>
-      {/* Left side: Guest label */}
-      {isGuest ? (
-        <HStack className="items-center justify-center rounded-md bg-gray-100 px-3 py-1">
-          
-          <Text style={styles.guestText}>Guest</Text>
-        </HStack>
-      ):
-      <HStack className="items-center justify-center rounded-md bg-gray-100 px-3 py-1">
-          
-          <Text style={styles.guestText}>User</Text>
-        </HStack>
-      }
+      {/* Left side: user name */}
+      <View style={styles.nameWrap}>
+        <Text style={styles.guestText}>
+          {(
+            (user as any)?.user_metadata?.full_name ||
+            (user?.email ? user.email.split('@')[0] : '') ||
+            'User'
+          )}
+        </Text>
+      </View>
 
-      {/* Right side: actions */}
+      {/* Right side: avatar only for authenticated users */}
       <View style={styles.actions}>
-        {isGuest ? (
-          <Button
-            title="Login"
-            variant="primary"
-            size="sm"
-            onPress={() => navigateTo("/")}
-            style={styles.loginButton}
-          />
-        ) : (
-          <>
-            <Image
-              source={{ uri: defaultAvatarUrl }}
-              style={styles.avatar}
-            />
-            <Button
-              title="Logout"
-              variant="secondary"
-              size="sm"
-              onPress={handleLogout}
-              style={styles.logoutButton}
-            />
-          </>
-        )}
+        <TouchableOpacity onPress={navigateToProfile}>
+          <View style={styles.avatar}>
+            <Text style={styles.avatarInitial}>{userInitial}</Text>
+          </View>
+        </TouchableOpacity>
       </View>
     </View>
   );
@@ -90,6 +67,10 @@ const styles = StyleSheet.create({
     color: "#666",
     fontWeight: "500",
   },
+  nameWrap: {
+    height: 36,
+    justifyContent: 'center',
+  },
   actions: {
     flexDirection: "row",
     alignItems: "center",
@@ -99,13 +80,20 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
+    backgroundColor: '#fff',
     borderWidth: 1,
-    borderColor: "#000",
+    borderColor: '#000',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 4,
   },
-  loginButton: {
-    minWidth: 80,
+  avatarInitial: {
+    color: '#000',
+    fontWeight: '700',
+    fontSize: 16,
+    lineHeight: 16,
+    textAlign: 'center',
+    textAlignVertical: 'center',
   },
-  logoutButton: {
-    minWidth: 80,
-  },
+  // no auth buttons
 });

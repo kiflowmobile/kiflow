@@ -1,13 +1,14 @@
+import { courseService } from '@/src/services/courses';
 
-import { updateLastSlideId } from '@/src/services/courses';
+// import { updateLastSlideId } from '@/src/services/courses';
 import { useAuthStore, useCourseStore, useModulesStore, useSlidesStore, useUserProgressStore } from '@/src/stores';
 import { useLocalSearchParams } from 'expo-router';
-import { useEffect, useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import CourseSwiper from '../CourseScreen/CourseSwiper';
 
 export default function ModuleSlidesScreen() {
-  const params = useLocalSearchParams<{ id?: string; courseId?: string }>(); // id модуля та courseId
+  const params = useLocalSearchParams<{ id?: string; courseId?: string }>(); 
   const { 
     slides, 
     isLoading, 
@@ -17,10 +18,29 @@ export default function ModuleSlidesScreen() {
   } = useSlidesStore();
   const { setModuleProgressSafe } = useUserProgressStore();
   const { user } = useAuthStore();
-
   const { fetchCourseById } = useCourseStore.getState();
   const { fetchModulesByCourse, getModule, setCurrentModule} = useModulesStore.getState();
+  const totalSlides = useMemo(() => slides.length || 0, [slides]);
 
+
+    const lastIndexRef = useRef<number | null>(null);
+
+    const handleIndexChange = useCallback((index: number) => {
+      if (lastIndexRef.current === index) return; 
+      lastIndexRef.current = index;
+      if (!params.id || totalSlides === 0) return;
+        
+        const percent = Math.round(((index + 1) / totalSlides) * 100);
+        setModuleProgressSafe(params.id, percent).catch(() => {});
+        
+        if (user?.id && params.courseId && slides[index]?.id) {
+          courseService.updateLastSlideId(user.id, params.courseId, slides[index].id).catch((error) => {
+            console.warn('Failed to update last slide id:', error);
+          });
+        }
+    }, [params.id, params.courseId, user?.id, totalSlides, slides]);
+    
+    
 
   useEffect(() => {
     if (!params.courseId) return;
@@ -39,7 +59,6 @@ export default function ModuleSlidesScreen() {
     .catch(console.error);
   }, [params.courseId]);
 
-  const totalSlides = useMemo(() => slides.length || 0, [slides]);
 
   useEffect(() => {
     if (!params.id) return;
@@ -83,18 +102,6 @@ export default function ModuleSlidesScreen() {
     );
   }
 
-  const handleIndexChange = (index: number) => {
-    if (!params.id || totalSlides === 0) return;
-    
-    const percent = Math.round(((index + 1) / totalSlides) * 100);
-    setModuleProgressSafe(params.id, percent).catch(() => {});
-    
-    if (user?.id && params.courseId && slides[index]?.id) {
-      updateLastSlideId(user.id, params.courseId, slides[index].id).catch((error) => {
-        console.warn('Failed to update last slide id:', error);
-      });
-    }
-  };
   return <CourseSwiper onIndexChange={handleIndexChange} />;
 }
 

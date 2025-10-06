@@ -19,7 +19,9 @@ export interface CompanyMember {
 /**
  * Знайти компанію за кодом
  */
-export const getCompanyByCode = async (code: string): Promise<{ data: Company | null; error: any }> => {
+export const getCompanyByCode = async (
+  code: string,
+): Promise<{ data: Company | null; error: any }> => {
   try {
     const { data, error } = await supabase
       .from('companies')
@@ -38,9 +40,9 @@ export const getCompanyByCode = async (code: string): Promise<{ data: Company | 
  * Додати користувача до компанії
  */
 export const addUserToCompany = async (
-  userId: string, 
-  companyId: string, 
-  joinedViaCode: string
+  userId: string,
+  companyId: string,
+  joinedViaCode: string,
 ): Promise<{ data: CompanyMember | null; error: any }> => {
   try {
     const { data, error } = await supabase
@@ -48,7 +50,7 @@ export const addUserToCompany = async (
       .insert({
         user_id: userId,
         company_id: companyId,
-        joined_via_code: joinedViaCode
+        joined_via_code: joinedViaCode,
       })
       .select()
       .single();
@@ -64,8 +66,8 @@ export const addUserToCompany = async (
  * Перевірити, чи є користувач членом компанії
  */
 export const isUserMemberOfCompany = async (
-  userId: string, 
-  companyId: string
+  userId: string,
+  companyId: string,
 ): Promise<{ data: CompanyMember | null; error: any }> => {
   try {
     const { data, error } = await supabase
@@ -85,11 +87,14 @@ export const isUserMemberOfCompany = async (
 /**
  * Отримати всі компанії користувача
  */
-export const getUserCompanies = async (userId: string): Promise<{ data: Company[] | null; error: any }> => {
+export const getUserCompanies = async (
+  userId: string,
+): Promise<{ data: Company[] | null; error: any }> => {
   try {
     const { data, error } = await supabase
       .from('company_members')
-      .select(`
+      .select(
+        `
         company_id,
         companies (
           id,
@@ -98,7 +103,8 @@ export const getUserCompanies = async (userId: string): Promise<{ data: Company[
           service_standards,
           created_at
         )
-      `)
+      `,
+      )
       .eq('user_id', userId);
 
     if (error) {
@@ -106,8 +112,8 @@ export const getUserCompanies = async (userId: string): Promise<{ data: Company[
     }
 
     // Витягуємо дані компаній з результату
-    const companies = data?.map(item => item.companies).filter(Boolean) || [];
-    
+    const companies = data?.map((item) => item.companies).filter(Boolean) || [];
+
     return { data: companies as unknown as Company[], error: null };
   } catch (err) {
     console.error('Error fetching user companies:', err);
@@ -118,39 +124,54 @@ export const getUserCompanies = async (userId: string): Promise<{ data: Company[
 /**
  * Приєднатися до компанії за кодом
  */
-export const joinCompanyByCode = async (code: string): Promise<{ success: boolean; error?: any; company?: Company; alreadyMember?: boolean }> => {
+export const joinCompanyByCode = async (
+  code: string,
+): Promise<{ success: boolean; error?: any; company?: Company; alreadyMember?: boolean }> => {
   try {
     // Отримуємо поточного користувача
     const user = await getCurrentUser();
-    
+
     if (!user) {
       return { success: false, error: 'User not authenticated' };
     }
 
     // Знаходимо компанію за кодом
     const { data: company, error: companyError } = await getCompanyByCode(code);
-    
+
     if (companyError || !company) {
       return { success: false, error: 'Company not found' };
     }
 
     // Перевіряємо, чи не є користувач уже членом цієї компанії
-    const { data: existingMember, error: checkError } = await isUserMemberOfCompany(user.id, company.id);
-    
+    const { data: existingMember, error: checkError } = await isUserMemberOfCompany(
+      user.id,
+      company.id,
+    );
+
     if (checkError) {
       console.error('Error checking existing membership:', checkError);
       return { success: false, error: checkError };
     }
-    
+
     if (existingMember) {
       return { success: true, company, alreadyMember: true }; // Вже член компанії
     }
 
     // Додаємо користувача до компанії
     const { error: addError } = await addUserToCompany(user.id, company.id, code);
-    
+
     if (addError) {
       return { success: false, error: addError };
+    }
+
+    // Оновлюємо поле current_code у таблиці users
+    const { error: updateError } = await supabase
+      .from('users')
+      .update({ current_code: code })
+      .eq('id', user.id);
+
+    if (updateError) {
+      return { success: false, error: updateError };
     }
 
     return { success: true, company };

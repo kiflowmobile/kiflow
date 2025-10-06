@@ -1,83 +1,91 @@
-import { supabase } from '@/src/config/supabaseClient';
-import { Module } from '@/src/constants/types/modules';
 import { create } from 'zustand';
+import { Module } from '@/src/constants/types/modules';
+import { modulesService } from '../services/modules';
 
 interface ModulesState {
-  // Стан
   modules: Module[];
   currentModule: Module | null;
   isLoading: boolean;
   error: string | null;
-  
-  // Дії
+
+  // Actions
   fetchModulesByCourse: (courseId: string) => Promise<void>;
+  fetchMyModulesByCourses: (courseId: string[]) => Promise<void>;
+
   setCurrentModule: (module: Module | null) => void;
   clearError: () => void;
   clearModules: () => void;
-  
-  // Внутрішні дії
+
+  // Internal actions
   setModules: (modules: Module[]) => void;
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
   getModule: (id: string) => Module | null;
-
 }
 
-export const useModulesStore = create<ModulesState>()(
-  (set, get) => ({
-    // Початковий стан
-    modules: [],
-    currentModule: null,
-    isLoading: false,
-    error: null,
+export const useModulesStore = create<ModulesState>()((set, get) => ({
+  modules: [],
+  currentModule: null,
+  isLoading: false,
+  error: null,
 
-    // Дії
-    fetchModulesByCourse: async (courseId: string) => {
-      set({ isLoading: true, error: null });
-      
-      try {
-        const { data, error } = await supabase
-          .from('modules')   
-          .select('*')
-          .eq('course_id', courseId)
-          .order('module_order', { ascending: true });
+  // Actions
+  fetchModulesByCourse: async (courseId: string) => {
+    set({ isLoading: true, error: null });
 
-        if (error) throw error;
-        
-        set({ 
-          modules: data || [], 
-          isLoading: false, 
-          error: null 
-        });
-        
-      } catch (error: any) {
-        console.error('❌ ModulesStore: Error fetching modules:', error);
-        set({ 
-          error: error.message || 'Failed to fetch modules', 
-          isLoading: false 
-        });
-        throw error;
-      }
-    },
+    try {
+      const { data, error } = await modulesService.getModulesByCourse(courseId);
 
-    setCurrentModule: (module: Module | null) => {
-      set({ currentModule: module });
-    },
+      if (error) throw error;
 
-    clearError: () => set({ error: null }),
+      set({
+        modules: data,
+        isLoading: false,
+        error: null,
+      });
+    } catch (error: any) {
+      console.error('❌ ModulesStore: Error fetching modules:', error);
+      set({
+        error: error.message || 'Failed to fetch modules',
+        isLoading: false,
+      });
+      throw error;
+    }
+  },
 
-    clearModules: () => set({ 
-      modules: [], 
-      currentModule: null
+  fetchMyModulesByCourses: async (courseIds: string[]) => {
+    set({ isLoading: true, error: null });
+    try {
+      const { data, error } = await modulesService.getMyModulesByCourses(courseIds);
+      if (error) throw error;
+
+      set({
+        modules: data || [],
+        isLoading: false,
+      });
+    } catch (err: any) {
+      set({ error: err.message || 'Failed to fetch modules', isLoading: false });
+    }
+  },
+
+  setCurrentModule: (module: Module | null) => {
+    set({ currentModule: module });
+  },
+
+  clearError: () => set({ error: null }),
+
+  clearModules: () =>
+    set({
+      modules: [],
+      currentModule: null,
     }),
 
-    // Внутрішні дії
-    setModules: (modules: Module[]) => set({ modules }),
-    setLoading: (loading: boolean) => set({ isLoading: loading }),
-    setError: (error: string | null) => set({ error }),
-    getModule: (id: string) => {
-      const module = get().modules.find(m => m.id === id);
-      return module || null;
-    },
-  })
-);
+  // Internal actions
+  setModules: (modules: Module[]) => set({ modules }),
+  setLoading: (loading: boolean) => set({ isLoading: loading }),
+  setError: (error: string | null) => set({ error }),
+  getModule: (id: string) => {
+    const module = get().modules.find((m) => m.id === id);
+    return module || null;
+  },
+}));

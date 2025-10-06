@@ -1,3 +1,4 @@
+import { Module } from "react-native";
 
 interface BaseSlide {
     id: number | string;
@@ -82,6 +83,7 @@ export interface Course {
   is_public: boolean;
   code: string;
   contact_email: string;
+  modules?: Module[]
 }
 
 export interface CourseSelectionProps {
