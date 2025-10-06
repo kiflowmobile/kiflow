@@ -1,10 +1,26 @@
 import { Icon } from '@/src/components/ui/icon';
 import { upsertRating } from '@/src/services/main_rating';
 import { usePromptsStore } from '@/src/services/slidePrompt';
-import { useAuthStore, useCourseStore, useCriteriaStore, useModulesStore, useSlidesStore } from '@/src/stores';
+import {
+  useAuthStore,
+  useCourseStore,
+  useCriteriaStore,
+  useModulesStore,
+  useSlidesStore,
+} from '@/src/stores';
 import { MessageCircle, Send } from 'lucide-react-native';
 import React, { useEffect, useRef, useState } from 'react';
-import { Dimensions, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View, KeyboardAvoidingView } from 'react-native';
+import {
+  Dimensions,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+  KeyboardAvoidingView,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { askGemini } from './askGemini';
 import AudioRecorder from './AudioRecorder';
@@ -103,25 +119,23 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
 
   const handleSend = async () => {
     if (!input.trim() || answered || loading) return;
-  
+
     const userMsg: Message = { id: Date.now().toString(), role: 'user', text: input.trim() };
     setMessages((prev) => [...prev, userMsg]);
     setInput('');
     setLoading(true);
     setAnswered(true);
     useSlidesStore.getState().markSlideAnswered(slideId);
-  
+
     try {
       const slidePrompt = prompt[slideId]?.prompt || '';
-      const criteriasText = criterias
-        .map((item) => `${item.key} - ${item.name.trim()}`)
-        .join('\n');
+      const criteriasText = criterias.map((item) => `${item.key} - ${item.name.trim()}`).join('\n');
 
       const aiResponse = await askGemini(
         [...messages, userMsg],
         slidePrompt,
         messages.length === 0,
-        criteriasText
+        criteriasText,
       );
 
       const currentModuleId = useModulesStore.getState().currentModule?.id;
@@ -135,7 +149,7 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
               score as number,
               currentModuleId,
               criteriaKey,
-              useCourseStore.getState().currentCourse?.id || ''
+              useCourseStore.getState().currentCourse?.id || '',
             );
           } catch (err) {
             console.warn(`Failed to save rating for ${criteriaKey}:`, err);
@@ -183,65 +197,62 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
 
   return (
     <SafeAreaView style={styles.screen}>
-       <KeyboardAvoidingView
-      style={{ flex: 1 }}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 80 : 0}
-    >
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>{title}</Text>
-      </View>
-
-      <View style={styles.chatBox}>
-        <ScrollView
-          contentContainerStyle={styles.chatContent}
-          showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled"
-        >
-          {messages.map((msg) => (
-            <View
-              key={msg.id}
-              style={[
-                styles.messageBubble,
-                msg.role === 'ai' ? styles.aiBubble : styles.userBubble,
-              ]}
-            >
-              {msg.role === 'ai' && (
-                <Icon as={MessageCircle} size={20} color="#0f172a" style={styles.messageIcon} />
-              )}
-              <Text style={styles.messageText}>{msg.text}</Text>
-            </View>
-          ))}
-          {loading && (
-            <View style={[styles.messageBubble, styles.aiBubble]}>
-              <Text style={styles.messageText}>AI думає...</Text>
-            </View>
-          )}
-        </ScrollView>
-      </View>
-
-      <View style={styles.footer}>
-        <TextInput
-          ref={inputRef}
-          style={styles.input}
-          placeholder="Введіть відповідь..."
-          value={input}
-          onChangeText={setInput}
-          onFocus={handleFocus}
-          onBlur={handleBlur}
-          multiline
-          editable={!answered && !loading}
-        />
-        <View style={styles.buttonContainer}>
-          <AudioRecorder
-            onAudioProcessed={handleAudioProcessed}
-            disabled={loading || answered}
-          />
-          <TouchableOpacity onPress={handleSend} disabled={loading || answered}>
-            <Icon as={Send} size={24} color={(loading || answered) ? '#94a3b8' : '#0f172a'} />
-          </TouchableOpacity>
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 80 : 0}
+      >
+        <View style={styles.header}>
+          <Text style={styles.headerTitle}>{title}</Text>
         </View>
-      </View>
+
+        <View style={styles.chatBox}>
+          <ScrollView
+            contentContainerStyle={styles.chatContent}
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+          >
+            {messages.map((msg) => (
+              <View
+                key={msg.id}
+                style={[
+                  styles.messageBubble,
+                  msg.role === 'ai' ? styles.aiBubble : styles.userBubble,
+                ]}
+              >
+                {msg.role === 'ai' && (
+                  <Icon as={MessageCircle} size={20} color="#0f172a" style={styles.messageIcon} />
+                )}
+                <Text style={styles.messageText}>{msg.text}</Text>
+              </View>
+            ))}
+            {loading && (
+              <View style={[styles.messageBubble, styles.aiBubble]}>
+                <Text style={styles.messageText}>AI думає...</Text>
+              </View>
+            )}
+          </ScrollView>
+        </View>
+
+        <View style={styles.footer}>
+          <TextInput
+            ref={inputRef}
+            style={styles.input}
+            placeholder="Введіть відповідь..."
+            value={input}
+            onChangeText={setInput}
+            onFocus={handleFocus}
+            onBlur={handleBlur}
+            multiline
+            editable={!answered && !loading}
+          />
+          <View style={styles.buttonContainer}>
+            <AudioRecorder onAudioProcessed={handleAudioProcessed} disabled={loading || answered} />
+            <TouchableOpacity onPress={handleSend} disabled={loading || answered}>
+              <Icon as={Send} size={24} color={loading || answered ? '#94a3b8' : '#0f172a'} />
+            </TouchableOpacity>
+          </View>
+        </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
@@ -281,7 +292,7 @@ const styles = StyleSheet.create({
   userBubble: { backgroundColor: '#f1f5f9', alignSelf: 'flex-end' },
   messageIcon: { marginRight: 6 },
   messageText: { fontSize: 16, color: '#0f172a', lineHeight: 22 },
-  footer: { 
+  footer: {
     paddingTop: 8,
   },
   input: {
