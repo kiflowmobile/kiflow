@@ -37,7 +37,6 @@ export default function RootLayout() {
         <Stack.Screen name="auth/registration" options={{ headerShown: false }} />
         <Stack.Screen name="+not-found" options={{ headerShown: false }} />
         <Stack.Screen name="module/[id]" options={{ headerShown: true, title: 'Module' }} />
-        <Stack.Screen name="slide" options={{ headerShown: true, title: 'Slide' }} />
         <Stack.Screen
           name="statistics/index"
           options={{ headerShown: true, title: 'Results' }}
