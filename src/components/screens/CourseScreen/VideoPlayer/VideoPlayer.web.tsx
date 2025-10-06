@@ -1,6 +1,4 @@
 import { Box } from '@/src/components/ui/box';
-import type MuxPlayerElement from '@mux/mux-player';
-import MuxPlayer from '@mux/mux-player-react';
 import React, { useEffect, useRef, useState } from 'react';
 import { useInView } from './useInView';
 
@@ -12,7 +10,6 @@ interface VideoPlayerProps {
 
 const VideoPlayer: React.FC<VideoPlayerProps> = ({ uri, mux }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const muxPlayerRef = useRef<MuxPlayerElement>(null);
   const { ref: viewRef } = useInView<HTMLDivElement>({ threshold: 0.35 });
 
   const [isPlaying, setIsPlaying] = useState(false);
@@ -26,14 +23,48 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ uri, mux }) => {
     }
   }, []);
 
-  // playbackRate для Mux
   useEffect(() => {
-    if (mux && muxPlayerRef.current) {
-      muxPlayerRef.current.playbackRate = 1.25;
+    if (!mux) return;
+    const videoEl = videoRef.current;
+    if (!videoEl) return;
+
+    const muxSrc = `https://stream.mux.com/${mux}.m3u8`;
+
+    if (videoEl.canPlayType('application/vnd.apple.mpegurl')) {
+      videoEl.src = muxSrc;
+      return;
     }
+
+    let hls: any | null = null;
+    let cancelled = false;
+
+    (async () => {
+      try {
+        const mod = await import('hls.js');
+        if (cancelled) return;
+        const Hls = mod.default || mod;
+        if (Hls.isSupported()) {
+          hls = new Hls({ autoStartLoad: true });
+          hls.loadSource(muxSrc);
+          hls.attachMedia(videoEl);
+        } else {
+          videoEl.src = muxSrc;
+        }
+      } catch {
+        videoEl.src = muxSrc;
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+      if (hls) {
+        try {
+          hls.destroy();
+        } catch {}
+      }
+    };
   }, [mux]);
 
-  // Настройка native video
   useEffect(() => {
     if (!uri) return;
     const videoElement = videoRef.current;
@@ -52,8 +83,9 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ uri, mux }) => {
   const handleVideoPause = () => setIsPlaying(false);
 
   const handleMuxPlay = () => {
-    if (!muxPlayerRef.current) return;
-    muxPlayerRef.current.muted = false;
+    const videoElement = videoRef.current;
+    if (!videoElement) return;
+    videoElement.muted = false;
     setIsPlaying(true);
   };
 
@@ -70,7 +102,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ uri, mux }) => {
   };
 
   const toggleMuxPlayback = () => {
-    const player = muxPlayerRef.current;
+    const player = videoRef.current;
     if (!player) return;
     if (player.paused) {
       player.play();
@@ -100,7 +132,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ uri, mux }) => {
       video::-webkit-media-controls { display: none !important; }
     `}</style>
 
-      {uri ? (
+      {(uri && !mux) ? (
         <div style={{ position: 'relative', width: '100%', height: '100%' }}>
           <video
             ref={videoRef}
@@ -147,13 +179,11 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ uri, mux }) => {
         </div>
       ) : mux ? (
         <div style={{ position: 'relative', width: '100%', height: '100%' }}>
-          <MuxPlayer
-            ref={muxPlayerRef}
-            playbackId={mux}
-            streamType="on-demand"
-            className="mux-no-controls"
+          <video
+            ref={videoRef}
             style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-            autoPlay={false}
+            preload="auto"
+            controls={false}
             muted
             onPlay={handleMuxPlay}
             onPause={handleMuxPause}
