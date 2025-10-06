@@ -51,21 +51,21 @@ export const courseService = {
   },
 
   updateLastSlideId: async (userId: string, courseId: string, slideId: string) => {
-    return await supabase
-      .from('user_course_summaries')
-      .upsert(
-        { user_id: userId, course_id: courseId, last_slide_id: slideId },
-        { onConflict: 'user_id,course_id' }
-      );
+  //   return await supabase
+  //     .from('user_course_summaries')
+  //     .upsert(
+  //       { user_id: userId, course_id: courseId, last_slide_id: slideId },
+  //       { onConflict: 'user_id,course_id' }
+  //     );
   },
   
-  updateCourseProgress: async (userId: string, courseId: string, progress: number) => {
-    const { error } = await supabase
-      .from('user_course_summaries')
-      .update({ progress })
-      .eq('user_id', userId)
-      .eq('course_id', courseId);
+  // updateCourseProgress: async (userId: string, courseId: string, progress: number) => {
+  //   const { error } = await supabase
+  //     .from('user_course_summaries')
+  //     .update({ progress })
+  //     .eq('user_id', userId)
+  //     .eq('course_id', courseId);
 
-    if (error) throw error;
-  },
+  //   if (error) throw error;
+  // },
 };

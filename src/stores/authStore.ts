@@ -68,7 +68,9 @@ export const useAuthStore = create<AuthState>()(
 
       signUp: async (email: string, password: string, firstName?: string, lastName?: string) => {
         set({ isLoading: true, error: null });
+      
         try {
+          // 1️⃣ Реєстрація користувача
           const { data, error } = await supabase.auth.signUp({
             email,
             password,
@@ -77,53 +79,77 @@ export const useAuthStore = create<AuthState>()(
                 full_name: firstName && lastName ? `${firstName} ${lastName}` : null,
                 first_name: firstName || null,
                 last_name: lastName || null,
-                role: 'user'
-              }
-            }
+                role: 'user',
+              },
+            },
           });
       
           if (error) throw error;
       
-          if (data.user) {
-            // створюємо профіль
-            await upsertUserProfile(data.user.id, {
-              email: data.user.email || email,
-              full_name: firstName && lastName ? `${firstName} ${lastName}` : null,
-              first_name: firstName || undefined,
-              last_name: lastName || undefined,
-            });
+          if (!data.user) throw new Error('User not created');
       
-            // отримуємо всі курси
-            const { data: courses } = await supabase.from('courses').select('id');
-            console.log('courses', courses)
-      
-            if (courses) {
-              const progressRows = courses.map(c => ({
-                user_id: data.user!.id,
-                course_id: c.id,
-                progress: 0,
-              }));
-      
-              // вставляємо прогрес по дефолту
-              await supabase.from('user_course_summaries').upsert(progressRows);
-            }
-          }
-      
-          const isGuest = !data.session || !data.session.user || data.session.user.is_anonymous;
-          set({ 
-            user: data.user, 
-            session: data.session, 
-            isGuest,
-            isLoading: false 
+          // 2️⃣ Створюємо профіль
+          await upsertUserProfile(data.user.id, {
+            email: data.user.email || email,
+            full_name: firstName && lastName ? `${firstName} ${lastName}` : null,
+            first_name: firstName || undefined,
+            last_name: lastName || undefined,
           });
+      
+          // 3️⃣ Отримуємо всі курси
+          // const { data: courses, error: coursesError } = await supabase
+          //   .from('courses')
+          //   .select('id');
+      
+          // if (coursesError) throw coursesError;
+      
+          // 4️⃣ Отримуємо всі модулі
+          // const { data: modules, error: modulesError } = await supabase
+          //   .from('modules')
+          //   .select('id, course_id');
+      
+          // if (modulesError) throw modulesError;
+      
+          // 5️⃣ Формуємо записи для user_course_summaries
+          // const progressRows = (courses || []).map(course => ({
+          //   user_id: data.user!.id,
+          //   course_id: course.id,
+          //   progress: 0,
+          //   last_slide_id: null,
+          //   modules: (modules || [])
+          //     .filter(m => m.course_id === course.id)
+          //     .map(m => ({ module_id: m.id, progress: 0, last_slide_id: null })),
+          // }));
+      
+          // 6️⃣ Вставляємо прогрес у БД
+          // if (progressRows.length > 0) {
+          //   const { error: insertError } = await supabase
+          //     .from('user_course_summaries')
+          //     .upsert(progressRows, { onConflict: 'user_id,course_id' }); // <-- рядок, не масив
+      
+          //   if (insertError) throw insertError;
+          // }
+      
+          // 7️⃣ Встановлюємо стан
+          const isGuest = !data.session || !data.session.user || data.session.user.is_anonymous;
+          set({
+            user: data.user,
+            session: data.session,
+            isGuest,
+            isLoading: false,
+          });
+      
         } catch (error: any) {
-          set({ 
-            error: error.message || 'Sign up failed', 
-            isLoading: false 
+          set({
+            error: error.message || 'Sign up failed',
+            isLoading: false,
           });
           throw error;
         }
       },
+      
+      
+      
       
 
       signOut: async () => {

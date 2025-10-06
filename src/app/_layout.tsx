@@ -8,9 +8,11 @@ import { useEffect } from 'react';
 import { Platform } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useUserProgressStore } from "../stores";
+import { initUserProgress } from "../services/course_summaries";
 
 export default function RootLayout() {
   const { initFromLocal } = useUserProgressStore();
+  const {  user } = useAuthStore();
 
   const [loaded] = useFonts({
     SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
@@ -25,12 +27,18 @@ export default function RootLayout() {
 
   useEffect(() => {
     initFromLocal(); // спробує підвантажити прогрес з AsyncStorage при запуску
-  }, []);
+  }, [user]);
 
   if (!loaded) {
     // Async font loading only occurs in development.
     return null;
   }
+
+  useEffect(() => {
+    if (user) {
+      initUserProgress(user.id);
+    }
+  }, [user]);
 
   return (
 

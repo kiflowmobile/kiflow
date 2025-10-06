@@ -30,6 +30,7 @@ interface UserProgressStore {
 }
 
 const persistCourses = (courses: UserCourseSummary[]) => {
+  console.log('persistCourses', )
   const { user } = useAuthStore.getState();
   if (user) {
     saveProgressLocal(user.id, courses);
@@ -69,13 +70,18 @@ export const useUserProgressStore = create<UserProgressStore>((set, get) => ({
       // 2) якщо в AsyncStorage нема → беремо з БД
       const { data, error } = await supabase
         .from('user_course_summaries')
-        .select('course_id, progress, last_slide_id')
+        .select('course_id, progress, last_slide_id, modules')
         .eq('user_id', userId);
 
       if (error) throw error;
 
-      const courses = (data || []).map(c => ({ ...c, modules: [] }));
-      set({ courses });
+      const courses = (data || []).map(c => ({
+        course_id: c.course_id,
+        progress: c.progress,
+        last_slide_id: c.last_slide_id,
+        modules: c.modules || [], // <- беремо саме з колонки modules
+      }));
+        set({ courses });
 
       // 3) кешуємо в AsyncStorage
       await saveProgressLocal(userId, courses);

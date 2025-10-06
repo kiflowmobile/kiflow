@@ -148,33 +148,6 @@ export const joinCompanyByCode = async (code: string): Promise<{ success: boolea
     if (addError) {
       return { success: false, error: addError };
     }
-
-    // 4. Витягуємо курси компанії і створюємо прогрес = 0
-    // Отримуємо всі курси компанії
-    console.log('company.id', company.id)
-      const { data: companyCourses, error: ccError } = await supabase
-      .from('company_courses')
-      .select('course_id')
-      .eq('company_id', company.id);
-
-      if (ccError) throw ccError;
-
-      console.log('companyCourses', companyCourses)
-
-      if (companyCourses && companyCourses.length > 0) {
-      const progressRows = companyCourses.map(c => ({
-        user_id: user.id,
-        course_id: c.course_id,
-        progress: 0,
-      }));
-
-      await supabase.from('user_course_summaries')
-      .upsert(progressRows, { onConflict: 'user_id,course_id' });
-      }
-
-
-
-
       
 
     return { success: true, company };
@@ -184,12 +157,12 @@ export const joinCompanyByCode = async (code: string): Promise<{ success: boolea
   }
 };
 
-export const updateCourseProgress = async (userId: string, courseId: string, progress: number) => {
-  const { error } = await supabase
-    .from('user_course_summaries')
-    .update({ progress })
-    .eq('user_id', userId)
-    .eq('course_id', courseId);
+// export const updateCourseProgress = async (userId: string, courseId: string, progress: number) => {
+//   const { error } = await supabase
+//     .from('user_course_summaries')
+//     .update({ progress })
+//     .eq('user_id', userId)
+//     .eq('course_id', courseId);
 
-  if (error) throw error;
-};
+//   if (error) throw error;
+// };
