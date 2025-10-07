@@ -1,4 +1,3 @@
-import { SafeAreaView } from '@/src/components/ui/safe-area-view';
 import { Colors } from '@/src/constants/Colors';
 import type { User, UserUpdateData } from '@/src/constants/types/user';
 import { getCurrentUserProfile, updateCurrentUserProfile } from '@/src/services/users';
@@ -12,19 +11,19 @@ import ActionButtons from './components/ActionButtons';
 import AvatarSection from './components/AvatarSection';
 import LoadingState from './components/LoadingState';
 import PasswordSection from './components/PasswordSection';
-import SignOutSection from './components/SignOutSection';
 import UserInfoSection from './components/UserInfoSection';
 import CompanyCode from './components/CompanyCode';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function ProfileScreen() {
   const router = useRouter();
-  const { user: authUser, isGuest } = useAuthStore();
-  
+  const { user: authUser, isGuest, signOut } = useAuthStore();
+
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
   const [editMode, setEditMode] = useState(false);
-  
+
   const [formData, setFormData] = useState<UserUpdateData>({
     full_name: '',
     email: '',
@@ -33,13 +32,12 @@ export default function ProfileScreen() {
     last_name: '',
   });
 
-
   useEffect(() => {
     if (isGuest || !authUser) {
       router.replace('/auth/login');
       return;
     }
-    
+
     loadUserProfile();
   }, [authUser, isGuest, router]);
 
@@ -47,7 +45,7 @@ export default function ProfileScreen() {
     try {
       setLoading(true);
       const { data, error } = await getCurrentUserProfile();
-      
+
       if (error) {
         console.error('Error loading profile:', error);
         if (Platform.OS === 'web') {
@@ -57,7 +55,7 @@ export default function ProfileScreen() {
         }
         return;
       }
-      
+
       if (data) {
         setUser(data);
         setFormData({
@@ -83,7 +81,7 @@ export default function ProfileScreen() {
   const handleSave = async () => {
     try {
       setUpdating(true);
-      
+
       // Відправляємо ім'я та аватар для оновлення
       const updateData = {
         full_name: formData.full_name,
@@ -91,9 +89,9 @@ export default function ProfileScreen() {
         first_name: formData.first_name,
         last_name: formData.last_name,
       };
-      
+
       const { data, error } = await updateCurrentUserProfile(updateData);
-      
+
       if (error) {
         console.error('Error updating profile:', error);
         if (Platform.OS === 'web') {
@@ -103,7 +101,7 @@ export default function ProfileScreen() {
         }
         return;
       }
-      
+
       if (data) {
         setUser(data);
         setEditMode(false);
@@ -127,7 +125,7 @@ export default function ProfileScreen() {
 
   const handleCancel = () => {
     if (user) {
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
         full_name: user.full_name || '',
         avatar_url: user.avatar_url || '',
@@ -140,11 +138,11 @@ export default function ProfileScreen() {
 
   // Хендлери для дочірніх компонентів
   const handleFormDataChange = (field: keyof UserUpdateData, value: string) => {
-    setFormData(prev => {
+    setFormData((prev) => {
       const next = { ...prev, [field]: value } as UserUpdateData;
       if (field === 'first_name' || field === 'last_name') {
-        const first = field === 'first_name' ? value : (prev.first_name || '');
-        const last = field === 'last_name' ? value : (prev.last_name || '');
+        const first = field === 'first_name' ? value : prev.first_name || '';
+        const last = field === 'last_name' ? value : prev.last_name || '';
         const full = `${first ?? ''} ${last ?? ''}`.trim();
         next.full_name = full;
       }
@@ -158,7 +156,16 @@ export default function ProfileScreen() {
 
   const handleCourseCodePress = () => {
     router.push('/course-code');
-  }
+  };
+
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      router.replace('/');
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
+  };
   if (loading) {
     return <LoadingState />;
   }
@@ -167,23 +174,28 @@ export default function ProfileScreen() {
     <SafeAreaView style={styles.container}>
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
         <View style={styles.content}>
-          <AvatarSection fullName={formData.full_name || user?.full_name || ''} />
+          <AvatarSection
+            fullName={formData.full_name || user?.full_name || ''}
+            onEditPress={handleEdit}
+            onSignOutPress={handleSignOut}
+            editMode={editMode}
+          />
           <UserInfoSection
             user={user}
             formData={formData}
             editMode={editMode}
             onFormDataChange={handleFormDataChange}
           />
-          <ActionButtons
-            editMode={editMode}
-            updating={updating}
-            onEdit={handleEdit}
-            onSave={handleSave}
-            onCancel={handleCancel}
-          />
+          {editMode && (
+            <ActionButtons
+              editMode={editMode}
+              updating={updating}
+              onSave={handleSave}
+              onCancel={handleCancel}
+            />
+          )}
           <PasswordSection />
           <CompanyCode onPress={handleCourseCodePress} />
-          <SignOutSection />
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -197,7 +209,6 @@ const styles = StyleSheet.create({
   },
   scrollView: {
     flex: 1,
-    
   },
   scrollContent: {
     flexGrow: 1,

@@ -1,5 +1,4 @@
 import Button from '@/src/components/ui/button';
-import { Text } from '@/src/components/ui/text';
 import { VStack } from '@/src/components/ui/vstack';
 import { Colors } from '@/src/constants/Colors';
 import { useAuthStore } from '@/src/stores/authStore';
@@ -79,7 +78,6 @@ export default function PasswordSection() {
 
   return (
     <VStack space="md" style={styles.passwordSection}>
-      <Text style={styles.sectionTitle}>Безпека</Text>
       
       {!showPasswordFields ? (
         <Button

@@ -23,7 +23,6 @@ export default function CustomHeader() {
 const styles = StyleSheet.create({
   headerContainer: {
     backgroundColor: '#fff',
-    paddingVertical: 10,
     alignItems: 'center',
   },
   logoWrap: {

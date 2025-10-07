@@ -7,7 +7,6 @@ import { StyleSheet } from 'react-native';
 interface ActionButtonsProps {
   editMode: boolean;
   updating: boolean;
-  onEdit: () => void;
   onSave: () => void;
   onCancel: () => void;
 }
@@ -15,13 +14,12 @@ interface ActionButtonsProps {
 export default function ActionButtons({
   editMode,
   updating,
-  onEdit,
   onSave,
   onCancel,
 }: ActionButtonsProps) {
   return (
     <VStack space="md" style={styles.actionsSection}>
-      {editMode ? (
+      {editMode && (
         <HStack space="md" style={styles.editModeButtons}>
           <Button
             title="Скасувати"
@@ -38,13 +36,6 @@ export default function ActionButtons({
             size="lg"
           />
         </HStack>
-      ) : (
-        <Button
-          title="Редагувати"
-          variant="primary"
-          onPress={onEdit}
-          size="lg"
-        />
       )}
     </VStack>
   );
