@@ -83,8 +83,8 @@ export default function PasswordSection() {
         <Button
           title="Змінити пароль"
           onPress={() => setShowPasswordFields(true)}
-          style={styles.changePasswordButton}
           textStyle={styles.buttonText}
+          size="lg"
         />
       ) : (
         <VStack space="md" style={styles.fieldsContainer}>
@@ -148,9 +148,7 @@ export default function PasswordSection() {
 
 const styles = StyleSheet.create({
   passwordSection: {
-    backgroundColor: Colors.gray[50],
     borderRadius: 16,
-    padding: 24,
     borderWidth: 1,
     borderColor: Colors.gray[200],
     shadowColor: Colors.black,

@@ -43,9 +43,7 @@ export default function ActionButtons({
 
 const styles = StyleSheet.create({
   actionsSection: {
-    backgroundColor: Colors.gray[50],
     borderRadius: 16,
-    padding: 20,
     borderWidth: 1,
     borderColor: Colors.gray[200],
     shadowColor: Colors.black,
