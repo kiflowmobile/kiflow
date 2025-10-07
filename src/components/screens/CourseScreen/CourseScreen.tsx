@@ -3,6 +3,7 @@ import { useModulesStore, useUserProgressStore } from '@/src/stores';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect } from 'react';
 import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
+import { shadow } from '../../ui/styles/shadow';
 
 export default function CourseScreen() {
   const params = useLocalSearchParams<{ id?: string }>();
@@ -62,10 +63,10 @@ export default function CourseScreen() {
                 <Text style={styles.moduleDescription}>{item.description}</Text>
               ) : null}
               <View style={styles.progressRow}>
+                <Text style={styles.progressText}>{getModuleProgress(item.id)}%</Text>
                 <View style={styles.progressBarWrapper}>
                   <ProgressBar percent={getModuleProgress(item.id)} />
                 </View>
-                <Text style={styles.progressText}>{getModuleProgress(item.id)}%</Text>
               </View>
             </Pressable>
           )}
@@ -76,16 +77,12 @@ export default function CourseScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff' },
+  container: { flex: 1, backgroundColor: '#fff', paddingInline: 16 },
   moduleItem: {
     padding: 16,
-    marginBottom: 12,
+    marginBottom: 16,
     borderRadius: 12,
-    backgroundColor: '#fff',
-    shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowRadius: 6,
-    elevation: 2,
+    ...shadow,
   },
   moduleTitle: {
     fontSize: 16,
@@ -101,7 +98,7 @@ const styles = StyleSheet.create({
     marginTop: 12,
   },
   progressBarWrapper: {
-    marginBottom: 6,
+    marginTop: 6,
   },
   progressText: {
     fontSize: 12,

@@ -1,6 +1,6 @@
 // src/components/CustomHeader.tsx
 import { Href, useRouter } from 'expo-router';
-import { StyleSheet, Text, TouchableOpacity, View, Image } from 'react-native';
+import { StyleSheet, TouchableOpacity, View, Image } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function CustomHeader() {
