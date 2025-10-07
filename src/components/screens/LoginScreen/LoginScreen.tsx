@@ -140,6 +140,11 @@ export default function LoginScreen() {
             ) : null}
 
             {/* Email */}
+            {touched.email && errors.email ? (
+              <View style={styles.formErrorBanner}>
+                <Text style={styles.formErrorText}>{errors.email}</Text>
+              </View>
+            ) : null}
             <Input
               variant="outline"
               size="xl"
@@ -156,11 +161,13 @@ export default function LoginScreen() {
                 returnKeyType="next"
               />
             </Input>
-            {touched.email && errors.email ? (
-              <Text style={styles.errorText}>{errors.email}</Text>
-            ) : null}
 
             {/* Password */}
+            {touched.password && errors.password ? (
+              <View style={styles.formErrorBanner}>
+                <Text style={styles.formErrorText}>{errors.password}</Text>
+              </View>
+            ) : null}
             <Input
               variant="outline"
               size="xl"
@@ -178,9 +185,6 @@ export default function LoginScreen() {
                 onSubmitEditing={handleLogin}
               />
             </Input>
-            {touched.password && errors.password ? (
-              <Text style={styles.errorText}>{errors.password}</Text>
-            ) : null}
 
             <Button
               title={isLoading ? 'Signing in...' : 'Sign In'}
