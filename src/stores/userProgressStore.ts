@@ -6,8 +6,7 @@ import { useAuthStore } from './authStore';
 import { useCourseStore } from './courseStore';
 import { loadProgressLocal, saveProgressLocal } from '../utils/progressAsyncStorage';
 import { UserCourseSummary } from '../constants/types/progress';
-
-
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 
 interface UserProgressStore {
@@ -27,6 +26,7 @@ interface UserProgressStore {
     lastSlideId?: string
   ) => Promise<void>;
     getModuleProgress: (courseId:string,moduleId: string) => number;
+    syncProgressToDB: () => Promise<void>
 }
 
 const persistCourses = (courses: UserCourseSummary[]) => {
@@ -58,32 +58,35 @@ export const useUserProgressStore = create<UserProgressStore>((set, get) => ({
   },
 
   fetchUserProgress: async (userId: string) => {
+    console.log('fetchUserProgress')
     set({ isLoading: true, error: null });
     try {
       // 1) пробуємо з AsyncStorage
+
+      const { data, error } = await supabase
+      .from('user_course_summaries')
+      .select('course_id, progress, last_slide_id, modules')
+      .eq('user_id', userId);
+
       const localData = await loadProgressLocal(userId);
-      if (localData.length > 0) {
+      console.log('localData', localData)
+
+      if (localData.length === data?.length) {
         set({ courses: localData });
         return;
       }
-
-      // 2) якщо в AsyncStorage нема → беремо з БД
-      const { data, error } = await supabase
-        .from('user_course_summaries')
-        .select('course_id, progress, last_slide_id, modules')
-        .eq('user_id', userId);
-
-      if (error) throw error;
-
+      // if (error) throw error;
       const courses = (data || []).map(c => ({
         course_id: c.course_id,
         progress: c.progress,
         last_slide_id: c.last_slide_id,
-        modules: c.modules || [], // <- беремо саме з колонки modules
+        modules: c.modules || [], 
       }));
+
+      console.log('data', courses)
+
         set({ courses });
 
-      // 3) кешуємо в AsyncStorage
       await saveProgressLocal(userId, courses);
 
     } catch (err: any) {
@@ -141,6 +144,7 @@ export const useUserProgressStore = create<UserProgressStore>((set, get) => ({
         course.modules.reduce((sum, m) => sum + m.progress, 0) / course.modules.length
       );
       course.progress = courseProgress;
+      course.last_slide_id = lastSlideId
   
       const updatedCourses = [...state.courses];
       return { courses: persistCourses(updatedCourses) };
@@ -153,5 +157,43 @@ export const useUserProgressStore = create<UserProgressStore>((set, get) => ({
     const course = get().courses.find(c => c.course_id === courseId);
     const module = course?.modules.find(m => m.module_id === moduleId);
     return module?.progress ?? 0;
-  }
+  },
+  syncProgressToDB: async () => {
+    const { user } = useAuthStore.getState();
+    if (!user) return;
+  
+    try {
+      const { courses } = get();
+  
+      for (const course of courses) {
+        const { course_id, progress, last_slide_id, modules } = course;
+  
+        const { error } = await supabase
+          .from('user_course_summaries')
+          .upsert({
+            user_id: user.id,
+            course_id,
+            progress,
+            last_slide_id,
+            modules, 
+          },
+          { onConflict: 'user_id, course_id'} 
+        );
+  
+        if (error) throw error;
+
+        await AsyncStorage.removeItem(`progress_${user.id}`);
+
+      }
+  
+      console.log('✅ Прогрес користувача синхронізовано з БД');
+  
+      // очищаємо локальний AsyncStorage після успішного збереження
+      await AsyncStorage.removeItem(`progress_${user.id}`);
+  
+    } catch (err: any) {
+      console.error('Помилка синхронізації прогресу з БД:', err.message);
+    }
+  },
+  
 }));

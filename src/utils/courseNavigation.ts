@@ -11,7 +11,6 @@ export const navigateToCourse = async (
 
 
     if (lastSlideId) {
-      // шукаємо module_id для lastSlideId
       const { data, error } = await supabase
         .from('slides')
         .select('module_id')

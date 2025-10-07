@@ -34,11 +34,6 @@ export default function RootLayout() {
     return null;
   }
 
-  useEffect(() => {
-    if (user) {
-      initUserProgress(user.id);
-    }
-  }, [user]);
 
   return (
 

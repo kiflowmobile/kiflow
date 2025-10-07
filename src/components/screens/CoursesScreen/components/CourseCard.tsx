@@ -27,6 +27,9 @@ const CourseCard: React.FC<CourseCardProps> = ({ course }) => {
     }
   }, [user]);
 
+
+  console.log('lastSlideId', lastSlideId)
+
   const handleStartCourse = () => {
     navigateToCourse(router, course.id, lastSlideId);
   };

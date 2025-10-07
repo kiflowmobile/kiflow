@@ -4,10 +4,13 @@ import { useEffect, useState } from "react";
 import { Image, StyleSheet, Text, View } from "react-native";
 import Button from "../../ui/button";
 import CustomHeader from "../../ui/CustomHeader";
+import { initUserProgress } from "@/src/services/course_summaries";
 
 export default function HomeScreen() {
   const router = useRouter();
   const [role, setRole] = useState<string | null>(null);
+  const {  user } = useAuthStore();
+
   
   // Zustand стор
   const { getUserRole } = useAuthStore();
@@ -20,6 +23,14 @@ export default function HomeScreen() {
 
     fetchRole();
   }, [getUserRole]);
+
+
+  useEffect(() => {
+    if (user) {
+      initUserProgress(user.id);
+    }
+  }, [user]);
+
   return (
     <View style={styles.container}>
       <CustomHeader />
