@@ -15,7 +15,6 @@
     "lint": "expo lint"
   },
   "dependencies": {
-    "@expo/cli": "^54.0.5",
     "@expo/vector-icons": "^15.0.2",
     "@gluestack-ui/button": "^1.0.14",
     "@gluestack-ui/icon": "^0.1.27",
@@ -67,6 +66,7 @@
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
+    "@expo/cli": "^54.0.9",
     "@tsconfig/react-native": "^3.0.6",
     "@types/jest": "^30.0.0",
     "@types/react": "~19.1.10",
