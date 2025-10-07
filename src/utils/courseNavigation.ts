@@ -4,9 +4,22 @@ import { supabase } from '@/src/config/supabaseClient';
 export const navigateToCourse = async (
   router: Router,
   courseId: string,
-  lastSlideId?: string | null
+  lastSlideId?: string | null,
+  moduleProgress?: number,
 ) => {
+
   try {
+
+    console.log(moduleProgress)
+
+    if(moduleProgress === 100) {
+      router.push({
+        pathname: '/courses/[id]',
+        params: { id: courseId },
+      });
+      return
+    }
+
     let moduleId: string | undefined;
 
 
@@ -38,6 +51,6 @@ export const navigateToCourse = async (
       });
     }
   } catch (err) {
-    console.error('Failed to navigate to course:', err);
+    // console.error('Failed to navigate to course:', err);
   }
 };

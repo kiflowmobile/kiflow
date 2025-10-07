@@ -18,7 +18,7 @@ interface CourseCardProps {
 const CourseCard: React.FC<CourseCardProps> = ({ course }) => {
   const { user } = useAuthStore();
   const { fetchUserProgress } = useUserProgressStore();
-  const { courseProgress, lastSlideId } = useCourseProgress(course.id);
+  const { courseProgress, lastSlideId, modules} = useCourseProgress(course.id);
   const router = useRouter();
 
   useEffect(() => {
@@ -28,10 +28,17 @@ const CourseCard: React.FC<CourseCardProps> = ({ course }) => {
   }, [user]);
 
 
-  console.log('lastSlideId', lastSlideId)
+  // console.log('lastSlideId', lastSlideId)
+  // console.log('modules', )
+
 
   const handleStartCourse = () => {
-    navigateToCourse(router, course.id, lastSlideId);
+
+    const moduleProgress = modules?.find(module=>module.last_slide_id ===lastSlideId)?.progress
+    // console.log('lastModule', lastModule)
+
+      navigateToCourse(router, course.id, lastSlideId, moduleProgress);
+
   };
 
   return (

@@ -30,7 +30,6 @@ interface UserProgressStore {
 }
 
 const persistCourses = (courses: UserCourseSummary[]) => {
-  console.log('persistCourses', )
   const { user } = useAuthStore.getState();
   if (user) {
     saveProgressLocal(user.id, courses);
@@ -104,7 +103,7 @@ export const useUserProgressStore = create<UserProgressStore>((set, get) => ({
           ? { ...c, progress, last_slide_id: lastSlideId }
           : c
       );
-      if (user) saveProgressLocal(user.id, updatedCourses); // ⚡ зберігаємо локально
+      if (user) saveProgressLocal(user.id, updatedCourses);
       return { courses: updatedCourses };
     });
   },
@@ -185,10 +184,7 @@ export const useUserProgressStore = create<UserProgressStore>((set, get) => ({
         await AsyncStorage.removeItem(`progress_${user.id}`);
 
       }
-  
-      console.log('✅ Прогрес користувача синхронізовано з БД');
-  
-      // очищаємо локальний AsyncStorage після успішного збереження
+    
       await AsyncStorage.removeItem(`progress_${user.id}`);
   
     } catch (err: any) {

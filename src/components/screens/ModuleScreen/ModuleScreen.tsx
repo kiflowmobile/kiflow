@@ -5,6 +5,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import Animated, { useAnimatedScrollHandler, runOnJS } from 'react-native-reanimated';
 import ModuleSlide from './ModuleSlide';
+import { useSaveProgressOnExit } from '@/src/hooks/useSaveProgressOnExit';
+import PaginationDots from './components/PaginationDot';
 
 export default function ModuleScreen() {
   const { moduleId, courseId, slideId } = useLocalSearchParams<{
@@ -19,9 +21,9 @@ export default function ModuleScreen() {
   const router = useRouter();
   const { user } = useAuthStore();
   const totalSlides = useMemo(() => slides.length || 0, [slides]);
-
-
   const [currentSlideId, setCurrentSlideId] = useState<string | undefined>(slideId);
+  const showPagination = useMemo(() => slides.length > 1, [slides.length]);
+
 
   const updateUrl = (id: string) => {
     router.setParams({ slideId: id });
@@ -39,17 +41,9 @@ export default function ModuleScreen() {
     if (moduleId && courseId) {
       setModuleProgressSafe(courseId, moduleId, index, slides.length, slides[index].id);
     }
-
-    // console.log(user?.id)
-    // console.log('courseId', courseId)
-    // console.log('slides[index]?.id', slides[index]?.id)
-
-    // if (user?.id && courseId && slides[index]?.id) {
-    //   courseService.updateLastSlideId(user.id, courseId, slides[index].id).catch((error) => {
-    //     console.warn('Failed to update last slide id:', error);
-    //   });
-    // }
   },[moduleId, courseId, user?.id, totalSlides, slides]);
+
+  useSaveProgressOnExit()
 
 
   const onScroll = useAnimatedScrollHandler({
@@ -136,6 +130,14 @@ export default function ModuleScreen() {
           </View>
         ))}
       </Animated.ScrollView>
+
+      {showPagination && (
+      <PaginationDots
+        total={slides.length}
+        currentIndex={slides.findIndex(s => s.id === currentSlideId)}
+      />
+    )}
+      
     </View>
   );
 }

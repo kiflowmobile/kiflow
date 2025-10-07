@@ -5,8 +5,12 @@ export const useCourseProgress = (courseId: string) => {
 
   const course = courses.find(c => c.course_id === courseId);
 
+  // console.log()
+  console.log('course',course)
+
   return {
     courseProgress: course?.progress ?? 0,
     lastSlideId: course?.last_slide_id ?? null,
+    modules: course?.modules 
   };
 };
