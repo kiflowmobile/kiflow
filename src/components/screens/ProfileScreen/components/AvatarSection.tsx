@@ -17,14 +17,11 @@ export default function AvatarSection({ fullName, onEditPress, onSignOutPress, e
 
   return (
     <View style={styles.largeAvatarSection}>
-      {/* Контейнер для иконок над аватаром */}
       <View style={styles.iconsContainer}>
-        {/* Иконка выхода слева */}
         <TouchableOpacity onPress={onSignOutPress}>
           <LogOutIcon size={32} />
         </TouchableOpacity>
         
-        {/* Иконка редактирования справа */}
         { (
           <TouchableOpacity onPress={onEditPress}>
             <EditIcon size={32} />
