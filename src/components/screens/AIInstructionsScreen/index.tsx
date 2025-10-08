@@ -16,12 +16,10 @@ const MockAIInstructionsScreen = () => {
 
   const handleSaveCompany = () => {
     // TODO: Implement save company logic
-    console.log('Saving company...');
   };
 
   const handleSaveCourse = () => {
     // TODO: Implement save course logic
-    console.log('Saving course...');
   };
 
   return (

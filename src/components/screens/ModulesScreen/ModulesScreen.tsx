@@ -7,14 +7,21 @@ import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 export default function CourseScreen() {
   const params = useLocalSearchParams<{ id?: string }>();
   const router = useRouter();
-  const { modules, isLoading, error, fetchModulesByCourse, clearError } = useModulesStore();
+  const { 
+    modules, 
+    isLoading, 
+    error, 
+    fetchModulesByCourse, 
+    clearError 
+  } = useModulesStore();
   const { getModuleProgress } = useUserProgressStore();
   const { setCurrentModule } = useModulesStore.getState();
+
 
   useEffect(() => {
     if (!params.id) return;
 
-    fetchModulesByCourse(params.id).catch((err) => {
+    fetchModulesByCourse(params.id).catch(err => {
       console.error('Unexpected error fetching modules:', err);
     });
   }, [params.id, fetchModulesByCourse]);
@@ -22,28 +29,26 @@ export default function CourseScreen() {
   const handleModulePress = (module: any) => {
     setCurrentModule(module);
     router.push({
-      pathname: '/module/[id]',
-      params: {
-        id: module.id,
+      pathname: '/module/[moduleId]',
+      params: { 
+        moduleId: module.id,   
         courseId: params.id,
       },
     });
   };
 
+
   return (
     <View style={styles.container}>
-      {error ? (
+     {error ? (
         <View style={styles.errorContainer}>
           <Text style={styles.errorText}>Помилка: {error}</Text>
-          <Text
-            style={styles.retryText}
-            onPress={() => {
-              clearError();
-              if (params.id) {
-                fetchModulesByCourse(params.id);
-              }
-            }}
-          >
+          <Text style={styles.retryText} onPress={() => {
+            clearError();
+            if (params.id) {
+              fetchModulesByCourse(params.id);
+            }
+          }}>
             Спробувати знову
           </Text>
         </View>
@@ -54,7 +59,7 @@ export default function CourseScreen() {
       ) : (
         <FlatList
           data={modules}
-          keyExtractor={(item) => item.id.toString()}
+          keyExtractor={item => item.id.toString()}
           renderItem={({ item }) => (
             <Pressable style={styles.moduleItem} onPress={() => handleModulePress(item)}>
               <Text style={styles.moduleTitle}>{item.title}</Text>
@@ -63,14 +68,14 @@ export default function CourseScreen() {
               ) : null}
               <View style={styles.progressRow}>
                 <View style={styles.progressBarWrapper}>
-                  <ProgressBar percent={getModuleProgress(item.id)} />
+                  {params.id && <ProgressBar percent={getModuleProgress(params.id, item.id)} />}
                 </View>
-                <Text style={styles.progressText}>{getModuleProgress(item.id)}%</Text>
+                {params.id && <Text style={styles.progressText}>{getModuleProgress(params.id, item.id)}%</Text>}
               </View>
             </Pressable>
           )}
         />
-      )}
+      )} 
     </View>
   );
 }

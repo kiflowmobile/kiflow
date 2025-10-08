@@ -3,10 +3,7 @@ import { useAuthStore } from '@/src/stores/authStore';
 import { useRouter } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
 import {
-  Dimensions,
-  Image,
   KeyboardAvoidingView,
-  SafeAreaView,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -14,6 +11,7 @@ import {
 } from 'react-native';
 import Button from '../../ui/button';
 import { Input, InputField } from '../../ui/input';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 interface AuthError {
   message?: string;
@@ -38,7 +36,6 @@ export default function LoginScreen() {
   // Zustand store
   const { signIn, isLoading, error, clearError } = useAuthStore();
 
-  const windowWidth = Dimensions.get('window').width;
 
   const normalizeEmail = (value: string) => value.trim().toLowerCase();
   const normalizePassword = (value: string) => value;
@@ -124,11 +121,6 @@ export default function LoginScreen() {
     <SafeAreaView style={styles.container}>
       <KeyboardAvoidingView behavior="padding" style={styles.container}>
         <View style={styles.inner}>
-          <Image
-            source={require('@/src/assets/images/loginIllustration.png')}
-            style={[styles.image, { width: windowWidth * 0.8 }]}
-            resizeMode="contain"
-          />
 
           <Text style={styles.title}>Sign in</Text>
 
@@ -211,7 +203,6 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#fff' },
   inner: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 16 },
-  image: { height: 180, marginBottom: 20 },
   title: { fontSize: 24, fontWeight: 'bold', marginBottom: 12 },
   form: { width: '100%', maxWidth: 400 },
   formErrorBanner: {

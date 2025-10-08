@@ -4,21 +4,34 @@ import type { Course } from '@/src/constants/types/course';
 import { useCourseProgress } from '@/src/hooks/useCourseProgress';
 import { navigateToCourse } from '@/src/utils/courseNavigation';
 import { useRouter } from 'expo-router';
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Image, StyleSheet, Text, View } from 'react-native';
 import Button from '../../../ui/button';
 import CourseProgressSection from '../../../ui/course-progress';
+import { shadow } from '../../../ui/styles/shadow';
+import { useAuthStore, useUserProgressStore } from '@/src/stores';
 
 interface CourseCardProps {
   course: Course;
 }
 
 const CourseCard: React.FC<CourseCardProps> = ({ course }) => {
+  const { user } = useAuthStore();
+  const { fetchUserProgress } = useUserProgressStore();
+  const { courseProgress, lastSlideId, modules} = useCourseProgress(course.id);
   const router = useRouter();
-  const { courseProgress, lastSlideId } = useCourseProgress(course);
 
+  useEffect(() => {
+    if (user) {
+      fetchUserProgress(user.id);
+    }
+  }, [user]);
   const handleStartCourse = () => {
-    navigateToCourse(router, course.id, lastSlideId);
+
+    const moduleProgress = modules?.find(module=>module.last_slide_id ===lastSlideId)?.progress
+
+      navigateToCourse(router, course.id, lastSlideId, moduleProgress);
+
   };
 
   return (
@@ -56,12 +69,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     backgroundColor: '#ffffff',
     overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-    marginBottom: 16,
+    ...shadow,
   },
   image: { 
     width: '100%', 

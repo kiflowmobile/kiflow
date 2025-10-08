@@ -3,13 +3,14 @@ import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { Image, StyleSheet, Text, View } from "react-native";
 import Button from "../../ui/button";
+import { initUserProgress } from "@/src/services/course_summaries";
+
 
 export default function HomeScreen() {
   const router = useRouter();
   const [role, setRole] = useState<string | null>(null);
-  
-  // Zustand стор
-  const { getUserRole } = useAuthStore();
+  const {  user } = useAuthStore();
+    const { getUserRole } = useAuthStore();
 
   useEffect(() => {
     const fetchRole = async () => {
@@ -19,6 +20,14 @@ export default function HomeScreen() {
 
     fetchRole();
   }, [getUserRole]);
+
+  useEffect(() => {
+    if (user) {
+      initUserProgress(user.id);
+    }
+  }, [user]);
+
+
   return (
     <View style={styles.container}>
       {/* <CustomHeader /> */}
@@ -97,8 +106,8 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
+    justifyContent: "center", // центрування по вертикалі
+    alignItems: "center", // центрування по горизонталі
     paddingHorizontal: 16,
     paddingTop: 20,
   },

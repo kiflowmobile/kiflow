@@ -2,6 +2,7 @@ import { supabase } from '@/src/config/supabaseClient';
 import { upsertUserProfile } from '@/src/services/users';
 import { Session, User } from '@supabase/supabase-js';
 import { create } from 'zustand';
+import { useUserProgressStore } from './userProgressStore';
 // import { devtools } from 'zustand/middleware';
 
 interface AuthState {
@@ -68,7 +69,9 @@ export const useAuthStore = create<AuthState>()(
 
       signUp: async (email: string, password: string, firstName?: string, lastName?: string) => {
         set({ isLoading: true, error: null });
+      
         try {
+          // 1️⃣ Реєстрація користувача
           const { data, error } = await supabase.auth.signUp({
             email,
             password,
@@ -77,66 +80,111 @@ export const useAuthStore = create<AuthState>()(
                 full_name: firstName && lastName ? `${firstName} ${lastName}` : null,
                 first_name: firstName || null,
                 last_name: lastName || null,
-                role: 'user'
-              }
-            }
+                role: 'user',
+              },
+            },
           });
-          
+      
           if (error) throw error;
-          
-          // Create or update user profile row in users table
-          if (data.user) {
-            await upsertUserProfile(data.user.id, {
-              email: data.user.email || email,
-              full_name: firstName && lastName ? `${firstName} ${lastName}` : null,
-              first_name: firstName || undefined,
-              last_name: lastName || undefined,
-            });
-          }
-          
-          const isGuest = !data.session || !data.session.user || data.session.user.is_anonymous;
-          set({ 
-            user: data.user, 
-            session: data.session, 
-            isGuest,
-            isLoading: false 
+      
+          if (!data.user) throw new Error('User not created');
+      
+          // 2️⃣ Створюємо профіль
+          await upsertUserProfile(data.user.id, {
+            email: data.user.email || email,
+            full_name: firstName && lastName ? `${firstName} ${lastName}` : null,
+            first_name: firstName || undefined,
+            last_name: lastName || undefined,
           });
+      
+          // 3️⃣ Отримуємо всі курси
+          // const { data: courses, error: coursesError } = await supabase
+          //   .from('courses')
+          //   .select('id');
+      
+          // if (coursesError) throw coursesError;
+      
+          // 4️⃣ Отримуємо всі модулі
+          // const { data: modules, error: modulesError } = await supabase
+          //   .from('modules')
+          //   .select('id, course_id');
+      
+          // if (modulesError) throw modulesError;
+      
+          // 5️⃣ Формуємо записи для user_course_summaries
+          // const progressRows = (courses || []).map(course => ({
+          //   user_id: data.user!.id,
+          //   course_id: course.id,
+          //   progress: 0,
+          //   last_slide_id: null,
+          //   modules: (modules || [])
+          //     .filter(m => m.course_id === course.id)
+          //     .map(m => ({ module_id: m.id, progress: 0, last_slide_id: null })),
+          // }));
+      
+          // 6️⃣ Вставляємо прогрес у БД
+          // if (progressRows.length > 0) {
+          //   const { error: insertError } = await supabase
+          //     .from('user_course_summaries')
+          //     .upsert(progressRows, { onConflict: 'user_id,course_id' }); // <-- рядок, не масив
+      
+          //   if (insertError) throw insertError;
+          // }
+      
+          // 7️⃣ Встановлюємо стан
+          const isGuest = !data.session || !data.session.user || data.session.user.is_anonymous;
+          set({
+            user: data.user,
+            session: data.session,
+            isGuest,
+            isLoading: false,
+          });
+      
         } catch (error: any) {
-          set({ 
-            error: error.message || 'Sign up failed', 
-            isLoading: false 
+          set({
+            error: error.message || 'Sign up failed',
+            isLoading: false,
           });
           throw error;
         }
       },
+      
+      
+      
+      
 
       signOut: async () => {
         set({ isLoading: true, error: null });
         try {
           // Спочатку перевіряємо, чи є активна сесія
-          const { data: sessionData } = await supabase.auth.getSession();
+          // const { data: sessionData } = await supabase.auth.getSession();
+
+
 
           // Якщо сесії не існує, повертаємо успіх без спроби виходу
-          if (!sessionData?.session) {
-            set({ 
-              user: null, 
-              session: null, 
-              isGuest: true, 
-              isLoading: false 
-            });
-            return;
-          }
+          // if (!sessionData?.session) {
+          //   set({ 
+          //     user: null, 
+          //     session: null, 
+          //     isGuest: true, 
+          //     isLoading: false 
+          //   });
+          //   return;
+          // }
+          await useUserProgressStore.getState().syncProgressToDB();
+
+
 
           // Продовжуємо з signOut, якщо у нас є сесія
-          const { error } = await supabase.auth.signOut();
-          if (error) throw error;
+          // const { error } = await supabase.auth.signOut();
+          // if (error) throw error;
           
-          set({ 
-            user: null, 
-            session: null, 
-            isGuest: true, 
-            isLoading: false 
-          });
+          // set({ 
+          //   user: null, 
+          //   session: null, 
+          //   isGuest: true, 
+          //   isLoading: false 
+          // });
         } catch (error: any) {
           console.error('Error during signOut:', error);
           set({ 
