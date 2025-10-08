@@ -159,14 +159,16 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: '#333',
   },
-  button: {
-    marginTop: 16,
-    width: '50%',
-  },
   button_block: {
     width: '100%',
-    alignItems: 'center',
+    display: 'flex',
+    alignItems: 'center', 
     justifyContent: 'center',
+    marginTop: 12,
+  },
+  button: {
+    marginTop: 16,
+    width: '80%',        
   },
   completedWrapper: {
     flexDirection: 'row',
