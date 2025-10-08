@@ -57,7 +57,6 @@ export const useUserProgressStore = create<UserProgressStore>((set, get) => ({
   },
 
   fetchUserProgress: async (userId: string) => {
-    console.log('fetchUserProgress')
     set({ isLoading: true, error: null });
     try {
       // 1) пробуємо з AsyncStorage
@@ -68,22 +67,17 @@ export const useUserProgressStore = create<UserProgressStore>((set, get) => ({
       .eq('user_id', userId);
 
       const localData = await loadProgressLocal(userId);
-      console.log('localData', localData)
 
       if (localData.length === data?.length) {
         set({ courses: localData });
         return;
       }
-      // if (error) throw error;
       const courses = (data || []).map(c => ({
         course_id: c.course_id,
         progress: c.progress,
         last_slide_id: c.last_slide_id,
         modules: c.modules || [], 
       }));
-
-      console.log('data', courses)
-
         set({ courses });
 
       await saveProgressLocal(userId, courses);

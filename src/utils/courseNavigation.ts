@@ -10,7 +10,6 @@ export const navigateToCourse = async (
 
   try {
 
-    console.log(moduleProgress)
 
     if(moduleProgress === 100) {
       router.push({
