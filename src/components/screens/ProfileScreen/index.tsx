@@ -4,10 +4,9 @@ import { getCurrentUserProfile, updateCurrentUserProfile } from '@/src/services/
 import { useAuthStore } from '@/src/stores/authStore';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Alert, Platform, ScrollView, StyleSheet, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 
 // Імпорт компонентів
-import ActionButtons from './components/ActionButtons';
 import AvatarSection from './components/AvatarSection';
 import LoadingState from './components/LoadingState';
 import PasswordSection from './components/PasswordSection';
@@ -48,11 +47,6 @@ export default function ProfileScreen() {
 
       if (error) {
         console.error('Error loading profile:', error);
-        if (Platform.OS === 'web') {
-          alert('Помилка: Не вдалося завантажити профіль');
-        } else {
-          Alert.alert('Помилка', 'Не вдалося завантажити профіль');
-        }
         return;
       }
 
@@ -68,11 +62,6 @@ export default function ProfileScreen() {
       }
     } catch (error) {
       console.error('Error loading profile:', error);
-      if (Platform.OS === 'web') {
-        alert('Помилка: Сталася помилка при завантаженні профілю');
-      } else {
-        Alert.alert('Помилка', 'Сталася помилка при завантаженні профілю');
-      }
     } finally {
       setLoading(false);
     }
@@ -94,30 +83,15 @@ export default function ProfileScreen() {
 
       if (error) {
         console.error('Error updating profile:', error);
-        if (Platform.OS === 'web') {
-          alert('Помилка: Не вдалося оновити профіль');
-        } else {
-          Alert.alert('Помилка', 'Не вдалося оновити профіль');
-        }
         return;
       }
 
       if (data) {
         setUser(data);
         setEditMode(false);
-        if (Platform.OS === 'web') {
-          alert('Успішно: Профіль оновлено');
-        } else {
-          Alert.alert('Успішно', 'Профіль оновлено');
-        }
       }
     } catch (error) {
       console.error('Error updating profile:', error);
-      if (Platform.OS === 'web') {
-        alert('Помилка: Сталася помилка при оновленні профілю');
-      } else {
-        Alert.alert('Помилка', 'Сталася помилка при оновленні профілю');
-      }
     } finally {
       setUpdating(false);
     }
@@ -178,7 +152,10 @@ export default function ProfileScreen() {
             fullName={formData.full_name || user?.full_name || ''}
             onEditPress={handleEdit}
             onSignOutPress={handleSignOut}
+            onSave={handleSave}
+            onCancel={handleCancel}
             editMode={editMode}
+            updating={updating}
           />
           <UserInfoSection
             user={user}
@@ -186,14 +163,6 @@ export default function ProfileScreen() {
             editMode={editMode}
             onFormDataChange={handleFormDataChange}
           />
-          {editMode && (
-            <ActionButtons
-              editMode={editMode}
-              updating={updating}
-              onSave={handleSave}
-              onCancel={handleCancel}
-            />
-          )}
           <PasswordSection />
           <CompanyCode onPress={handleCourseCodePress} />
         </View>
