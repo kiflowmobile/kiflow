@@ -2,8 +2,6 @@ import { useAuthStore } from '@/src/stores/authStore';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useMemo, useState } from 'react';
 import {
-  Dimensions,
-  Image,
   KeyboardAvoidingView,
   StyleSheet,
   Text,
@@ -35,7 +33,6 @@ const normalizeName = (v: string) =>
 const normalizeEmail = (v: string) => v.trim().toLowerCase();
 
 export default function RegisterScreen() {
-  const windowWidth = Dimensions.get('window').width;
   const router = useRouter();
   const { signUp, isLoading, error, clearError } = useAuthStore();
 
@@ -175,11 +172,7 @@ export default function RegisterScreen() {
     <SafeAreaView style={styles.container}>
       <KeyboardAvoidingView behavior="padding" style={styles.container}>
         <View style={styles.inner}>
-          <Image
-            source={require('@/src/assets/images/loginIllustration.png')}
-            style={[styles.image, { width: windowWidth * 0.8 }]}
-            resizeMode="contain"
-          />
+
           <Text style={styles.title}>Sign up</Text>
 
           <View style={styles.form}>
@@ -356,7 +349,6 @@ export default function RegisterScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#fff' },
   inner: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 16 },
-  image: { height: 180, marginBottom: 20 },
   title: { fontSize: 24, fontWeight: 'bold', marginBottom: 12 },
   form: { width: '100%', maxWidth: 400 },
 

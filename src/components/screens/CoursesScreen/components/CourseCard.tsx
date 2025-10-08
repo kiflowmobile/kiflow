@@ -8,6 +8,7 @@ import React from 'react';
 import { Image, StyleSheet, Text, View } from 'react-native';
 import Button from '../../../ui/button';
 import CourseProgressSection from '../../../ui/course-progress';
+import { shadow } from '../../../ui/styles/shadow';
 
 interface CourseCardProps {
   course: Course;
@@ -56,12 +57,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     backgroundColor: '#ffffff',
     overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-    marginBottom: 16,
+    ...shadow,
   },
   image: { 
     width: '100%', 

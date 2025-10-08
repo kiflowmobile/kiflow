@@ -17,9 +17,7 @@ export default function CompanyCode({ onPress }: CompanyCodeProps) {
 
 const styles = StyleSheet.create({
   companyCodeSection: {
-    backgroundColor: Colors.gray[50],
     borderRadius: 16,
-    padding: 20,
     borderWidth: 1,
     borderColor: Colors.gray[200],
     shadowColor: Colors.black,

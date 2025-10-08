@@ -1,5 +1,4 @@
 import Button from '@/src/components/ui/button';
-import { Text } from '@/src/components/ui/text';
 import { VStack } from '@/src/components/ui/vstack';
 import { Colors } from '@/src/constants/Colors';
 import { useAuthStore } from '@/src/stores/authStore';
@@ -79,14 +78,13 @@ export default function PasswordSection() {
 
   return (
     <VStack space="md" style={styles.passwordSection}>
-      <Text style={styles.sectionTitle}>Безпека</Text>
       
       {!showPasswordFields ? (
         <Button
           title="Змінити пароль"
           onPress={() => setShowPasswordFields(true)}
-          style={styles.changePasswordButton}
           textStyle={styles.buttonText}
+          size="lg"
         />
       ) : (
         <VStack space="md" style={styles.fieldsContainer}>
@@ -150,9 +148,7 @@ export default function PasswordSection() {
 
 const styles = StyleSheet.create({
   passwordSection: {
-    backgroundColor: Colors.gray[50],
     borderRadius: 16,
-    padding: 24,
     borderWidth: 1,
     borderColor: Colors.gray[200],
     shadowColor: Colors.black,
