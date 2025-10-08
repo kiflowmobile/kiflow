@@ -1,7 +1,7 @@
 import { Icon } from '@/src/components/ui/icon';
 import { AlertCircle, CheckCircle } from 'lucide-react-native';
 import React from 'react';
-import { Dimensions, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
 export interface ContentWithExampleProps {
   title: string;
@@ -10,7 +10,6 @@ export interface ContentWithExampleProps {
   example: string;
 }
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 const ContentWithExample: React.FC<ContentWithExampleProps> = ({
   title,
@@ -59,8 +58,7 @@ export default ContentWithExample;
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: '#f7fafc',
-    padding: 12,
+    backgroundColor: '#ffffff',
   },
   scrollContainer: {
     flexGrow: 1,
@@ -68,18 +66,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   card: {
-    width: SCREEN_WIDTH - 24,
-    maxWidth: 760,
-    borderRadius: 18,
-    paddingVertical: 24,
-    paddingHorizontal: 16,
+    paddingInline: 16,
     backgroundColor: '#ffffff',
-    shadowColor: '#000',
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 3,
   },
-  icon: { marginBottom: 12 },
+  icon: { marginBottom: 0 },
   title: {
     fontSize: 22,
     fontWeight: '700',

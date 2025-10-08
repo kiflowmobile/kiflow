@@ -284,12 +284,12 @@ const styles = StyleSheet.create({
     marginVertical: 6,
   },
   aiBubble: {
-    backgroundColor: '#e0f2fe',
+    backgroundColor: 'rgba(0, 0, 0, 0.05)',
     alignSelf: 'flex-start',
     flexDirection: 'row',
     alignItems: 'center',
   },
-  userBubble: { backgroundColor: '#f1f5f9', alignSelf: 'flex-end' },
+  userBubble: { backgroundColor: 'rgba(0,0,0,0.03)', alignSelf: 'flex-end' },
   messageIcon: { marginRight: 6 },
   messageText: { fontSize: 16, color: '#0f172a', lineHeight: 22 },
   footer: {
