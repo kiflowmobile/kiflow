@@ -10,6 +10,7 @@ import Button from '../../../ui/button';
 import CourseProgressSection from '../../../ui/course-progress';
 import { shadow } from '../../../ui/styles/shadow';
 import { useAuthStore, useUserProgressStore } from '@/src/stores';
+import { MaterialIcons } from '@expo/vector-icons';
 
 interface CourseCardProps {
   course: Course;
@@ -49,13 +50,32 @@ const CourseCard: React.FC<CourseCardProps> = ({ course }) => {
         <CourseProgressSection progress={courseProgress} />
         
         <HStack style={styles.button_block}>
-          <Button
-            title={courseProgress > 0 ? "ПРОДОВЖИТИ" : "ПОЧАТИ КУРС"}
-            variant="primary"
-            size="md"
-            onPress={handleStartCourse}
-            style={styles.button}
-          />
+          {courseProgress === 0 && (
+            <Button
+              title="ПОЧАТИ КУРС"
+              variant="primary"
+              size="md"
+              onPress={handleStartCourse}
+              style={styles.button}
+            />
+          )}
+
+          {courseProgress > 0 && courseProgress < 100 && (
+            <Button
+              title="ПРОДОВЖИТИ"
+              variant="primary"
+              size="md"
+              onPress={handleStartCourse}
+              style={styles.button}
+            />
+          )}
+
+          {courseProgress === 100 && (
+            <View style={styles.completedWrapper}>
+              <MaterialIcons name="check-circle" size={28} color="#22c55e" />
+              <Text style={styles.completedText}>Курс завершено</Text>
+            </View>
+          )}
         </HStack>
       </VStack>
     </View>
@@ -97,5 +117,16 @@ const styles = StyleSheet.create({
     display: "flex", 
     alignItems: 'center', 
     justifyContent: 'center'
-  }
+  },
+  completedWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 16,
+    gap: 6,
+  },
+  completedText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#22c55e',
+  },
 });
