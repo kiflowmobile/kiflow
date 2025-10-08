@@ -215,8 +215,8 @@ const styles = StyleSheet.create({
     paddingBottom: 32,
   },
   content: {
-    padding: 20,
     display: 'flex',
-    gap: 32,
+    paddingInline: 16,
+    gap: 16,
   },
 });
