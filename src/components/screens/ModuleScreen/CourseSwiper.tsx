@@ -78,9 +78,6 @@ const CourseSwiper: React.FC<CourseSwiperProps> = ({
     [SCREEN_H, currentSlideIndex, onIndexChange, setCurrentSlideIndex],
   );
 
-  console.log('slides',slides)
-
-
   const renderSlide = ({ item, index }: { item: Slide; index: number }) => {
     const isActive = index === currentSlideIndex;
     switch (item.slide_type) {

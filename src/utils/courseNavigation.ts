@@ -10,7 +10,6 @@ export const navigateToCourse = async (
 
   try {
 
-
     if(moduleProgress === 100) {
       router.push({
         pathname: '/courses/[id]',

@@ -12,7 +12,6 @@ export const initUserProgress = async (userId: string) => {
     if (checkError) throw checkError;
 
     if (existing) {
-      console.log('✅ user_course_summaries already exists for user');
       return; // Не дублюємо
     }
 
@@ -54,7 +53,6 @@ export const initUserProgress = async (userId: string) => {
       if (insertError) throw insertError;
     }
 
-    console.log('🎉 User progress initialized successfully');
   } catch (err: any) {
     console.error('❌ Error initializing user progress:', err.message);
   }
