@@ -7,6 +7,7 @@ export const initUserProgress = async (userId: string) => {
       .from('user_course_summaries')
       .select('user_id')
       .eq('user_id', userId)
+      .limit(1)
       .maybeSingle();
 
     if (checkError) throw checkError;

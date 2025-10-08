@@ -40,7 +40,7 @@ export default function RootLayout() {
     <Stack.Screen name="index" />
     <Stack.Screen name="course-code" />
     <Stack.Screen name="home" />
-    
+    <Stack.Screen name="module/[moduleId]" /> 
     <Stack.Screen name="courses/index" />
     <Stack.Screen name="courses/[id]" />
     <Stack.Screen name="instractions" />
