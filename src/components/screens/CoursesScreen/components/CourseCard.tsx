@@ -19,7 +19,7 @@ interface CourseCardProps {
 
 const CourseCard: React.FC<CourseCardProps> = ({ course }) => {
   const { user } = useAuthStore();
-  const { fetchUserProgress } = useUserProgressStore();
+  const { fetchUserProgress, resetCourseProgress } = useUserProgressStore();
   const { courseProgress, lastSlideId, modules} = useCourseProgress(course.id);
   const router = useRouter();
   const [isDeveloper, setIsDeveloper] = React.useState(false);
@@ -30,41 +30,34 @@ const CourseCard: React.FC<CourseCardProps> = ({ course }) => {
       fetchUserProgress(user.id);
     }
   }, [user]);
+
   const handleStartCourse = () => {
     const moduleProgress = modules?.find(module=>module.last_slide_id ===lastSlideId)?.progress
     navigateToCourse(router, course.id, lastSlideId, moduleProgress);
   };
 
-
-useEffect(() => {
-  const loadDevMode = async () => {
-    try {
-      const value = await AsyncStorage.getItem('isDeveloper');
-      if (value === 'true') setIsDeveloper(true);
-    } catch (error) {
-      console.error('Error loading developer mode:', error);
-    }
-  };
-  loadDevMode();
-}, []);
+  useEffect(() => {
+    const loadDevMode = async () => {
+      try {
+        const value = await AsyncStorage.getItem('isDeveloper');
+        if (value === 'true') setIsDeveloper(true);
+      } catch (error) {
+        console.error('Error loading developer mode:', error);
+      }
+    };
+    loadDevMode();
+  }, []);
 
 
 const handleResetProgress = async () => {
   if (!user) return;
-  // try {
-  //   const { error } = await supabase
-  //     .from('user_course_summaries')
-  //     .update({ progress: 0, last_slide_id: null })
-  //     .eq('user_id', user.id)
-  //     .eq('course_id', course.id);
-
-  //   if (error) throw error;
-
-  //   await fetchUserProgress(user.id);
-  //   alert('✅ Прогрес курсу скинуто!');
-  // } catch (err) {
-  //   console.error('Error resetting course progress:', err);
-  // }
+  console.log('reset progress')
+  try {
+    resetCourseProgress(course.id)
+    
+  } catch (err) {
+    console.error('Error resetting course progress:', err);
+  }
 };
 
 

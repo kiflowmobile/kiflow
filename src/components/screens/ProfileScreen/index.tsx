@@ -6,9 +6,6 @@ import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, Switch, View, Text} from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
-
-// Імпорт компонентів
 import AvatarSection from './components/AvatarSection';
 import LoadingState from './components/LoadingState';
 import PasswordSection from './components/PasswordSection';
@@ -35,13 +32,22 @@ export default function ProfileScreen() {
   });
 
   useEffect(() => {
-    if (isGuest || !authUser) {
-      router.replace('/auth/login');
-      return;
-    }
+    if (authUser && !isGuest) loadUserProfile();
+  }, [authUser, isGuest]);
 
-    loadUserProfile();
-  }, [authUser, isGuest, router]);
+  useEffect(() => {
+    const loadDevMode = async () => {
+      try {
+        const value = await AsyncStorage.getItem('isDeveloper');
+        setIsDeveloper(value === 'true');
+      } catch (error) {
+        console.error('Error loading developer mode:', error);
+        setIsDeveloper(false);
+      }
+    };
+    loadDevMode();
+  }, []);
+
 
   const loadUserProfile = async () => {
     try {
@@ -146,7 +152,7 @@ export default function ProfileScreen() {
   if (loading) {
     return <LoadingState />;
   }
-
+  
   const toggleDeveloperMode = async (value: boolean) => {
     try {
       setIsDeveloper(value);
@@ -155,7 +161,6 @@ export default function ProfileScreen() {
       console.error('Error saving isDeveloper:', error);
     }
   };
-  
 
 
   return (
