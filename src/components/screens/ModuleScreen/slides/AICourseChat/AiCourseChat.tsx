@@ -278,6 +278,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 14,
     borderRadius: 16,
+    marginBottom: 12,
   },
   aiBubble: {
     backgroundColor: 'rgba(0, 0, 0, 0.05)',
