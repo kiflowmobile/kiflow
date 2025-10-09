@@ -4,9 +4,8 @@ import { getCurrentUserProfile, updateCurrentUserProfile } from '@/src/services/
 import { useAuthStore } from '@/src/stores/authStore';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
-
-// Імпорт компонентів
+import { ScrollView, StyleSheet, Switch, View, Text} from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import AvatarSection from './components/AvatarSection';
 import LoadingState from './components/LoadingState';
 import PasswordSection from './components/PasswordSection';
@@ -17,11 +16,12 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 export default function ProfileScreen() {
   const router = useRouter();
   const { user: authUser, isGuest, signOut } = useAuthStore();
-
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
   const [editMode, setEditMode] = useState(false);
+  const [isDeveloper, setIsDeveloper] = useState(false);
+
 
   const [formData, setFormData] = useState<UserUpdateData>({
     full_name: '',
@@ -32,13 +32,22 @@ export default function ProfileScreen() {
   });
 
   useEffect(() => {
-    if (isGuest || !authUser) {
-      router.replace('/auth/login');
-      return;
-    }
+    if (authUser && !isGuest) loadUserProfile();
+  }, [authUser, isGuest]);
 
-    loadUserProfile();
-  }, [authUser, isGuest, router]);
+  useEffect(() => {
+    const loadDevMode = async () => {
+      try {
+        const value = await AsyncStorage.getItem('isDeveloper');
+        setIsDeveloper(value === 'true');
+      } catch (error) {
+        console.error('Error loading developer mode:', error);
+        setIsDeveloper(false);
+      }
+    };
+    loadDevMode();
+  }, []);
+
 
   const loadUserProfile = async () => {
     try {
@@ -143,11 +152,22 @@ export default function ProfileScreen() {
   if (loading) {
     return <LoadingState />;
   }
+  
+  const toggleDeveloperMode = async (value: boolean) => {
+    try {
+      setIsDeveloper(value);
+      await AsyncStorage.setItem('isDeveloper', value ? 'true' : 'false');
+    } catch (error) {
+      console.error('Error saving isDeveloper:', error);
+    }
+  };
+
 
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
         <View style={styles.content}>
+        
           <AvatarSection
             fullName={formData.full_name || user?.full_name || ''}
             onEditPress={handleEdit}
@@ -157,6 +177,13 @@ export default function ProfileScreen() {
             editMode={editMode}
             updating={updating}
           />
+          <View style={{ flexDirection: 'column', alignItems: 'flex-start', marginTop: 16 }}>
+            <Text style={{ flex: 1, fontSize: 16 }}>Developer Mode</Text>        
+            <Switch
+              value={isDeveloper}
+              onValueChange={toggleDeveloperMode}
+            />
+          </View>
           <UserInfoSection
             user={user}
             formData={formData}
@@ -166,7 +193,9 @@ export default function ProfileScreen() {
           <PasswordSection />
           <CompanyCode onPress={handleCourseCodePress} />
         </View>
+        
       </ScrollView>
+      
     </SafeAreaView>
   );
 }

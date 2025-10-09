@@ -4,6 +4,7 @@ import { useCourseStore } from '@/src/stores';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import CourseCard from './components/CourseCard';
 import { useEffect } from 'react';
+import { useSaveProgressOnExit } from '@/src/hooks/useSaveProgressOnExit';
 
 const CoursesScreen = () => {
   const { courses, isLoading, error, fetchCourses, clearError } = useCourseStore();
@@ -13,6 +14,9 @@ const CoursesScreen = () => {
       console.error('Непередбачена помилка при завантаженні курсів:', err);
     });
   }, [fetchCourses]);
+
+  useSaveProgressOnExit()
+
 
   return (
     <SafeAreaView style={styles.container}>

@@ -81,12 +81,12 @@ export default function CourseScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff' },
+  container: { flex: 1, backgroundColor: '#fff',padding: 16, },
   moduleItem: {
     padding: 16,
     marginBottom: 12,
     borderRadius: 12,
-    backgroundColor: '#fff',
+    backgroundColor: 'rgba(0, 0, 0, 0.03)',
     shadowColor: '#000',
     shadowOpacity: 0.05,
     shadowRadius: 6,

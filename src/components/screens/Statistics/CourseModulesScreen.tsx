@@ -157,8 +157,8 @@ const CourseModulesScreen: React.FC = () => {
 export default CourseModulesScreen;
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: '#f8fafc', padding: 16 },
-  card: { backgroundColor: '#fff', borderRadius: 20, padding: 24 },
+  screen: { flex: 1, backgroundColor: '#ffffff', padding: 16 },
+  card: { backgroundColor: '#fff', borderRadius: 20 },
   iconWrapper: {
     alignSelf: 'center',
     backgroundColor: '#f3e8ff',
@@ -168,13 +168,23 @@ const styles = StyleSheet.create({
   },
   title: { fontSize: 22, fontWeight: '800', textAlign: 'center', marginBottom: 4 },
   subtitle: { fontSize: 16, textAlign: 'center', color: '#475569', marginBottom: 16 },
-  statsCard: { backgroundColor: '#f9fafb', borderRadius: 16, padding: 16, marginBottom: 16 },
+  statsCard: {
+    backgroundColor: 'rgba(0, 0, 0, 0.02)',
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 16,
+  },
   statsTitle: { fontSize: 18, fontWeight: '600', color: '#0f172a', marginBottom: 12 },
   statsRow: { flexDirection: 'row', justifyContent: 'space-between', gap: 8 },
   statBox: { flex: 1, borderRadius: 12, padding: 12, alignItems: 'center' },
   statLabel: { fontSize: 13, color: '#475569', marginBottom: 4 },
   statValue: { fontSize: 18, fontWeight: '700' },
-  moduleCard: { backgroundColor: '#f9fafb', borderRadius: 16, padding: 16, marginBottom: 16 },
+  moduleCard: {
+    backgroundColor: 'rgba(0, 0, 0, 0.02)',
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 16,
+  },
   moduleTitle: { fontSize: 16, fontWeight: '700', marginBottom: 8 },
   chartPlaceholderText: { color: '#64748b', textAlign: 'center', marginTop: 16 },
 });

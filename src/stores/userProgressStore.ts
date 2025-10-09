@@ -27,6 +27,7 @@ interface UserProgressStore {
   ) => Promise<void>;
     getModuleProgress: (courseId:string,moduleId: string) => number;
     syncProgressToDB: () => Promise<void>
+    resetCourseProgress: (courseId: string) => Promise<void>
 }
 
 const persistCourses = (courses: UserCourseSummary[]) => {
@@ -59,8 +60,6 @@ export const useUserProgressStore = create<UserProgressStore>((set, get) => ({
   fetchUserProgress: async (userId: string) => {
     set({ isLoading: true, error: null });
     try {
-      // 1) пробуємо з AsyncStorage
-
       const { data, error } = await supabase
       .from('user_course_summaries')
       .select('course_id, progress, last_slide_id, modules')
@@ -105,7 +104,6 @@ export const useUserProgressStore = create<UserProgressStore>((set, get) => ({
   getCourseProgress: (courseId) => {
     return get().courses.find(c => c.course_id === courseId)?.progress ?? 0;
   },
-  
 
   setModuleProgressSafe: async (courseId, moduleId, currentSlideIndex, totalSlides, lastSlideId) => {
     const { user } = useAuthStore.getState();
@@ -143,7 +141,6 @@ export const useUserProgressStore = create<UserProgressStore>((set, get) => ({
       return { courses: persistCourses(updatedCourses) };
     });
   },
-  
 
   getModuleProgress: (courseId?: string, moduleId?: string) => {
     if (!courseId || !moduleId) return 0;
@@ -151,6 +148,7 @@ export const useUserProgressStore = create<UserProgressStore>((set, get) => ({
     const module = course?.modules.find(m => m.module_id === moduleId);
     return module?.progress ?? 0;
   },
+
   syncProgressToDB: async () => {
     const { user } = useAuthStore.getState();
     if (!user) return;
@@ -185,5 +183,32 @@ export const useUserProgressStore = create<UserProgressStore>((set, get) => ({
       console.error('Помилка синхронізації прогресу з БД:', err.message);
     }
   },
+
+  resetCourseProgress: async (courseId: string) => {
+    const { user } = useAuthStore.getState();
+    if (!user) return;
+  
+    set(state => {
+      const updatedCourses = state.courses.map(course => {
+        if (course.course_id === courseId) {
+          return {
+            ...course,
+            progress: 0,
+            last_slide_id: null,
+            modules: course.modules.map(m => ({
+              ...m,
+              progress: 0,
+              last_slide_id: null,
+            })),
+          };
+        }
+        return course;
+      });
+  
+      saveProgressLocal(user.id, updatedCourses);  
+      return { courses: updatedCourses };
+    });
+  },
+  
   
 }));
