@@ -40,15 +40,18 @@ export default function CourseScreen() {
 
   return (
     <View style={styles.container}>
-     {error ? (
+      {error ? (
         <View style={styles.errorContainer}>
           <Text style={styles.errorText}>Помилка: {error}</Text>
-          <Text style={styles.retryText} onPress={() => {
-            clearError();
-            if (params.id) {
-              fetchModulesByCourse(params.id);
-            }
-          }}>
+          <Text
+            style={styles.retryText}
+            onPress={() => {
+              clearError();
+              if (params.id) {
+                fetchModulesByCourse(params.id);
+              }
+            }}
+          >
             Спробувати знову
           </Text>
         </View>
@@ -59,29 +62,35 @@ export default function CourseScreen() {
       ) : (
         <FlatList
           data={modules}
-          keyExtractor={item => item.id.toString()}
+          keyExtractor={(item) => item.id.toString()}
           renderItem={({ item }) => (
             <Pressable style={styles.moduleItem} onPress={() => handleModulePress(item)}>
               <Text style={styles.moduleTitle}>{item.title}</Text>
               {item.description ? (
                 <Text style={styles.moduleDescription}>{item.description}</Text>
               ) : null}
-              <View style={styles.progressRow}>
-                <View style={styles.progressBarWrapper}>
-                  {params.id && <ProgressBar percent={getModuleProgress(params.id, item.id)} />}
-                </View>
-                {params.id && <Text style={styles.progressText}>{getModuleProgress(params.id, item.id)}%</Text>}
+              <View>
+                {params.id && (
+                  <>
+                    <Text style={styles.progressText}>
+                      {getModuleProgress(params.id, item.id)}%
+                    </Text>
+                    <View style={styles.progressBarWrapper}>
+                      <ProgressBar percent={getModuleProgress(params.id, item.id)} />
+                    </View>
+                  </>
+                )}
               </View>
             </Pressable>
           )}
         />
-      )} 
+      )}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff',padding: 16, },
+  container: { flex: 1, backgroundColor: '#fff', padding: 16 },
   moduleItem: {
     padding: 16,
     marginBottom: 12,
@@ -102,16 +111,15 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#444',
   },
-  progressRow: {
-    marginTop: 12,
-  },
-  progressBarWrapper: {
-    marginBottom: 6,
-  },
   progressText: {
     fontSize: 12,
     color: '#666',
     textAlign: 'right',
+    marginBottom: 6,
+  },
+  
+  progressBarWrapper: {
+    marginBottom: 6,
   },
   loadingText: {
     textAlign: 'center',
