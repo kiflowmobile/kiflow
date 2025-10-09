@@ -157,7 +157,7 @@ const CourseModulesScreen: React.FC = () => {
 export default CourseModulesScreen;
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: '#f8fafc', padding: 16 },
+  screen: { flex: 1, backgroundColor: '#ffffff', padding: 16 },
   card: { backgroundColor: '#fff', borderRadius: 20, padding: 24 },
   iconWrapper: {
     alignSelf: 'center',

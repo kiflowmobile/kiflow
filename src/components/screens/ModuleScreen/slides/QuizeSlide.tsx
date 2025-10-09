@@ -67,6 +67,8 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#fff',
     paddingHorizontal: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   scrollContainer: {
     flexGrow: 1,
@@ -119,7 +121,7 @@ const styles = StyleSheet.create({
     borderWidth: 0.5,
   },
   optionCorrect: {
-    backgroundColor: 'rgba(34,197,94,0.3)', 
+    backgroundColor: 'rgba(34,197,94,0.3)',
     borderColor: '#22c55e',
   },
   optionIncorrect: {

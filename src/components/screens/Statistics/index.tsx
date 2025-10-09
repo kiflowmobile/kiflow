@@ -6,6 +6,7 @@ import { useCriteriaStore } from "@/src/stores/criterias";
 import { useMainRatingStore } from "@/src/stores/mainRatingStore";
 import { useAuthStore, useModulesStore } from "@/src/stores";
 import { useRouter } from "expo-router";
+import { shadow } from "../../ui/styles/shadow";
 
 export default function StatisticsScreen() {
   const { width } = useWindowDimensions(); 
@@ -124,7 +125,7 @@ export default function StatisticsScreen() {
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, padding: 16, backgroundColor: "#f8fafc",},
+  screen: { flex: 1, padding: 16, backgroundColor: "#ffffff",},
   scrollContent: { paddingBottom: 32 },
   scrollContentLarge: { flexDirection: "row", flexWrap: "wrap", justifyContent: "center", gap: 16 },
   iconWrapper: {
@@ -141,12 +142,8 @@ const styles = StyleSheet.create({
     padding: 16,
     borderRadius: 20,
     backgroundColor: "#ffffff",
-    shadowColor: "#000",
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 3,
     width: "100%",
+    ...shadow,
   },
   cardLarge: {
     width: "45%", // планшети
