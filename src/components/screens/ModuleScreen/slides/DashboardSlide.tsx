@@ -1,3 +1,4 @@
+import { shadow } from '@/src/components/ui/styles/shadow';
 import { useAuthStore, useModulesStore } from '@/src/stores';
 import { useMainRatingStore } from '@/src/stores/mainRatingStore';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -116,19 +117,16 @@ const styles = StyleSheet.create({
     padding: 16,
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: '#ffffff',
   },
   card: {
     width: '100%',
     maxWidth: 480,
-    height: '80%', 
+    height: '80%',
     borderRadius: 20,
     padding: 24,
     backgroundColor: '#ffffff',
-    shadowColor: '#000',
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 3,
+    ...shadow,
   },
   iconWrapper: {
     alignSelf: 'center',

@@ -1,9 +1,6 @@
-import { Text } from '@/src/components/ui/text';
 import { View } from '@/src/components/ui/view';
-import { CheckCircle, XCircle } from 'lucide-react-native';
 import React, { useState } from 'react';
-import { Dimensions, Pressable, ScrollView, StyleSheet } from 'react-native';
-
+import { Pressable, ScrollView, StyleSheet, Text } from 'react-native';
 
 type QuizData = {
   question: string;
@@ -17,43 +14,16 @@ interface QuizProps {
   quiz: QuizData;
 }
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
-
 const QuizSlide: React.FC<QuizProps> = ({ title, subtitle, quiz }) => {
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
-
-  const getOptionStyle = (index: number) => {
-    if (selectedAnswer === null) return styles.option;
-
-    if (index === quiz.correctAnswer)
-      return StyleSheet.flatten([styles.option, styles.optionCorrect]);
-
-    if (index === selectedAnswer && selectedAnswer !== quiz.correctAnswer)
-      return StyleSheet.flatten([styles.option, styles.optionIncorrect]);
-
-    return styles.option;
-  };
-
-  const getOptionIcon = (index: number) => {
-    if (selectedAnswer === null) return null;
-
-    if (index === quiz.correctAnswer) {
-      return <CheckCircle size={20} color="#22c55e" />;
-    }
-
-    if (index === selectedAnswer && selectedAnswer !== quiz.correctAnswer) {
-      return <XCircle size={20} color="#ef4444" />;
-    }
-
-    return null;
-  };
+  const isAnswered = selectedAnswer !== null;
 
   return (
     <View style={styles.screen}>
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         <View style={styles.header}>
           <Text style={styles.title}>{title}</Text>
-          {subtitle && <Text style={styles.subtitle}>{subtitle}</Text>}
+          {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
         </View>
 
         <View style={styles.questionContainer}>
@@ -61,32 +31,30 @@ const QuizSlide: React.FC<QuizProps> = ({ title, subtitle, quiz }) => {
         </View>
 
         <View style={styles.optionsContainer}>
-          {quiz.options.map((option, index) => (
-            <Pressable
-              key={index}
-              style={getOptionStyle(index)}
-              onPress={() => setSelectedAnswer(index)}
-              disabled={selectedAnswer !== null}
-            >
-              <View style={styles.optionContent}>
-                {getOptionIcon(index)}
-                <Text>
-                  {option}
-                </Text>
-              </View>
-            </Pressable>
-          ))}
-        </View> 
+          {quiz.options.map((option, index) => {
+            const isCorrect = index === quiz.correctAnswer;
+            const isSelected = index === selectedAnswer;
 
-        {selectedAnswer !== null && (
-          <View style={styles.feedbackContainer}>
-            <Text >
-              {selectedAnswer === quiz.correctAnswer
-                ? 'Правильно!'
-                : 'Неправильно. Спробуйте ще раз!'}
-            </Text>
-          </View>
-        )}
+            const visualStyle = isAnswered
+              ? isCorrect
+                ? styles.optionCorrect
+                : isSelected
+                ? styles.optionIncorrect
+                : null
+              : null;
+
+            return (
+              <Pressable
+                key={index}
+                style={[styles.option, visualStyle]}
+                onPress={() => setSelectedAnswer(index)}
+                disabled={isAnswered}
+              >
+                <Text style={styles.optionText}>{option}</Text>
+              </Pressable>
+            );
+          })}
+        </View>
       </ScrollView>
     </View>
   );
@@ -97,19 +65,21 @@ export default QuizSlide;
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: '#f7fafc',
+    backgroundColor: '#fff',
     paddingHorizontal: 16,
-    paddingVertical: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   scrollContainer: {
     flexGrow: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    paddingVertical: 24,
+    gap: 16,
   },
   header: {
-    marginBottom: 20,
     alignItems: 'center',
-    width: '100%',
+    alignSelf: 'stretch',
   },
   title: {
     fontSize: 22,
@@ -124,32 +94,31 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   questionContainer: {
-    backgroundColor: '#e0f2fe',
+    alignSelf: 'stretch',
+    maxWidth: 760,
+    backgroundColor: 'rgba(0,0,0,0.05)',
     borderRadius: 16,
     padding: 16,
-    marginBottom: 20,
-    width: SCREEN_WIDTH - 32,
-    maxWidth: 760,
   },
   question: {
     fontSize: 20,
-    fontWeight: '700',
+    fontWeight: '500',
     textAlign: 'center',
     color: '#111',
   },
   optionsContainer: {
-    width: '100%',
+    alignSelf: 'stretch',
     maxWidth: 760,
   },
   option: {
     paddingVertical: 14,
     paddingHorizontal: 12,
     borderRadius: 16,
-    borderWidth: 2,
-    borderColor: '#cbd5e1',
     backgroundColor: '#fff',
     marginBottom: 12,
     alignItems: 'center',
+    borderColor: '#ccc',
+    borderWidth: 0.5,
   },
   optionCorrect: {
     backgroundColor: 'rgba(34,197,94,0.3)',
@@ -159,25 +128,9 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(239,68,68,0.3)',
     borderColor: '#ef4444',
   },
-  optionContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   optionText: {
     fontSize: 16,
     color: '#111',
     textAlign: 'center',
-  },
-  feedbackContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 20,
-  },
-  feedbackText: {
-    fontSize: 18,
-    fontWeight: '700',
-    marginLeft: 8,
   },
 });
