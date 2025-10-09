@@ -22,9 +22,9 @@ export default PaginationDots;
 const styles = StyleSheet.create({
   paginationContainer: {
     position: 'absolute',
-    right: 5,
+    right: 2,
     top: '50%',
-    transform: [{ translateY: -50 }],
+    transform: [{ translateY: '-50%' }],
     justifyContent: 'center',
     alignItems: 'center',
     gap: 8,

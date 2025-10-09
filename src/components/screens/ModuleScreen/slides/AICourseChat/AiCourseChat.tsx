@@ -25,6 +25,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { askGemini } from './askGemini';
 import AudioRecorder from './AudioRecorder';
 import { formatAIResponseForChat } from './formatAIResponseForChat';
+import { shadow } from '@/src/components/ui/styles/shadow';
 
 interface Message {
   id: string;
@@ -267,21 +268,16 @@ const styles = StyleSheet.create({
   chatBox: {
     flex: 1,
     borderRadius: 16,
-    padding: 12,
+    padding: 16,
+    ...shadow,
     backgroundColor: '#ffffff',
-    shadowColor: '#000',
-    shadowOpacity: 0.03,
-    shadowRadius: 6,
-    elevation: 2,
     marginVertical: 8,
   },
   chatContent: { paddingVertical: 8 },
   messageBubble: {
-    maxWidth: SCREEN_WIDTH * 0.75,
     paddingVertical: 10,
     paddingHorizontal: 14,
     borderRadius: 16,
-    marginVertical: 6,
   },
   aiBubble: {
     backgroundColor: 'rgba(0, 0, 0, 0.05)',

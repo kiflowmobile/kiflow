@@ -166,11 +166,10 @@ const styles = StyleSheet.create({
   },
   tableRow: {
     flexDirection: "row",
-    justifyContent: "space-between",
+    justifyContent: "space-around",
     paddingVertical: 8,
-    borderBottomWidth: 1,
-    borderColor: "#f1f5f9",
+    borderBottomWidth: 0,
   },
-  tableCell: { flex: 1, fontSize: 14, color: "#334155" },
+  tableCell: { flex: 1, fontSize: 14, color: "#334155", },
   tableHeaderText: { fontWeight: "700", color: "#0f172a" },
 });
