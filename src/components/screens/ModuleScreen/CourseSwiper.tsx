@@ -185,7 +185,7 @@ const CourseSwiper: React.FC<CourseSwiperProps> = ({
           return (
             <View
               key={String(i)}
-              pointerEvents="none"
+              // pointerEvents="none"
               style={[
                 styles.dot,
                 active ? styles.dotActive : styles.dotInactive,
