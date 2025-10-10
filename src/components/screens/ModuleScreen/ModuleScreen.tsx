@@ -73,15 +73,14 @@ export default function ModuleScreen() {
   useSaveProgressOnExit()
 
 
-  // const onScroll = useAnimatedScrollHandler({
-  //   onScroll: event => {
-  //     const index = Math.round(event.contentOffset.y / height);
-  //     if (index !== lastSlideIndexRef.current) {
-  //       lastSlideIndexRef.current = index;
-  //       runOnJS(handleSlideChange)(index);
-  //     }
-  //   },
-  // });
+  useEffect(() => {
+    if (slides.length > 0 && !currentSlideId) {
+      const firstSlide = slides[0];
+      setCurrentSlideId(firstSlide.id);
+      setCurrentSlideIndex(0);
+      updateUrl(firstSlide.id);
+    }
+  }, [slides, currentSlideId]);
 
   const goToNextSlide = () => {
     const currentIndex = slides.findIndex(s => s.id === currentSlideId);
@@ -159,11 +158,13 @@ export default function ModuleScreen() {
       </Animated.ScrollView>
 
       {showPagination && (
-      <PaginationDots
-        total={slides.length}
-        currentIndex={slides.findIndex(s => s.id === currentSlideId)}
-      />
-    )}
+  <PaginationDots
+    total={slides.length}
+    currentIndex={
+      Math.max(slides.findIndex(s => s.id === currentSlideId), 0)
+    }
+  />
+)}
       
     </View>
   );
