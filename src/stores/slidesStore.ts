@@ -28,6 +28,7 @@ interface SlidesState {
   getCurrentSlideId: () => string | null;
   isSlideAnswered: (slideId: string) => boolean;
   markSlideAnswered: (slideId: string) => void;
+  clearAnsweredSlides: () => void;
 }
 type UUID = string & { readonly brand: unique symbol };
 
@@ -57,14 +58,13 @@ const writePersistedAnswered = async (value: Record<string, boolean>): Promise<v
   } catch {}
 };
 
-export const useSlidesStore = create<SlidesState>()(
-  (set, get) => ({
+export const useSlidesStore = create<SlidesState>()((set, get) => ({
   slides: [],
   currentSlideIndex: 0,
   currentModuleId: null,
   isLoading: false,
   error: null,
-      answeredBySlideId: {},
+  answeredBySlideId: {},
 
   fetchSlidesByModule: async (moduleId: string) => {
     set({ isLoading: true, error: null, currentModuleId: moduleId });
@@ -157,8 +157,17 @@ export const useSlidesStore = create<SlidesState>()(
       return { answeredBySlideId: next };
     });
   },
-  })
-);
+
+  clearAnsweredSlides: () => {
+    set((state) => {
+      const next = Object.fromEntries(
+        Object.keys(state.answeredBySlideId).map((key) => [key, false]),
+      );
+      writePersistedAnswered(next);
+      return { answeredBySlideId: next };
+    });
+  },
+}));
 
 (async () => {
   const initial = await readPersistedAnswered();
