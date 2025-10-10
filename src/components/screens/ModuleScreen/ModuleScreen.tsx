@@ -36,42 +36,52 @@ export default function ModuleScreen() {
   const lastSlideIndexRef = useRef<number>(-1);
 
 
+  const lastScrollIndexRef = useRef<number>(-1);
+  const lastSavedIndexRef = useRef<number>(-1);
+  
   const handleSlideChange = useCallback(
     async (index: number) => {
-      // Якщо індекс поза діапазоном
       if (index < 0 || index >= slides.length) return;
-  
-      // Якщо новий індекс менший або рівний поточному — не оновлюємо прогрес
-      if (index <= (currentSlideIndex ?? 0)) return;
-  
-      setCurrentSlideId(slides[index].id);
+        setCurrentSlideId(slides[index].id);
+      setCurrentSlideIndex(index);
       updateUrl(slides[index].id);
   
       if (!user || !courseId || !moduleId) return;
   
-      console.log('currentSlideIndex', currentSlideIndex);
-      console.log('new index', index);
-  
-      // ✅ Оновлюємо тільки якщо йдемо вперед
-      setCurrentSlideIndex(index);
-      setModuleProgressSafe(courseId, moduleId, index, slides.length, slides[index].id);
+      if (index > lastSavedIndexRef.current) {
+        await setModuleProgressSafe(courseId, moduleId, index, slides.length, slides[index].id);
+        lastSavedIndexRef.current = index;
+        console.log("✅ Saved progress up to slide", index);
+      }
     },
-    [moduleId, courseId, user?.id, slides, currentSlideIndex]
+    [moduleId, courseId, user?.id, slides]
   );
+  
+  const onScroll = useAnimatedScrollHandler({
+    onScroll: event => {
+      const index = Math.round(event.contentOffset.y / height);
+      if (index !== lastScrollIndexRef.current) {
+        lastScrollIndexRef.current = index;
+        runOnJS(handleSlideChange)(index);
+      }
+    },
+  });
+  
+  
   
 
   useSaveProgressOnExit()
 
 
-  const onScroll = useAnimatedScrollHandler({
-    onScroll: event => {
-      const index = Math.round(event.contentOffset.y / height);
-      if (index !== lastSlideIndexRef.current) {
-        lastSlideIndexRef.current = index;
-        runOnJS(handleSlideChange)(index);
-      }
-    },
-  });
+  // const onScroll = useAnimatedScrollHandler({
+  //   onScroll: event => {
+  //     const index = Math.round(event.contentOffset.y / height);
+  //     if (index !== lastSlideIndexRef.current) {
+  //       lastSlideIndexRef.current = index;
+  //       runOnJS(handleSlideChange)(index);
+  //     }
+  //   },
+  // });
 
   const goToNextSlide = () => {
     const currentIndex = slides.findIndex(s => s.id === currentSlideId);
