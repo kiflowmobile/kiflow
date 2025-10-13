@@ -188,6 +188,9 @@ export const useUserProgressStore = create<UserProgressStore>((set, get) => ({
     const { user } = useAuthStore.getState();
     if (!user) return;
   
+    // Очистити відповіді AI слайдів
+    useSlidesStore.getState().clearAnsweredSlides();
+  
     set(state => {
       const updatedCourses = state.courses.map(course => {
         if (course.course_id === courseId) {

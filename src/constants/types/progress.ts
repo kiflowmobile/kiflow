@@ -9,5 +9,6 @@ export interface UserCourseSummary {
     course_id: string;
     progress: number;
     last_slide_id?: string | null; 
+  
     modules: ModuleProgress[];
   }
