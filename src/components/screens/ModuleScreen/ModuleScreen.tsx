@@ -132,6 +132,9 @@ export default function ModuleScreen() {
     </View>
   );
 
+
+  console.log('ModuleScreen')
+
   return (
     <View style={{ flex: 1 }}>
       <Animated.ScrollView

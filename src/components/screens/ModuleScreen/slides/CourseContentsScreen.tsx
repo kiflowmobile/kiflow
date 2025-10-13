@@ -1,10 +1,11 @@
-import { secondSlideData } from '@/src/constants/types/slides';
+// import { secondSlideData } from '@/src/constants/types/slides';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 
 interface CourseContentsScreenProps {
   title: string;
-  data: secondSlideData[];
+  // data: secondSlideData[];
+  data: any[]
 }
 
 export default function CourseContentsScreen({ title, data }: CourseContentsScreenProps) {
