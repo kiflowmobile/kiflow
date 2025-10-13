@@ -1,5 +1,6 @@
 import { Message } from "@/src/constants/types/ai_chat";
 import { buildPrompt } from "./buildPrompt";
+import { jsonrepair } from "jsonrepair";
 
 const GEMINI_API_KEY = process.env.EXPO_PUBLIC_GEMINI_API_KEY;
 
@@ -39,7 +40,7 @@ export async function askGemini(
     generationConfig: {
       temperature: 0.3,
       topP: 0.9,
-      maxOutputTokens: 800,
+      maxOutputTokens: 10000,
     },
   };
 
@@ -69,12 +70,19 @@ export async function askGemini(
     let parsed: GeminiResponse;
     try {
       parsed = JSON.parse(rawText);
-
-      if (!parsed.criterias) parsed.criterias = criteriasText;
     } catch (err) {
-      console.error("❌ JSON parse error:", err, rawText);
-      parsed = { content: rawText, rating: null, criterias: criteriasText };
+      console.warn("⚠️ JSON parse error, trying to repair:", err);
+      try {
+        const repairedJson = jsonrepair(rawText);
+        parsed = JSON.parse(repairedJson);
+        console.log("✅ JSON successfully repaired");
+      } catch (repairErr) {
+        console.error("❌ JSON repair failed:", repairErr, rawText);
+        parsed = { content: rawText, rating: null, criterias: criteriasText };
+      }
     }
+
+    if (!parsed.criterias) parsed.criterias = criteriasText;
 
     return parsed;
   } catch (err) {
