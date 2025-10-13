@@ -51,7 +51,6 @@ export default function ModuleScreen() {
       if (index > lastSavedIndexRef.current) {
         await setModuleProgressSafe(courseId, moduleId, index, slides.length, slides[index].id);
         lastSavedIndexRef.current = index;
-        console.log("✅ Saved progress up to slide", index);
       }
     },
     [moduleId, courseId, user?.id, slides]
@@ -131,9 +130,6 @@ export default function ModuleScreen() {
       <Text style={styles.noSlidesText}>Слайди не знайдено</Text>
     </View>
   );
-
-
-  console.log('ModuleScreen')
 
   return (
     <View style={{ flex: 1 }}>
