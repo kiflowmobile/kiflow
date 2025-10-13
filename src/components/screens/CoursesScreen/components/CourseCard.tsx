@@ -49,7 +49,10 @@ const CourseCard: React.FC<CourseCardProps> = ({ course }) => {
   }, []);
 
 
-const handleResetProgress = async () => {
+const handleResetProgress = async (e?: any) => {
+  if (e && e.stopPropagation) {
+    e.stopPropagation();
+  }
   if (!user) return;
   console.log('reset progress')
   try {
@@ -62,7 +65,11 @@ const handleResetProgress = async () => {
 
 
 return (
-  <View style={styles.card}>
+  <TouchableOpacity 
+    style={styles.card} 
+    onPress={handleStartCourse}
+    activeOpacity={0.7}
+  >
     <View style={styles.imageWrapper}>
       <Image
         source={{ uri: course.image || 'https://picsum.photos/800/600' }}
@@ -110,14 +117,18 @@ return (
         )}
 
         {courseProgress === 100 && (
-          <View style={styles.completedWrapper}>
+          <TouchableOpacity 
+            style={styles.completedWrapper}
+            onPress={handleStartCourse}
+            activeOpacity={0.7}
+          >
             <MaterialIcons name="check-circle" size={28} color="#22c55e" />
             <Text style={styles.completedText}>Курс завершено</Text>
-          </View>
+          </TouchableOpacity>
         )}
       </HStack>
     </VStack>
-  </View>
+  </TouchableOpacity>
 );
 };
 

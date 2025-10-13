@@ -7,6 +7,7 @@ import Animated, { useAnimatedScrollHandler, runOnJS } from 'react-native-reanim
 import ModuleSlide from './ModuleSlide';
 import { useSaveProgressOnExit } from '@/src/hooks/useSaveProgressOnExit';
 import PaginationDots from './components/PaginationDot';
+import {  loadProgressLocal } from '@/src/utils/progressAsyncStorage';
 
 export default function ModuleScreen() {
   const { moduleId, courseId, slideId } = useLocalSearchParams<{
@@ -22,6 +23,8 @@ export default function ModuleScreen() {
   const { user } = useAuthStore();
   const totalSlides = useMemo(() => slides.length || 0, [slides]);
   const [currentSlideId, setCurrentSlideId] = useState<string | undefined>(slideId);
+  const [currentSlideIndex, setCurrentSlideIndex] = useState<number | undefined>(0);
+
   const showPagination = useMemo(() => slides.length > 1, [slides.length]);
 
 
@@ -29,32 +32,55 @@ export default function ModuleScreen() {
     router.setParams({ slideId: id });
   };
 
-  const { setModuleProgressSafe, setCourseProgress } = useUserProgressStore();
+  const { setModuleProgressSafe, setCourseProgress, getModuleProgress } = useUserProgressStore();
   const lastSlideIndexRef = useRef<number>(-1);
 
 
-  const handleSlideChange = useCallback((index: number) => {
-    setCurrentSlideId(slides[index].id);
-    updateUrl(slides[index].id);
-
+  const lastScrollIndexRef = useRef<number>(-1);
+  const lastSavedIndexRef = useRef<number>(-1);
   
-    if (moduleId && courseId) {
-      setModuleProgressSafe(courseId, moduleId, index, slides.length, slides[index].id);
-    }
-  },[moduleId, courseId, user?.id, totalSlides, slides]);
-
-  useSaveProgressOnExit()
-
-
+  const handleSlideChange = useCallback(
+    async (index: number) => {
+      if (index < 0 || index >= slides.length) return;
+        setCurrentSlideId(slides[index].id);
+      setCurrentSlideIndex(index);
+      updateUrl(slides[index].id);
+  
+      if (!user || !courseId || !moduleId) return;
+  
+      if (index > lastSavedIndexRef.current) {
+        await setModuleProgressSafe(courseId, moduleId, index, slides.length, slides[index].id);
+        lastSavedIndexRef.current = index;
+        console.log("✅ Saved progress up to slide", index);
+      }
+    },
+    [moduleId, courseId, user?.id, slides]
+  );
+  
   const onScroll = useAnimatedScrollHandler({
     onScroll: event => {
       const index = Math.round(event.contentOffset.y / height);
-      if (index !== lastSlideIndexRef.current) {
-        lastSlideIndexRef.current = index;
+      if (index !== lastScrollIndexRef.current) {
+        lastScrollIndexRef.current = index;
         runOnJS(handleSlideChange)(index);
       }
     },
   });
+  
+  
+  
+
+  useSaveProgressOnExit()
+
+
+  useEffect(() => {
+    if (slides.length > 0 && !currentSlideId) {
+      const firstSlide = slides[0];
+      setCurrentSlideId(firstSlide.id);
+      setCurrentSlideIndex(0);
+      updateUrl(firstSlide.id);
+    }
+  }, [slides, currentSlideId]);
 
   const goToNextSlide = () => {
     const currentIndex = slides.findIndex(s => s.id === currentSlideId);
@@ -132,11 +158,13 @@ export default function ModuleScreen() {
       </Animated.ScrollView>
 
       {showPagination && (
-      <PaginationDots
-        total={slides.length}
-        currentIndex={slides.findIndex(s => s.id === currentSlideId)}
-      />
-    )}
+  <PaginationDots
+    total={slides.length}
+    currentIndex={
+      Math.max(slides.findIndex(s => s.id === currentSlideId), 0)
+    }
+  />
+)}
       
     </View>
   );

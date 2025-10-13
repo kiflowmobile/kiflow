@@ -16,3 +16,4 @@ export const loadProgressLocal = async (userId: string): Promise<UserCourseSumma
 export const clearProgressLocal = async (userId: string) => {
   await AsyncStorage.removeItem(STORAGE_KEY(userId));
 };
+
