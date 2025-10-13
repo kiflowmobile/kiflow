@@ -10,7 +10,6 @@ export interface ContentWithExampleProps {
   example: string;
 }
 
-
 const ContentWithExample: React.FC<ContentWithExampleProps> = ({
   title,
   mainPoint,
@@ -74,18 +73,17 @@ const styles = StyleSheet.create({
     fontSize: 22,
     fontWeight: '700',
     textAlign: 'center',
-    marginBottom: 16,
+    marginBottom: 8,
     color: '#111',
   },
   section: {
-    marginBottom: 16,
     borderRadius: 12,
     padding: 12,
   },
   mainPoint: {
     fontSize: 16,
     color: '#111',
-    lineHeight: 22,
+    lineHeight: 20,
   },
   tipRow: {
     flexDirection: 'row',
@@ -101,12 +99,12 @@ const styles = StyleSheet.create({
     marginLeft: 8,
     fontSize: 16,
     color: '#111',
-    lineHeight: 22,
+    lineHeight: 20,
   },
   exampleHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 6,
+    marginBottom: 4,
   },
   exampleIcon: {},
   exampleTitle: {

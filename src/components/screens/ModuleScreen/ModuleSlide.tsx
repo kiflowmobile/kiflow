@@ -1,5 +1,5 @@
 import { View } from 'lucide-react-native';
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { Spinner, SPINNER_SIZES } from '../../ui/spinner';
 import { Text, useWindowDimensions } from 'react-native';
 import TextSlide from './slides/TextSlide';
@@ -55,6 +55,12 @@ const ModuleSlide: React.FC<CourseSlideProps> = ({
     );
   }
 
+  // useEffect(() => {
+  //   if (!isActive && videoRef.current) {
+  //     videoRef.current.pause();
+  //   }
+  // }, [isActive]);
+
   switch (slideData.slide_type) {
     case 'text':
       return (
@@ -66,10 +72,12 @@ const ModuleSlide: React.FC<CourseSlideProps> = ({
       const hasVideo = !!uri || !!mux;
       return (
         <>
-          {hasVideo ? (
-            <VideoPlayer uri={uri ?? undefined} mux={mux ?? undefined} isActive={isActive} />
-          ) : (
-            <MediaPlaceholder />
+          {isActive && (
+            hasVideo ? (
+              <VideoPlayer uri={uri ?? undefined} mux={mux ?? undefined} isActive={isActive} />
+            ) : (
+              <MediaPlaceholder />
+            )
           )}
         </>
       );
@@ -84,12 +92,14 @@ const ModuleSlide: React.FC<CourseSlideProps> = ({
       );
     case 'content':
       return (
+     
           <ContentWithExample
             title={slideData.slide_title}
             mainPoint={slideData.slide_data?.mainPoint}
             tips={slideData.slide_data?.tips}
             example={slideData.slide_data?.example}
           />
+          
       );
     case 'dashboard':
       return (

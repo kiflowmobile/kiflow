@@ -7,6 +7,8 @@ import { useEffect } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useUserProgressStore } from '../stores';
 import CustomHeader from '../components/ui/CustomHeader';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+
 
 export default function RootLayout() {
   const { initFromLocal } = useUserProgressStore();
@@ -31,6 +33,8 @@ export default function RootLayout() {
   }
 
   return (
+    <GestureHandlerRootView style={{ flex: 1 }}>
+
     <SafeAreaProvider>
       <Stack
         screenOptions={{
@@ -50,5 +54,6 @@ export default function RootLayout() {
         <Stack.Screen name="profile" />
       </Stack>
     </SafeAreaProvider>
+    </GestureHandlerRootView>
   );
 }
