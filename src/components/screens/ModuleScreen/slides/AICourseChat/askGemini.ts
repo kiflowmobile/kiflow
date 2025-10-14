@@ -1,5 +1,6 @@
 import { Message } from "@/src/constants/types/ai_chat";
 import { buildPrompt } from "./buildPrompt";
+import { jsonrepair } from "jsonrepair";
 
 const GEMINI_API_KEY = process.env.EXPO_PUBLIC_GEMINI_API_KEY;
 
@@ -17,7 +18,6 @@ export async function askGemini(
   model: string = "gemini-2.0-flash"
 ): Promise<GeminiResponse> {
   if (!GEMINI_API_KEY) {
-    console.log(GEMINI_API_KEY)
     console.error("❌ GEMINI_API_KEY не налаштований");
     return {
       content: "⚠️ Помилка: відсутній API ключ.",
@@ -40,7 +40,7 @@ export async function askGemini(
     generationConfig: {
       temperature: 0.3,
       topP: 0.9,
-      maxOutputTokens: 800,
+      maxOutputTokens: 10000,
     },
   };
 
@@ -58,8 +58,6 @@ export async function askGemini(
 
     const data = await response.json();
 
-    // console.log('data', data)
-
     let rawText = data.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
     rawText = rawText.replace(/```json|```/g, "").trim();
 
@@ -72,15 +70,20 @@ export async function askGemini(
     let parsed: GeminiResponse;
     try {
       parsed = JSON.parse(rawText);
-
-      console.log('parsed',parsed)
-      if (!parsed.criterias) parsed.criterias = criteriasText;
     } catch (err) {
-      console.error("❌ JSON parse error:", err, rawText);
-      parsed = { content: rawText, rating: null, criterias: criteriasText };
+      console.warn("⚠️ JSON parse error, trying to repair:", err);
+      try {
+        const repairedJson = jsonrepair(rawText);
+        parsed = JSON.parse(repairedJson);
+        console.log("✅ JSON successfully repaired");
+      } catch (repairErr) {
+        console.error("❌ JSON repair failed:", repairErr, rawText);
+        parsed = { content: rawText, rating: null, criterias: criteriasText };
+      }
     }
 
-    // console.log('parsed', parsed)
+    if (!parsed.criterias) parsed.criterias = criteriasText;
+
     return parsed;
   } catch (err) {
     console.error("Gemini API error", err);

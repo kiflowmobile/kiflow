@@ -127,7 +127,7 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
   }, [courseId, fetchCriterias]);
 
   const handleSend = async () => {
-    // if (!input.trim() || answered || loading) return;
+    if (!input.trim() || answered || loading) return;
 
     const userMsg: Message = { id: Date.now().toString(), role: 'user', text: input.trim() };
     setMessages((prev) => [...prev, userMsg]);
@@ -146,20 +146,11 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
         messages.length === 0,
         criteriasText,
       );
-
-      // привіт, мене звати толя, купи щось в мене
-
       if (user && aiResponse.rating?.criteriaScores && moduleId) {
         const criteriaScores = aiResponse.rating.criteriaScores;
         for (const [criteriaKey, score] of Object.entries(criteriaScores)) {
           try {
-            await upsertRating(
-              user.id,
-              score as number,
-              moduleIdStr,
-              criteriaKey,
-              courseIdStr,
-            );
+            await saveRating (user.id, score as number, moduleIdStr, criteriaKey, courseIdStr)
           } catch (err) {
             console.warn(`Failed to save rating for ${criteriaKey}:`, err);
           }
@@ -253,18 +244,17 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
             onFocus={handleFocus}
             onBlur={handleBlur}
             multiline
-            // editable={!answered && !loading}
+            editable={!answered && !loading}
           />
           <View style={styles.buttonContainer}>
             <AudioRecorder onAudioProcessed={handleAudioProcessed} 
-            // disabled={loading || answered} 
-            disabled={false}
+            disabled={loading || answered} 
             />
             <TouchableOpacity onPress={handleSend}
-            //  disabled={loading || answered}
+             disabled={loading || answered}
              >
               <Icon as={Send} size={24} 
-              // color={loading || answered ? '#94a3b8' : '#0f172a'} 
+              color={loading || answered ? '#94a3b8' : '#0f172a'} 
               />
             </TouchableOpacity>
           </View>
