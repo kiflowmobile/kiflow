@@ -17,6 +17,7 @@ export async function askGemini(
   model: string = "gemini-2.0-flash"
 ): Promise<GeminiResponse> {
   if (!GEMINI_API_KEY) {
+    console.log(GEMINI_API_KEY)
     console.error("❌ GEMINI_API_KEY не налаштований");
     return {
       content: "⚠️ Помилка: відсутній API ключ.",
@@ -57,6 +58,8 @@ export async function askGemini(
 
     const data = await response.json();
 
+    // console.log('data', data)
+
     let rawText = data.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
     rawText = rawText.replace(/```json|```/g, "").trim();
 
@@ -76,6 +79,7 @@ export async function askGemini(
       parsed = { content: rawText, rating: null, criterias: criteriasText };
     }
 
+    // console.log('parsed', parsed)
     return parsed;
   } catch (err) {
     console.error("Gemini API error", err);

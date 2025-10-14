@@ -37,6 +37,10 @@ const DashboardSlide: React.FC<DashboardSlideProps> = ({ title }) => {
     fetchSkills(user.id, currentModuleId);
   }, [user, currentModuleId]);
 
+
+  console.log('average', average)
+  console.log('skills', skills)
+
   return (
     <View style={styles.screen}>
       <View style={styles.card}>

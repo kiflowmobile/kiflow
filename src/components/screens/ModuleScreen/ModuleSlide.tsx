@@ -29,7 +29,7 @@ const ModuleSlide: React.FC<CourseSlideProps> = ({
   currentIndex,
   totalSlides,
 }) => {
-    const { slides, isLoading, error } = useSlidesStore();
+  const { slides, isLoading, error } = useSlidesStore();
 
   const { height: SCREEN_H, width: SCREEN_W } = useWindowDimensions();
 

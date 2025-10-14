@@ -99,7 +99,6 @@ export const useMainRatingStore = create<MainRatingState>((set) => ({
       const normalized = typeof rating === 'string' ? parseInt(rating, 10) : rating;
       const final = existing ? (existing.rating + normalized) / 2 : normalized;
 
-      // передаємо courseId
       await upsertRating(userId, final, moduleId, key, courseId);
 
       await useMainRatingStore.getState().fetchAverage(userId, moduleId);

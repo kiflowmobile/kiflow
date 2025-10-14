@@ -28,6 +28,7 @@ export const upsertRating = async (
   key: string,
   courseId: string,
 ) => {
+
   const value = Number(rating);
   if (!Number.isFinite(value)) throw new Error('Rating is not a number');
   if (!userId || !moduleId || !key || !courseId) throw new Error('Missing ids');

@@ -5,6 +5,7 @@ import {
   useAuthStore,
   useCourseStore,
   useCriteriaStore,
+  useMainRatingStore,
   useModulesStore,
   useSlidesStore,
 } from '@/src/stores';
@@ -26,6 +27,8 @@ import { askGemini } from './askGemini';
 import AudioRecorder from './AudioRecorder';
 import { formatAIResponseForChat } from './formatAIResponseForChat';
 import { shadow } from '@/src/components/ui/styles/shadow';
+import { useRoute } from '@react-navigation/native';
+import { useLocalSearchParams } from 'expo-router';
 
 interface Message {
   id: string;
@@ -47,11 +50,16 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
   const [answered, setAnswered] = useState(false);
   const { prompt, fetchPromptBySlide } = usePromptsStore();
   const { criterias, fetchCriterias } = useCriteriaStore();
-  const courseId = useCourseStore((state) => state.currentCourse?.id);
+  // const courseId = useCourseStore((state) => state.currentCourse?.id);
   const { user } = useAuthStore();
-
+  const {saveRating} = useMainRatingStore()
   const inputRef = useRef<TextInput>(null);
   const pageScrollLockedRef = useRef(false);
+  const { moduleId, courseId } = useLocalSearchParams();
+
+  const moduleIdStr = Array.isArray(moduleId) ? moduleId[0] : moduleId;
+  const courseIdStr = Array.isArray(courseId) ? courseId[0] : courseId;
+
 
   const lockPageScroll = () => {
     if (Platform.OS !== 'web' || pageScrollLockedRef.current) return;
@@ -99,7 +107,7 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
 
       // Restore per-slide answered state
       const alreadyAnswered = useSlidesStore.getState().isSlideAnswered(slideId);
-      setAnswered(alreadyAnswered);
+      // setAnswered(alreadyAnswered);
       setInput('');
 
       const aiMsg: Message = {
@@ -115,11 +123,11 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
   }, [slideId, prompt]);
 
   useEffect(() => {
-    if (courseId) fetchCriterias(courseId);
+    if (courseId) fetchCriterias(courseIdStr);
   }, [courseId, fetchCriterias]);
 
   const handleSend = async () => {
-    if (!input.trim() || answered || loading) return;
+    // if (!input.trim() || answered || loading) return;
 
     const userMsg: Message = { id: Date.now().toString(), role: 'user', text: input.trim() };
     setMessages((prev) => [...prev, userMsg]);
@@ -139,18 +147,18 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
         criteriasText,
       );
 
-      const currentModuleId = useModulesStore.getState().currentModule?.id;
+      // привіт, мене звати толя, купи щось в мене
 
-      if (user && aiResponse.rating?.criteriaScores && currentModuleId) {
+      if (user && aiResponse.rating?.criteriaScores && moduleId) {
         const criteriaScores = aiResponse.rating.criteriaScores;
         for (const [criteriaKey, score] of Object.entries(criteriaScores)) {
           try {
             await upsertRating(
               user.id,
               score as number,
-              currentModuleId,
+              moduleIdStr,
               criteriaKey,
-              useCourseStore.getState().currentCourse?.id || '',
+              courseIdStr,
             );
           } catch (err) {
             console.warn(`Failed to save rating for ${criteriaKey}:`, err);
@@ -245,12 +253,19 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
             onFocus={handleFocus}
             onBlur={handleBlur}
             multiline
-            editable={!answered && !loading}
+            // editable={!answered && !loading}
           />
           <View style={styles.buttonContainer}>
-            <AudioRecorder onAudioProcessed={handleAudioProcessed} disabled={loading || answered} />
-            <TouchableOpacity onPress={handleSend} disabled={loading || answered}>
-              <Icon as={Send} size={24} color={loading || answered ? '#94a3b8' : '#0f172a'} />
+            <AudioRecorder onAudioProcessed={handleAudioProcessed} 
+            // disabled={loading || answered} 
+            disabled={false}
+            />
+            <TouchableOpacity onPress={handleSend}
+            //  disabled={loading || answered}
+             >
+              <Icon as={Send} size={24} 
+              // color={loading || answered ? '#94a3b8' : '#0f172a'} 
+              />
             </TouchableOpacity>
           </View>
         </View>
