@@ -1,4 +1,3 @@
-// src/screens/Auth/LoginScreen.tsx
 import { useAuthStore } from '@/src/stores/authStore';
 import { useRouter } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
@@ -12,6 +11,7 @@ import {
 import Button from '../../ui/button';
 import { Input, InputField } from '../../ui/input';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import Svg, { Path } from 'react-native-svg';
 
 interface AuthError {
   message?: string;
@@ -25,7 +25,7 @@ const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/i;
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-
+  const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
   const [touched, setTouched] = useState<{ email?: boolean; password?: boolean }>({});
 
@@ -33,7 +33,6 @@ export default function LoginScreen() {
 
   const router = useRouter();
 
-  // Zustand store
   const { signIn, isLoading, error, clearError } = useAuthStore();
 
 
@@ -160,23 +159,47 @@ export default function LoginScreen() {
                 <Text style={styles.formErrorText}>{errors.password}</Text>
               </View>
             ) : null}
-            <Input
-              variant="outline"
-              size="xl"
-              style={[styles.input, touched.password && errors.password && styles.inputError]}
-            >
-              <InputField
-                placeholder="Password"
-                secureTextEntry
-                autoCapitalize="none"
-                autoCorrect={false}
-                value={password}
-                onChangeText={setPassword}
-                onBlur={() => handleBlur('password')}
-                returnKeyType="go"
-                onSubmitEditing={handleLogin}
-              />
-            </Input>
+<View style={styles.passwordContainer}>
+  <Input
+    variant="outline"
+    size="xl"
+    style={[styles.input, touched.password && errors.password && styles.inputError]}
+  >
+    <InputField
+      placeholder="Password"
+      secureTextEntry={!showPassword}
+      autoCapitalize="none"
+      autoCorrect={false}
+      value={password}
+      onChangeText={setPassword}
+      onBlur={() => handleBlur('password')}
+      returnKeyType="go"
+      onSubmitEditing={handleLogin}
+      style={{ flex: 1 }}
+    />
+  </Input>
+
+  <TouchableOpacity
+    style={styles.eyeButton}
+    onPress={() => setShowPassword(!showPassword)}
+  >
+    {showPassword ? (
+      <Svg width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth={1} strokeLinecap="round" strokeLinejoin="round">
+        <Path d="M10.585 10.587a2 2 0 0 0 2.829 2.828" />
+        <Path d="M16.681 16.673a8.717 8.717 0 0 1 -4.681 1.327c-3.6 0 -6.6 -2 -9 -6c1.272 -2.12 2.712 -3.678 4.32 -4.674m2.86 -1.146a9.055 9.055 0 0 1 1.82 -.18c3.6 0 6.6 2 9 6c-.666 1.11 -1.379 2.067 -2.138 2.87" />
+        <Path d="M3 3l18 18" />
+      </Svg>
+    ) : (
+      <Svg width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth={1} strokeLinecap="round" strokeLinejoin="round">
+        <Path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+        <Path d="M21 12c-2.4 4 -5.4 6 -9 6c-3.6 0 -6.6 -2 -9 -6c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6" />
+      </Svg>
+    )}
+  </TouchableOpacity>
+</View>
+
+
+            
 
             <Button
               title={isLoading ? 'Signing in...' : 'Sign In'}
@@ -226,4 +249,18 @@ const styles = StyleSheet.create({
   },
   registerText: { color: '#555', fontSize: 14 },
   registerLink: { color: '#000000', fontWeight: '600', fontSize: 14 },
+  passwordContainer: {
+    position: 'relative',
+    width: '100%',
+    maxWidth: 400,
+  },
+  eyeButton: {
+    position: 'absolute',
+    right: 12,
+    top: 14,
+    padding: 4,
+  },
+  eyeIcon: {
+    fontSize: 18,
+  },
 });
