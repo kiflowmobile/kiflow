@@ -11,6 +11,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Button from '../../ui/button';
 import { Input, InputField } from '../../ui/input';
+import Svg, { Path } from 'react-native-svg';
 
 type Form = {
   firstName: string;
@@ -47,6 +48,9 @@ export default function RegisterScreen() {
   const [errors, setErrors] = useState<Errors>({});
   const [formError, setFormError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
 
   const setField = useCallback(
     <K extends keyof Form>(key: K, value: string) => {
@@ -268,28 +272,49 @@ export default function RegisterScreen() {
                 <Text style={styles.formErrorText}>{errors.password}</Text>
               </View>
             ) : null}
-            <Input
-              variant="outline"
-              size="xl"
-              style={[styles.input, touched.password && errors.password && styles.inputError]}
-            >
-              <InputField
-                placeholder="Password"
-                secureTextEntry
-                autoCapitalize="none"
-                autoCorrect={false}
-                value={form.password}
-                onChangeText={(v) => setField('password', v)}
-                onBlur={() => {
-                  markTouched('password');
-                  setErrors((prev) => ({
-                    ...prev,
-                    password: validateOne('password', form.password, form),
-                  }));
-                }}
-                returnKeyType="next"
-              />
-            </Input>
+            <View style={styles.passwordContainer}>
+  <Input
+    variant="outline"
+    size="xl"
+    style={[styles.input, touched.password && errors.password && styles.inputError]}
+  >
+    <InputField
+      placeholder="Password"
+      secureTextEntry={!showPassword}
+      autoCapitalize="none"
+      autoCorrect={false}
+      value={form.password}
+      onChangeText={(v) => setField('password', v)}
+      onBlur={() => {
+        markTouched('password');
+        setErrors((prev) => ({
+          ...prev,
+          password: validateOne('password', form.password, form),
+        }));
+      }}
+      returnKeyType="next"
+    />
+  </Input>
+  <TouchableOpacity
+    style={styles.eyeButton}
+    onPress={() => setShowPassword(!showPassword)}
+  >
+    {showPassword ? (
+      // Eye-off
+      <Svg width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth={1} strokeLinecap="round" strokeLinejoin="round">
+        <Path d="M10.585 10.587a2 2 0 0 0 2.829 2.828" />
+        <Path d="M16.681 16.673a8.717 8.717 0 0 1 -4.681 1.327c-3.6 0 -6.6 -2 -9 -6c1.272 -2.12 2.712 -3.678 4.32 -4.674m2.86 -1.146a9.055 9.055 0 0 1 1.82 -.18c3.6 0 6.6 2 9 6c-.666 1.11 -1.379 2.067 -2.138 2.87" />
+        <Path d="M3 3l18 18" />
+      </Svg>
+    ) : (
+      // Eye
+      <Svg width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth={1} strokeLinecap="round" strokeLinejoin="round">
+        <Path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+        <Path d="M21 12c-2.4 4 -5.4 6 -9 6c-3.6 0 -6.6 -2 -9 -6c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6" />
+      </Svg>
+    )}
+  </TouchableOpacity>
+</View>
 
             {/* Confirm Password */}
             {touched.confirmPassword && errors.confirmPassword ? (
@@ -297,39 +322,59 @@ export default function RegisterScreen() {
                 <Text style={styles.formErrorText}>{errors.confirmPassword}</Text>
               </View>
             ) : null}
-            <Input
-              variant="outline"
-              size="xl"
-              style={[
-                styles.input,
-                touched.confirmPassword && errors.confirmPassword && styles.inputError,
-              ]}
-            >
-              <InputField
-                placeholder="Confirm Password"
-                secureTextEntry
-                autoCapitalize="none"
-                autoCorrect={false}
-                value={form.confirmPassword}
-                onChangeText={(v) => setField('confirmPassword', v)}
-                onBlur={() => {
-                  markTouched('confirmPassword');
-                  setErrors((prev) => ({
-                    ...prev,
-                    confirmPassword: validateOne('confirmPassword', form.confirmPassword, form),
-                  }));
-                }}
-                returnKeyType="go"
-                onSubmitEditing={handleRegister}
-              />
-            </Input>
+            <View style={styles.passwordContainer}>
+  <Input
+    variant="outline"
+    size="xl"
+    style={[styles.input, touched.confirmPassword && errors.confirmPassword && styles.inputError]}
+  >
+    <InputField
+      placeholder="Confirm Password"
+      secureTextEntry={!showConfirmPassword}
+      autoCapitalize="none"
+      autoCorrect={false}
+      value={form.confirmPassword}
+      onChangeText={(v) => setField('confirmPassword', v)}
+      onBlur={() => {
+        markTouched('confirmPassword');
+        setErrors((prev) => ({
+          ...prev,
+          confirmPassword: validateOne('confirmPassword', form.confirmPassword, form),
+        }));
+      }}
+      returnKeyType="go"
+      onSubmitEditing={handleRegister}
+    />
+  </Input>
+  <TouchableOpacity
+    style={styles.eyeButton}
+    onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+  >
+    {showConfirmPassword ? (
+      // Eye-off
+      <Svg width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth={1} strokeLinecap="round" strokeLinejoin="round">
+        <Path d="M10.585 10.587a2 2 0 0 0 2.829 2.828" />
+        <Path d="M16.681 16.673a8.717 8.717 0 0 1 -4.681 1.327c-3.6 0 -6.6 -2 -9 -6c1.272 -2.12 2.712 -3.678 4.32 -4.674m2.86 -1.146a9.055 9.055 0 0 1 1.82 -.18c3.6 0 6.6 2 9 6c-.666 1.11 -1.379 2.067 -2.138 2.87" />
+        <Path d="M3 3l18 18" />
+      </Svg>
+    ) : (
+      // Eye
+      <Svg width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth={1} strokeLinecap="round" strokeLinejoin="round">
+        <Path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+        <Path d="M21 12c-2.4 4 -5.4 6 -9 6c-3.6 0 -6.6 -2 -9 -6c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6" />
+      </Svg>
+    )}
+  </TouchableOpacity>
+</View>
+
 
             <Button
               title={submitting || isLoading ? 'Signing up…' : 'Sign Up'}
               variant="primary"
               size="lg"
               onPress={handleRegister}
-              disabled={submitting || isLoading || !isValid}
+              // disabled={submitting || isLoading || !isValid}
+              disabled={!isValid || isLoading }
               style={styles.button}
             />
 
@@ -376,4 +421,16 @@ const styles = StyleSheet.create({
   },
   registerText: { color: '#555', fontSize: 14 },
   registerLink: { color: '#000000', fontWeight: '600', fontSize: 14 },
+  passwordContainer: {
+    position: 'relative',
+    width: '100%',
+    maxWidth: 400,
+  },
+  eyeButton: {
+    position: 'absolute',
+    right: 12,
+    top: 14,
+    padding: 4,
+  },
+  
 });
