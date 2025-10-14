@@ -1,7 +1,7 @@
 import { Icon } from '@/src/components/ui/icon';
 import { AlertCircle, CheckCircle } from 'lucide-react-native';
 import React from 'react';
-import { ScrollView, StyleSheet, Text, View, Dimensions } from 'react-native';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
 export interface ContentWithExampleProps {
   title: string;
@@ -10,8 +10,6 @@ export interface ContentWithExampleProps {
   example: string;
 }
 
-const screenHeight = Dimensions.get('window').height;
-
 const ContentWithExample: React.FC<ContentWithExampleProps> = ({
   title,
   mainPoint,
@@ -19,41 +17,37 @@ const ContentWithExample: React.FC<ContentWithExampleProps> = ({
   example,
 }) => {
   return (
-    <View style={styles.content}>
-      <View style={styles.wrapper}>
-        <ScrollView
-          style={styles.scroll}
-          contentContainerStyle={styles.scrollContainer}
-          showsVerticalScrollIndicator={false} // 🔹 приховує скрол
-          overScrollMode="never" // 🔹 без "блискіток" при прокрутці
-        >
-          <View style={styles.card}>
-            <Icon as={AlertCircle} size={44} color="#111" style={styles.icon} />
-            <Text style={styles.title}>{title}</Text>
+    <View style={styles.screen}>
+      <ScrollView
+        contentContainerStyle={styles.scrollContainer}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.card}>
+          <Icon as={AlertCircle} size={44} color="#111" style={styles.icon} />
+          <Text style={styles.title}>{title}</Text>
 
-            <View style={[styles.section, { backgroundColor: 'rgba(0,0,0,0.05)' }]}>
-              <Text style={styles.mainPoint}>{mainPoint}</Text>
-            </View>
-
-            <View style={styles.section}>
-              {tips.map((tip, index) => (
-                <View key={index} style={styles.tipRow}>
-                  <Icon as={CheckCircle} size={20} color="#111" style={styles.tipIcon} />
-                  <Text style={styles.tipText}>{tip}</Text>
-                </View>
-              ))}
-            </View>
-
-            <View style={[styles.section, { backgroundColor: 'rgba(0,0,0,0.03)' }]}>
-              <View style={styles.exampleHeader}>
-                <Icon as={AlertCircle} size={20} color="#111" style={styles.exampleIcon} />
-                <Text style={styles.exampleTitle}>Приклад</Text>
-              </View>
-              <Text style={styles.exampleText}>{example}</Text>
-            </View>
+          <View style={[styles.section, { backgroundColor: 'rgba(0,0,0,0.05)' }]}>
+            <Text style={styles.mainPoint}>{mainPoint}</Text>
           </View>
-        </ScrollView>
-      </View>
+
+          <View style={styles.section}>
+            {tips.map((tip, index) => (
+              <View key={index} style={styles.tipRow}>
+                <Icon as={CheckCircle} size={20} color="#111" style={styles.tipIcon} />
+                <Text style={styles.tipText}>{tip}</Text>
+              </View>
+            ))}
+          </View>
+
+          <View style={[styles.section, { backgroundColor: 'rgba(0,0,0,0.03)' }]}>
+            <View style={styles.exampleHeader}>
+              <Icon as={AlertCircle} size={20} color="#111" style={styles.exampleIcon} />
+              <Text style={styles.exampleTitle}>Приклад</Text>
+            </View>
+            <Text style={styles.exampleText}>{example}</Text>
+          </View>
+        </View>
+      </ScrollView>
     </View>
   );
 };
@@ -61,30 +55,18 @@ const ContentWithExample: React.FC<ContentWithExampleProps> = ({
 export default ContentWithExample;
 
 const styles = StyleSheet.create({
-  content:{
-    height:'100%',
-    width: '100%',
-    display:'flex',
-    alignContent: 'center',
-    justifyContent: 'center'
-  },
-  wrapper: {
-   
-    height: screenHeight * 0.75, 
-    overflow: 'hidden',
-  },
-  scroll: {
+  screen: {
     flex: 1,
+    backgroundColor: '#ffffff',
   },
   scrollContainer: {
-    paddingHorizontal: 16,
-    paddingVertical: 20,
+    flexGrow: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   card: {
-    backgroundColor: '#fff',
-    paddingVertical: 20,
-    paddingLeft: 20,
-    paddingRight: 20,
+    paddingInline: 16,
+    backgroundColor: '#ffffff',
   },
   icon: { marginBottom: 0 },
   title: {
@@ -135,6 +117,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontStyle: 'italic',
     color: '#111',
-    lineHeight: 20,
+    lineHeight: 22,
   },
 });

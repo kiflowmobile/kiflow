@@ -73,6 +73,7 @@ export async function askGemini(
     try {
       parsed = JSON.parse(rawText);
 
+      console.log('parsed',parsed)
       if (!parsed.criterias) parsed.criterias = criteriasText;
     } catch (err) {
       console.error("❌ JSON parse error:", err, rawText);
