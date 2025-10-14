@@ -12,6 +12,7 @@ import { shadow } from '../../../ui/styles/shadow';
 import { useAuthStore, useUserProgressStore } from '@/src/stores';
 import { MaterialIcons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import Svg, { Path } from 'react-native-svg';
 
 interface CourseCardProps {
   course: Course;
@@ -122,10 +123,24 @@ return (
             onPress={handleStartCourse}
             activeOpacity={0.7}
           >
-            <MaterialIcons name="check-circle" size={28} color="#22c55e" />
+            <Svg
+              width={28}
+              height={28}
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="#4cd964"
+              strokeWidth={1.5}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <Path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" />
+              <Path d="M9 12l2 2l4 -4" />
+            </Svg>
             <Text style={styles.completedText}>Курс завершено</Text>
           </TouchableOpacity>
         )}
+
+
       </HStack>
     </VStack>
   </TouchableOpacity>
