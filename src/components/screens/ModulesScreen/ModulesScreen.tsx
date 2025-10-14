@@ -1,5 +1,6 @@
 import ProgressBar from '@/src/components/ui/progress-bar';
 import { useModulesStore, useUserProgressStore } from '@/src/stores';
+import { useCourseProgress } from '@/src/hooks/useCourseProgress';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect } from 'react';
 import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
@@ -16,6 +17,7 @@ export default function CourseScreen() {
   } = useModulesStore();
   const { getModuleProgress } = useUserProgressStore();
   const { setCurrentModule } = useModulesStore.getState();
+  const { modules: progressModules } = useCourseProgress((params.id as string) || '');
 
 
   useEffect(() => {
@@ -28,11 +30,14 @@ export default function CourseScreen() {
 
   const handleModulePress = (module: any) => {
     setCurrentModule(module);
+    const progressEntry = progressModules?.find(m => m.module_id === module.id);
+    const slideId = progressEntry?.last_slide_id || undefined;
     router.push({
       pathname: '/module/[moduleId]',
       params: { 
         moduleId: module.id,   
         courseId: params.id,
+        ...(slideId ? { slideId } : {}),
       },
     });
   };
