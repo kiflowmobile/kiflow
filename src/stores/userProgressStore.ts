@@ -3,7 +3,6 @@ import { supabase } from '../config/supabaseClient';
 import { useSlidesStore } from './slidesStore';
 import { useModulesStore } from './modulesStore';
 import { useAuthStore } from './authStore';
-import { useCourseStore } from './courseStore';
 import { loadProgressLocal, saveProgressLocal } from '../utils/progressAsyncStorage';
 import { UserCourseSummary } from '../constants/types/progress';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -61,26 +60,28 @@ export const useUserProgressStore = create<UserProgressStore>((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       const { data, error } = await supabase
-      .from('user_course_summaries')
-      .select('course_id, progress, last_slide_id, modules')
-      .eq('user_id', userId);
+        .from('user_course_summaries')
+        .select('course_id, progress, last_slide_id, modules')
+        .eq('user_id', userId);
+
+      if (error) throw error;
 
       const localData = await loadProgressLocal(userId);
-
-      if (localData.length === data?.length) {
-        set({ courses: localData });
-        return;
-      }
-      const courses = (data || []).map(c => ({
+      const remoteCourses = (data || []).map((c) => ({
         course_id: c.course_id,
         progress: c.progress,
         last_slide_id: c.last_slide_id,
-        modules: c.modules || [], 
+        modules: c.modules || [],
       }));
-        set({ courses });
 
-      await saveProgressLocal(userId, courses);
-
+      if (remoteCourses.length > 0) {
+        set({ courses: remoteCourses });
+        await saveProgressLocal(userId, remoteCourses);
+      } else if (localData.length > 0) {
+        set({ courses: localData });
+      } else {
+        set({ courses: [] });
+      }
     } catch (err: any) {
       set({ error: err.message });
     } finally {
@@ -89,15 +90,27 @@ export const useUserProgressStore = create<UserProgressStore>((set, get) => ({
   },
 
   setCourseProgress: (courseId, progress, lastSlideId = null) => {
-    const { user } = useAuthStore.getState();
-    set(state => {
-      const updatedCourses = state.courses.map(c =>
-        c.course_id === courseId
-          ? { ...c, progress, last_slide_id: lastSlideId }
-          : c
-      );
-      if (user) saveProgressLocal(user.id, updatedCourses);
-      return { courses: updatedCourses };
+    set((state) => {
+      const updatedCourses = [...state.courses];
+      const courseIndex = updatedCourses.findIndex((c) => c.course_id === courseId);
+      const sanitizedLastSlideId = lastSlideId ?? null;
+
+      if (courseIndex >= 0) {
+        updatedCourses[courseIndex] = {
+          ...updatedCourses[courseIndex],
+          progress,
+          last_slide_id: sanitizedLastSlideId,
+        };
+      } else {
+        updatedCourses.push({
+          course_id: courseId,
+          progress,
+          last_slide_id: sanitizedLastSlideId,
+          modules: [],
+        });
+      }
+
+      return { courses: persistCourses(updatedCourses) };
     });
   },
 
@@ -107,37 +120,73 @@ export const useUserProgressStore = create<UserProgressStore>((set, get) => ({
 
   setModuleProgressSafe: async (courseId, moduleId, currentSlideIndex, totalSlides, lastSlideId) => {
     const { user } = useAuthStore.getState();
-    if (!user || !courseId) return;
+    if (!user || !courseId || totalSlides <= 0) return;
 
-    const percent = Math.round(((currentSlideIndex + 1) / totalSlides) * 100);
-  
-    set(state => {
-      const course = state.courses.find(c => c.course_id === courseId);
-      if (!course) return state;
-  
-      const moduleIndex = course.modules.findIndex(m => m.module_id === moduleId);
-      if (moduleIndex >= 0) {
-        course.modules[moduleIndex] = {
-          module_id: moduleId,
-          progress: percent,
-          last_slide_id: lastSlideId || null,
-        };
+    const percent = Math.min(100, Math.round(((currentSlideIndex + 1) / totalSlides) * 100));
+    const sanitizedLastSlideId = lastSlideId ?? null;
+
+    set((state) => {
+      const updatedCourses = [...state.courses];
+      const courseIndex = updatedCourses.findIndex((c) => c.course_id === courseId);
+      const existingCourse = courseIndex >= 0 ? updatedCourses[courseIndex] : null;
+
+      const existingModules = existingCourse ? existingCourse.modules : [];
+      const moduleMap = new Map(
+        existingModules.map((m) => [
+          m.module_id,
+          { ...m, last_slide_id: m.last_slide_id ?? null },
+        ]),
+      );
+
+      moduleMap.set(moduleId, {
+        module_id: moduleId,
+        progress: percent,
+        last_slide_id: sanitizedLastSlideId,
+      });
+
+      const { modules: modulesState } = useModulesStore.getState();
+      const courseModuleIds = modulesState
+        .filter((module) => module.course_id === courseId)
+        .map((module) => module.id);
+
+      let normalizedModules = courseModuleIds.map((id) =>
+        moduleMap.get(id) ?? {
+          module_id: id,
+          progress: 0,
+          last_slide_id: null,
+        },
+      );
+
+      if (normalizedModules.length === 0) {
+        normalizedModules = Array.from(moduleMap.values());
       } else {
-        course.modules.push({
-          module_id: moduleId,
-          progress: percent,
-          last_slide_id: lastSlideId || null,
+        moduleMap.forEach((module, id) => {
+          if (!courseModuleIds.includes(id)) {
+            normalizedModules.push(module);
+          }
         });
       }
-  
-      // перерахуємо прогрес курсу
-      const courseProgress = Math.round(
-        course.modules.reduce((sum, m) => sum + m.progress, 0) / course.modules.length
-      );
-      course.progress = courseProgress;
-      course.last_slide_id = lastSlideId
-  
-      const updatedCourses = [...state.courses];
+
+      const courseProgress =
+        normalizedModules.length > 0
+          ? Math.round(
+              normalizedModules.reduce((sum, m) => sum + m.progress, 0) / normalizedModules.length,
+            )
+          : percent;
+
+      const updatedCourse: UserCourseSummary = {
+        course_id: courseId,
+        progress: courseProgress,
+        last_slide_id: sanitizedLastSlideId,
+        modules: normalizedModules,
+      };
+
+      if (courseIndex >= 0) {
+        updatedCourses[courseIndex] = updatedCourse;
+      } else {
+        updatedCourses.push(updatedCourse);
+      }
+
       return { courses: persistCourses(updatedCourses) };
     });
   },
