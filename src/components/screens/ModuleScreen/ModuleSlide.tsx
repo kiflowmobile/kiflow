@@ -84,7 +84,7 @@ const ModuleSlide: React.FC<CourseSlideProps> = ({
     }
     case 'quiz':
       return (
-          <QuizSlide title={slideData.slide_title} quiz={slideData.slide_data} />
+          <QuizSlide id = {slideData.id} title={slideData.slide_title} quiz={slideData.slide_data} />
       );
     case 'ai':
       return (

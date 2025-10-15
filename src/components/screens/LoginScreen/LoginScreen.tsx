@@ -206,7 +206,8 @@ export default function LoginScreen() {
               variant="primary"
               size="lg"
               onPress={handleLogin}
-              disabled={isLoading || !isValid}
+              // disabled={isLoading || !isValid}
+              disabled={ !isValid}
               style={styles.button}
             />
 

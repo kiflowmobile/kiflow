@@ -29,6 +29,9 @@ import { formatAIResponseForChat } from './formatAIResponseForChat';
 import { shadow } from '@/src/components/ui/styles/shadow';
 import { useRoute } from '@react-navigation/native';
 import { useLocalSearchParams } from 'expo-router';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { storage } from '@/src/utils/chactAsyncStorage';
+
 
 interface Message {
   id: string;
@@ -56,6 +59,7 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
   const inputRef = useRef<TextInput>(null);
   const pageScrollLockedRef = useRef(false);
   const { moduleId, courseId } = useLocalSearchParams();
+  const storageKey = `chat_history_${slideId}`;
 
   const moduleIdStr = Array.isArray(moduleId) ? moduleId[0] : moduleId;
   const courseIdStr = Array.isArray(courseId) ? courseId[0] : courseId;
@@ -126,8 +130,58 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
     if (courseId) fetchCriterias(courseIdStr);
   }, [courseId, fetchCriterias]);
 
+  useEffect(() => {
+    const initChat = async () => {
+      try {
+        // спроба завантажити історію чату
+        const savedHistory = await loadChatHistory(slideId);
+  
+        if (savedHistory.length > 0) {
+          setMessages(savedHistory);
+        } else {
+          // якщо історії немає, показуємо промпт (як раніше)
+          const slidePrompt = prompt[slideId]?.question;
+          if (slidePrompt) {
+            const aiMsg: Message = {
+              id: Date.now().toString(),
+              role: 'ai',
+              text: slidePrompt,
+            };
+            setMessages([aiMsg]);
+            await saveChatHistory(slideId, [aiMsg]);
+          }
+        }
+      } catch (err) {
+        console.error('Error initializing chat:', err);
+      }
+    };
+  
+    initChat();
+  }, [slideId, prompt]);
+  
+  const saveChatHistory = async (chatId: string, history: Message[]) => {
+    try {
+      await AsyncStorage.setItem(`chat_history_${chatId}`, JSON.stringify(history));
+    } catch (err) {
+      console.error('Error saving chat history:', err);
+    }
+  };
+  
+  // завантаження історії
+  const loadChatHistory = async (chatId: string): Promise<Message[]> => {
+    try {
+      const saved = await AsyncStorage.getItem(`chat_history_${chatId}`);
+      return saved ? JSON.parse(saved) : [];
+    } catch (err) {
+      console.error('Error loading chat history:', err);
+      return [];
+    }
+  };
+  
+  
+
   const handleSend = async () => {
-    if (!input.trim() || answered || loading) return;
+    // if (!input.trim() || answered || loading) return;
 
     const userMsg: Message = { id: Date.now().toString(), role: 'user', text: input.trim() };
     setMessages((prev) => [...prev, userMsg]);
@@ -195,6 +249,46 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
     unlockPageScroll();
   };
 
+
+  useEffect(() => {
+    const initChat = async () => {
+      try {
+        const savedHistory = await loadChatHistory(slideId);
+  
+        if (savedHistory.length > 0) {
+          // Якщо вже є історія — просто підставляємо її
+          setMessages(savedHistory);
+        } else {
+          // Якщо історії немає — показуємо початкове AI-повідомлення
+          const slidePrompt = prompt[slideId]?.question;
+          if (slidePrompt) {
+            const aiMsg: Message = {
+              id: Date.now().toString(),
+              role: 'ai',
+              text: slidePrompt,
+            };
+            setMessages([aiMsg]);
+            await saveChatHistory(slideId, [aiMsg]);
+          }
+        }
+      } catch (err) {
+        console.error('Error initializing chat:', err);
+      }
+    };
+  
+    initChat();
+  }, [slideId, prompt]);
+  
+  // Збереження історії при кожній зміні
+  useEffect(() => {
+    if (messages.length > 0) {
+      saveChatHistory(slideId, messages);
+    }
+  }, [messages, slideId]);
+  
+
+
+
   return (
     <SafeAreaView style={styles.screen}>
       <KeyboardAvoidingView
@@ -244,14 +338,14 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
             onFocus={handleFocus}
             onBlur={handleBlur}
             multiline
-            editable={!answered && !loading}
+            // editable={!answered && !loading}
           />
           <View style={styles.buttonContainer}>
             <AudioRecorder onAudioProcessed={handleAudioProcessed} 
             disabled={loading || answered} 
             />
             <TouchableOpacity onPress={handleSend}
-             disabled={loading || answered}
+            //  disabled={loading || answered}
              >
               <Icon as={Send} size={24} 
               color={loading || answered ? '#94a3b8' : '#0f172a'} 

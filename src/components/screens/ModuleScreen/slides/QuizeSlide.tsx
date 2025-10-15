@@ -1,22 +1,50 @@
 import { View } from '@/src/components/ui/view';
-import React, { useState } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import React, { useEffect, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text } from 'react-native';
 
 type QuizData = {
   question: string;
   options: string[];
   correctAnswer: number;
+  // id: string;
 };
 
 interface QuizProps {
+  id: string;
   title: string;
   subtitle?: string;
   quiz: QuizData;
 }
 
-const QuizSlide: React.FC<QuizProps> = ({ title, subtitle, quiz }) => {
+const QuizSlide: React.FC<QuizProps> = ({ title, subtitle, quiz, id }) => {
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
   const isAnswered = selectedAnswer !== null;
+  const storageKey = `quiz_answer_${id}`;
+
+  useEffect(() => {
+    const loadAnswer = async () => {
+      try {
+        const saved = await AsyncStorage.getItem(storageKey);
+        if (saved !== null) {
+          setSelectedAnswer(Number(saved));
+        }
+      } catch (err) {
+        console.error('Error loading quiz answer:', err);
+      }
+    };
+    loadAnswer();
+  }, [storageKey]);
+
+  const handleAnswer = async (index: number) => {
+    setSelectedAnswer(index);
+    try {
+      await AsyncStorage.setItem(storageKey, index.toString());
+    } catch (err) {
+      console.error('Error saving quiz answer:', err);
+    }
+  };
+
 
   return (
     <View style={styles.screen}>
@@ -47,7 +75,7 @@ const QuizSlide: React.FC<QuizProps> = ({ title, subtitle, quiz }) => {
               <Pressable
                 key={index}
                 style={[styles.option, visualStyle]}
-                onPress={() => setSelectedAnswer(index)}
+                onPress={() => handleAnswer(index)}
                 disabled={isAnswered}
               >
                 <Text style={styles.optionText}>{option}</Text>
