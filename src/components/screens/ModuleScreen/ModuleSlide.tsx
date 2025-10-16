@@ -87,7 +87,7 @@ const ModuleSlide: React.FC<CourseSlideProps> = ({
         />
       );
     case 'dashboard':
-      return <DashboardSlide title={slideData.slide_title} />;
+      return <DashboardSlide courseId={courseIdStr} title={slideData.slide_title} />;
     default:
       return (
         // <View

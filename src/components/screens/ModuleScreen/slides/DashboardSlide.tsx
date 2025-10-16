@@ -2,6 +2,7 @@ import { shadow } from '@/src/components/ui/styles/shadow';
 import { useAuthStore, useModulesStore } from '@/src/stores';
 import { useMainRatingStore } from '@/src/stores/mainRatingStore';
 import { MaterialIcons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { useEffect, useState } from 'react';
 import { Platform, StyleSheet, Text, View, ScrollView} from 'react-native';
 import Svg, { Path } from 'react-native-svg';
@@ -16,9 +17,22 @@ import {
 
 interface DashboardSlideProps {
   title: string;
+  courseId: string
 }
 
-const DashboardSlide: React.FC<DashboardSlideProps> = ({ title }) => {
+
+const calculateQuizRating = (quizData: Record<string, { selectedAnswer: number; correctAnswer: number }>) => {
+  const entries = Object.values(quizData);
+  const total = entries.length;
+  if (total === 0) return 0;
+
+  const correct = entries.filter(q => q.selectedAnswer === q.correctAnswer).length;
+  const rating = (correct / total) * 5;
+
+  return Number(rating.toFixed(1)); 
+};
+
+const DashboardSlide: React.FC<DashboardSlideProps> = ({ courseId, title }) => {
   const { user } = useAuthStore();
   const currentModuleId = useModulesStore.getState().currentModule?.id;
 
@@ -30,6 +44,26 @@ const DashboardSlide: React.FC<DashboardSlideProps> = ({ title }) => {
     isLoading,
     error,
   } = useMainRatingStore();
+  const [quizRatings, setQuizRatings] = useState<number | null>(null);
+
+  useEffect(() => {
+    const loadQuizRatings = async () => {
+      try {
+        const stored = await AsyncStorage.getItem(`course-progress-${courseId}`);
+        if (!stored) return;
+        const parsed = JSON.parse(stored);
+
+        
+  
+        const quizScore = calculateQuizRating(parsed);
+        setQuizRatings(quizScore);
+      } catch (err) {
+        console.error('Error loading quiz ratings:', err);
+      }
+    };
+  
+    if (courseId) loadQuizRatings();
+  }, [courseId]);
 
   useEffect(() => {
     if (!user || !currentModuleId) return;
@@ -37,6 +71,7 @@ const DashboardSlide: React.FC<DashboardSlideProps> = ({ title }) => {
     fetchAverage(user.id, currentModuleId);
     fetchSkills(user.id, currentModuleId);
   }, [user, currentModuleId]);
+
 
   return (
     <View style={styles.screen}>
@@ -76,11 +111,23 @@ const DashboardSlide: React.FC<DashboardSlideProps> = ({ title }) => {
                 </Text>
               </View>
             )}
+            <View style={[styles.statBox, { backgroundColor: '#ede9fe' }]}>
+              <Text style={styles.statLabel}>Модулі quiz</Text>
+              <Text style={[styles.statValue, { color: '#7c3aed' }]}>
+                {quizRatings ? quizRatings + '/5': '...' }
+              </Text>
+            </View>
 
             {/* <View style={[styles.statBox, { backgroundColor: '#ede9fe' }]}>
               <Text style={styles.statLabel}>Курси</Text>
               <Text style={[styles.statValue, { color: '#7c3aed' }]}>5</Text>
             </View> */}
+            <View style={[styles.statBox, { backgroundColor: '#dbeafe' }]}>
+              <Text style={styles.statLabel}>Середній бал</Text>
+              <Text style={[styles.statValue, { color: '#2563eb' }]}>
+              {quizRatings && average ? ((Number(quizRatings) + Number(average.toFixed(1)))/2) + '/5': '...' }
+              </Text>
+            </View>
           </View>
         </View>
 

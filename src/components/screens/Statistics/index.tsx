@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { FlatList, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useCourseStore } from "@/src/stores/courseStore";
@@ -7,6 +7,8 @@ import { useMainRatingStore } from "@/src/stores/mainRatingStore";
 import { useAuthStore, useModulesStore } from "@/src/stores";
 import { useRouter } from "expo-router";
 import { shadow } from "../../ui/styles/shadow";
+import Svg, { Path } from "react-native-svg";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function StatisticsScreen() {
   const { width } = useWindowDimensions(); 
@@ -19,6 +21,7 @@ export default function StatisticsScreen() {
   const { modules, fetchMyModulesByCourses } = useModulesStore();
   const { user } = useAuthStore();
   const router = useRouter();
+
 
   useEffect(() => {
     if (user?.id) {
@@ -53,8 +56,20 @@ export default function StatisticsScreen() {
 
   return (
     <View style={styles.screen}>
-              <View style={styles.iconWrapper}>
-          <MaterialIcons name="insert-chart" size={40} color="#7c3aed" />
+        <View style={styles.iconWrapper}>
+          <Svg
+            width={40}
+            height={40}
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="#7c3aed"
+            strokeWidth={1.5}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <Path d="M10 3.2a9 9 0 1 0 10.8 10.8a1 1 0 0 0 -1 -1h-3.8a4.1 4.1 0 1 1 -5 -5v-4a.9 .9 0 0 0 -1 -.8" />
+            <Path d="M15 3.5a9 9 0 0 1 5.5 5.5h-4.5a9 9 0 0 0 -1 -1v-4.5" />
+          </Svg>
         </View>
 
         <Text style={styles.title}>Статистика</Text>
@@ -93,6 +108,12 @@ export default function StatisticsScreen() {
                 </View>
                 <View style={[styles.statBox, { backgroundColor: "#ede9fe" }]}>
                   <Text style={styles.statLabel}>Модулів</Text>
+                  <Text style={[styles.statValue, { color: "#7c3aed" }]}>
+                    {getModulesCount(course.id)}
+                  </Text>
+                </View>
+                <View style={[styles.statBox, { backgroundColor: "#ede9fe" }]}>
+                  <Text style={styles.statLabel}>Оцінка quize</Text>
                   <Text style={[styles.statValue, { color: "#7c3aed" }]}>
                     {getModulesCount(course.id)}
                   </Text>
