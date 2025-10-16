@@ -9,6 +9,7 @@ import DashboardSlide from './slides/DashboardSlide';
 import MediaPlaceholder from './slides/MediaPlaceholder';
 import { useSlidesStore } from '@/src/stores';
 import VideoPlayer from './VideoPlayer';
+import { useLocalSearchParams } from 'expo-router';
 
 interface CourseSlideProps {
   slideId: string | number;
@@ -28,6 +29,9 @@ const ModuleSlide: React.FC<CourseSlideProps> = ({
   const { slides, isLoading, error } = useSlidesStore();
 
   const slideData = useMemo(() => slides.find((s) => s.id === slideId), [slides, slideId]);
+  const { moduleId, courseId } = useLocalSearchParams();
+  const moduleIdStr = Array.isArray(moduleId) ? moduleId[0] : moduleId;
+  const courseIdStr = Array.isArray(courseId) ? courseId[0] : courseId;
 
   if (isLoading) {
     return (
@@ -70,7 +74,7 @@ const ModuleSlide: React.FC<CourseSlideProps> = ({
       );
     }
     case 'quiz':
-      return <QuizSlide title={slideData.slide_title} quiz={slideData.slide_data} />;
+      return <QuizSlide id={slideData.id} courseId={courseIdStr} title={slideData.slide_title} quiz={slideData.slide_data} />;
     case 'ai':
       return <AICourseChat title={slideData.slide_title} slideId={slideData.id} />;
     case 'content':

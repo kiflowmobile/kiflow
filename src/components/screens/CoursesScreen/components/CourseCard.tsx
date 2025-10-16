@@ -58,6 +58,9 @@ const handleResetProgress = async (e?: any) => {
   console.log('reset progress')
   try {
     resetCourseProgress(course.id)
+
+    const storageKey = `course-progress-${course.id}`;
+    await AsyncStorage.removeItem(storageKey);
     
   } catch (err) {
     console.error('Error resetting course progress:', err);
