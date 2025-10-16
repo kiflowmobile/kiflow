@@ -4,6 +4,7 @@ import { useMainRatingStore } from '@/src/stores/mainRatingStore';
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useEffect, useState } from 'react';
 import { Platform, StyleSheet, Text, View, ScrollView} from 'react-native';
+import Svg, { Path } from 'react-native-svg';
 import {
   PolarAngleAxis,
   PolarGrid,
@@ -37,17 +38,24 @@ const DashboardSlide: React.FC<DashboardSlideProps> = ({ title }) => {
     fetchSkills(user.id, currentModuleId);
   }, [user, currentModuleId]);
 
-
-  console.log('average', average)
-  console.log('skills', skills)
-
   return (
     <View style={styles.screen}>
       <View style={styles.card}>
       <ScrollView contentContainerStyle={{ paddingBottom: 16 }}>
-
         <View style={styles.iconWrapper}>
-          <MaterialIcons name="insert-chart" size={40} color="#7c3aed" />
+          <Svg
+            width={40}
+            height={40}
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="#7c3aed"
+            strokeWidth={1.5}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <Path d="M10 3.2a9 9 0 1 0 10.8 10.8a1 1 0 0 0 -1 -1h-3.8a4.1 4.1 0 1 1 -5 -5v-4a.9 .9 0 0 0 -1 -.8" />
+            <Path d="M15 3.5a9 9 0 0 1 5.5 5.5h-4.5a9 9 0 0 0 -1 -1v-4.5" />
+          </Svg>
         </View>
 
         <Text style={styles.title}>{title}</Text>
