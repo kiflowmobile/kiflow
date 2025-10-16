@@ -18,6 +18,7 @@ import { formatAIResponseForChat } from './formatAIResponseForChat';
 import { shadow } from '@/src/components/ui/styles/shadow';
 import { useLocalSearchParams } from 'expo-router';
 import { useState, useRef, useEffect } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 interface Message {
   id: string;
@@ -30,7 +31,6 @@ interface AICourseChatProps {
   slideId: string;
 }
 
-
 const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
@@ -38,15 +38,29 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
   const [answered, setAnswered] = useState(false);
   const { prompt, fetchPromptBySlide } = usePromptsStore();
   const { criterias, fetchCriterias } = useCriteriaStore();
-  // const courseId = useCourseStore((state) => state.currentCourse?.id);
   const { user } = useAuthStore();
   const { saveRating } = useMainRatingStore();
   const inputRef = useRef<TextInput | null>(null);
   const pageScrollLockedRef = useRef(false);
   const { moduleId, courseId } = useLocalSearchParams();
-
   const moduleIdStr = Array.isArray(moduleId) ? moduleId[0] : moduleId;
   const courseIdStr = Array.isArray(courseId) ? courseId[0] : courseId;
+  const CHAT_STORAGE_KEY = `course-chat-${courseIdStr}`;
+
+  const loadChat = async () => {
+    try {
+      const stored = await AsyncStorage.getItem(CHAT_STORAGE_KEY);
+      if (!stored) return;
+
+      const parsed = JSON.parse(stored);
+      if (parsed[slideId]) {
+        setMessages(parsed[slideId]);
+        setAnswered(true); 
+      }
+    } catch (err) {
+      console.error('Error loading chat:', err);
+    }
+  };
 
   const lockPageScroll = () => {
     if (Platform.OS !== 'web' || pageScrollLockedRef.current) return;
@@ -88,50 +102,75 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
   }, [slideId, fetchPromptBySlide]);
 
   useEffect(() => {
-    const loadInitialPrompt = async () => {
-      const slidePrompt = prompt[slideId]?.question;
-      if (!slidePrompt) return;
-
-      // Restore per-slide answered state
-      setAnswered(useSlidesStore.getState().isSlideAnswered(slideId));
-      setInput('');
-
-      const aiMsg: Message = {
-        id: Date.now().toString(),
-        role: 'ai',
-        text: slidePrompt,
-      };
-
-      setMessages([aiMsg]);
+    const loadChatOrPrompt = async () => {
+      try {
+        const stored = await AsyncStorage.getItem(CHAT_STORAGE_KEY);
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          if (parsed[slideId]) {
+            setMessages(parsed[slideId]);
+            setAnswered(true);
+            return; 
+          }
+        }
+  
+        const slidePrompt = prompt[slideId]?.question;
+        if (!slidePrompt) return;
+  
+        const aiMsg: Message = {
+          id: Date.now().toString(),
+          role: 'ai',
+          text: slidePrompt,
+        };
+  
+        setMessages([aiMsg]);
+        setAnswered(useSlidesStore.getState().isSlideAnswered(slideId));
+        setInput('');
+      } catch (err) {
+        console.error('Error loading chat or prompt:', err);
+      }
     };
-
-    loadInitialPrompt();
+  
+    if (slideId) {
+      loadChatOrPrompt();
+    }
   }, [slideId, prompt]);
+  
 
   useEffect(() => {
     if (courseId) fetchCriterias(courseIdStr);
   }, [courseId, courseIdStr, fetchCriterias]);
 
+  useEffect(() => {
+    if (slideId) {
+      fetchPromptBySlide(slideId);
+      loadChat(); // ✅ спробуємо підвантажити історію
+    }
+  }, [slideId]);
+
   const handleSend = async () => {
     if (!input.trim() || answered || loading) return;
-
+  
     const userMsg: Message = { id: Date.now().toString(), role: 'user', text: input.trim() };
     setMessages((prev) => [...prev, userMsg]);
     setInput('');
     setLoading(true);
     setAnswered(true);
     useSlidesStore.getState().markSlideAnswered(slideId);
-
+  
     try {
       const slidePrompt = prompt[slideId]?.prompt || '';
       const criteriasText = criterias.map((item) => `${item.key} - ${item.name.trim()}`).join('\n');
-
+  
+      // генеруємо відповідь
       const aiResponse = await askGemini(
         [...messages, userMsg],
         slidePrompt,
         messages.length === 0,
         criteriasText,
       );
+  
+      // зберігаємо оцінки, якщо вони є
       if (user && aiResponse.rating?.criteriaScores && moduleId) {
         const criteriaScores = aiResponse.rating.criteriaScores;
         for (const [criteriaKey, score] of Object.entries(criteriaScores)) {
@@ -142,21 +181,36 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
           }
         }
       }
-
+  
+      // форматуємо текст від AI
       const chatText = formatAIResponseForChat(aiResponse);
       const aiMsg: Message = {
         id: Date.now().toString(),
         role: 'ai',
         text: chatText,
       };
-
-      setMessages((prev) => [...prev, aiMsg]);
+  
+      // створюємо оновлений масив повідомлень
+      const updatedMessages = [...messages, userMsg, aiMsg];
+      setMessages(updatedMessages);
+  
+      // ✅ нова логіка збереження чату
+      try {
+        const existing = await AsyncStorage.getItem(CHAT_STORAGE_KEY);
+        const parsed = existing ? JSON.parse(existing) : {};
+        parsed[slideId] = updatedMessages;
+        await AsyncStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(parsed));
+      } catch (err) {
+        console.error('Error saving chat:', err);
+      }
+  
     } catch (e) {
       console.error(e);
     } finally {
       setLoading(false);
     }
   };
+  
 
   const handleAudioProcessed = (transcribedText: string) => {
     if (answered) return;
@@ -180,6 +234,7 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
   const handleBlur = () => {
     unlockPageScroll();
   };
+
 
   return (
     <SafeAreaView style={styles.screen}>

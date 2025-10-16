@@ -59,8 +59,10 @@ const handleResetProgress = async (e?: any) => {
   try {
     resetCourseProgress(course.id)
 
-    const storageKey = `course-progress-${course.id}`;
-    await AsyncStorage.removeItem(storageKey);
+    const storageQuizeKey = `course-progress-${course.id}`;
+    await AsyncStorage.removeItem(storageQuizeKey);
+    const storageChatKey = `course-chat-${course.id}`;
+    await AsyncStorage.removeItem(storageChatKey);
     
   } catch (err) {
     console.error('Error resetting course progress:', err);
