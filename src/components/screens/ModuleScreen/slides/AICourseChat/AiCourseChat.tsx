@@ -5,7 +5,9 @@ import {
   TextInput,
   View,
   StyleSheet,
+  Modal,
 } from 'react-native';
+import React from 'react';
 import { usePromptsStore } from '@/src/services/slidePrompt';
 import { useAuthStore, useCriteriaStore, useMainRatingStore, useSlidesStore } from '@/src/stores';
 
@@ -36,6 +38,7 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [answered, setAnswered] = useState(false);
+  const [modalVisible, setModalVisible] = useState(false);
   const { prompt, fetchPromptBySlide } = usePromptsStore();
   const { criterias, fetchCriterias } = useCriteriaStore();
   const { user } = useAuthStore();
@@ -47,7 +50,7 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
   const courseIdStr = Array.isArray(courseId) ? courseId[0] : courseId;
   const CHAT_STORAGE_KEY = `course-chat-${courseIdStr}`;
 
-  const loadChat = async () => {
+  const loadChat = React.useCallback(async () => {
     try {
       const stored = await AsyncStorage.getItem(CHAT_STORAGE_KEY);
       if (!stored) return;
@@ -55,12 +58,12 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
       const parsed = JSON.parse(stored);
       if (parsed[slideId]) {
         setMessages(parsed[slideId]);
-        setAnswered(true); 
+        setAnswered(true);
       }
     } catch (err) {
       console.error('Error loading chat:', err);
     }
-  };
+  }, [CHAT_STORAGE_KEY, slideId]);
 
   const lockPageScroll = () => {
     if (Platform.OS !== 'web' || pageScrollLockedRef.current) return;
@@ -110,19 +113,19 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
           if (parsed[slideId]) {
             setMessages(parsed[slideId]);
             setAnswered(true);
-            return; 
+            return;
           }
         }
-  
+
         const slidePrompt = prompt[slideId]?.question;
         if (!slidePrompt) return;
-  
+
         const aiMsg: Message = {
           id: Date.now().toString(),
           role: 'ai',
           text: slidePrompt,
         };
-  
+
         setMessages([aiMsg]);
         setAnswered(useSlidesStore.getState().isSlideAnswered(slideId));
         setInput('');
@@ -130,12 +133,11 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
         console.error('Error loading chat or prompt:', err);
       }
     };
-  
+
     if (slideId) {
       loadChatOrPrompt();
     }
-  }, [slideId, prompt]);
-  
+  }, [slideId, prompt, CHAT_STORAGE_KEY]);
 
   useEffect(() => {
     if (courseId) fetchCriterias(courseIdStr);
@@ -146,22 +148,22 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
       fetchPromptBySlide(slideId);
       loadChat(); // ✅ спробуємо підвантажити історію
     }
-  }, [slideId]);
+  }, [slideId, fetchPromptBySlide, loadChat]);
 
   const handleSend = async () => {
     if (!input.trim() || answered || loading) return;
-  
+
     const userMsg: Message = { id: Date.now().toString(), role: 'user', text: input.trim() };
     setMessages((prev) => [...prev, userMsg]);
     setInput('');
     setLoading(true);
     setAnswered(true);
     useSlidesStore.getState().markSlideAnswered(slideId);
-  
+
     try {
       const slidePrompt = prompt[slideId]?.prompt || '';
       const criteriasText = criterias.map((item) => `${item.key} - ${item.name.trim()}`).join('\n');
-  
+
       // генеруємо відповідь
       const aiResponse = await askGemini(
         [...messages, userMsg],
@@ -169,7 +171,7 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
         messages.length === 0,
         criteriasText,
       );
-  
+
       // зберігаємо оцінки, якщо вони є
       if (user && aiResponse.rating?.criteriaScores && moduleId) {
         const criteriaScores = aiResponse.rating.criteriaScores;
@@ -181,7 +183,7 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
           }
         }
       }
-  
+
       // форматуємо текст від AI
       const chatText = formatAIResponseForChat(aiResponse);
       const aiMsg: Message = {
@@ -189,11 +191,11 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
         role: 'ai',
         text: chatText,
       };
-  
+
       // створюємо оновлений масив повідомлень
       const updatedMessages = [...messages, userMsg, aiMsg];
       setMessages(updatedMessages);
-  
+
       // ✅ нова логіка збереження чату
       try {
         const existing = await AsyncStorage.getItem(CHAT_STORAGE_KEY);
@@ -203,14 +205,12 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
       } catch (err) {
         console.error('Error saving chat:', err);
       }
-  
     } catch (e) {
       console.error(e);
     } finally {
       setLoading(false);
     }
   };
-  
 
   const handleAudioProcessed = (transcribedText: string) => {
     if (answered) return;
@@ -221,7 +221,7 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
 
   const handleFocus = () => {
     lockPageScroll();
-
+    setModalVisible(true);
     if (Platform.OS === 'web') {
       setTimeout(() => {
         try {
@@ -233,8 +233,8 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
 
   const handleBlur = () => {
     unlockPageScroll();
+    setModalVisible(false);
   };
-
 
   return (
     <SafeAreaView style={styles.screen}>
@@ -249,18 +249,43 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
             <ChatMessages messages={messages} loading={loading} />
           </ScrollView>
         </View>
-        <ChatInput
-          input={input}
-          setInput={setInput}
-          onSend={handleSend}
-          onAudioProcessed={handleAudioProcessed}
-          inputRef={inputRef}
-          onFocus={handleFocus}
-          onBlur={handleBlur}
-          loading={loading}
-          answered={answered}
-        />
+        {!modalVisible && (
+          <ChatInput
+            input={input}
+            setInput={setInput}
+            onSend={handleSend}
+            onAudioProcessed={handleAudioProcessed}
+            inputRef={inputRef}
+            onFocus={handleFocus}
+            onBlur={handleBlur}
+            loading={loading}
+            answered={answered}
+          />
+        )}
       </KeyboardAvoidingView>
+      {/* Модалка вынесена за пределы KeyboardAvoidingView */}
+      <Modal
+        visible={modalVisible}
+        animationType="fade"
+        transparent={true}
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <View style={styles.modalAbsoluteOverlay}>
+          <SafeAreaView style={styles.modalBottomContainer}>
+            <ChatInput
+              input={input}
+              setInput={setInput}
+              onSend={handleSend}
+              onAudioProcessed={handleAudioProcessed}
+              inputRef={inputRef}
+              onFocus={handleFocus}
+              onBlur={handleBlur}
+              loading={loading}
+              answered={answered}
+            />
+          </SafeAreaView>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };
@@ -276,5 +301,25 @@ const styles = StyleSheet.create({
     ...shadow,
     backgroundColor: '#ffffff',
     marginVertical: 8,
+  },
+  modalAbsoluteOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    width: '100%',
+    height: '100%',
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+  },
+  modalBottomContainer: {
+    width: '100%',
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
+    backgroundColor: '#fff',
+    padding: 16,
+    marginTop: 0,
   },
 });
