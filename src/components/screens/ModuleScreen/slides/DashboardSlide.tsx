@@ -2,8 +2,10 @@ import { shadow } from '@/src/components/ui/styles/shadow';
 import { useAuthStore, useModulesStore } from '@/src/stores';
 import { useMainRatingStore } from '@/src/stores/mainRatingStore';
 import { MaterialIcons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { useEffect, useState } from 'react';
 import { Platform, StyleSheet, Text, View, ScrollView} from 'react-native';
+import Svg, { Path } from 'react-native-svg';
 import {
   PolarAngleAxis,
   PolarGrid,
@@ -15,9 +17,22 @@ import {
 
 interface DashboardSlideProps {
   title: string;
+  courseId: string
 }
 
-const DashboardSlide: React.FC<DashboardSlideProps> = ({ title }) => {
+
+const calculateQuizRating = (quizData: Record<string, { selectedAnswer: number; correctAnswer: number }>) => {
+  const entries = Object.values(quizData);
+  const total = entries.length;
+  if (total === 0) return 0;
+
+  const correct = entries.filter(q => q.selectedAnswer === q.correctAnswer).length;
+  const rating = (correct / total) * 5;
+
+  return Number(rating.toFixed(1)); 
+};
+
+const DashboardSlide: React.FC<DashboardSlideProps> = ({ courseId, title }) => {
   const { user } = useAuthStore();
   const currentModuleId = useModulesStore.getState().currentModule?.id;
 
@@ -29,6 +44,26 @@ const DashboardSlide: React.FC<DashboardSlideProps> = ({ title }) => {
     isLoading,
     error,
   } = useMainRatingStore();
+  const [quizRatings, setQuizRatings] = useState<number | null>(null);
+
+  useEffect(() => {
+    const loadQuizRatings = async () => {
+      try {
+        const stored = await AsyncStorage.getItem(`course-progress-${courseId}`);
+        if (!stored) return;
+        const parsed = JSON.parse(stored);
+
+        
+  
+        const quizScore = calculateQuizRating(parsed);
+        setQuizRatings(quizScore);
+      } catch (err) {
+        console.error('Error loading quiz ratings:', err);
+      }
+    };
+  
+    if (courseId) loadQuizRatings();
+  }, [courseId]);
 
   useEffect(() => {
     if (!user || !currentModuleId) return;
@@ -38,16 +73,24 @@ const DashboardSlide: React.FC<DashboardSlideProps> = ({ title }) => {
   }, [user, currentModuleId]);
 
 
-  console.log('average', average)
-  console.log('skills', skills)
-
   return (
     <View style={styles.screen}>
       <View style={styles.card}>
       <ScrollView contentContainerStyle={{ paddingBottom: 16 }}>
-
         <View style={styles.iconWrapper}>
-          <MaterialIcons name="insert-chart" size={40} color="#7c3aed" />
+          <Svg
+            width={40}
+            height={40}
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="#7c3aed"
+            strokeWidth={1.5}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <Path d="M10 3.2a9 9 0 1 0 10.8 10.8a1 1 0 0 0 -1 -1h-3.8a4.1 4.1 0 1 1 -5 -5v-4a.9 .9 0 0 0 -1 -.8" />
+            <Path d="M15 3.5a9 9 0 0 1 5.5 5.5h-4.5a9 9 0 0 0 -1 -1v-4.5" />
+          </Svg>
         </View>
 
         <Text style={styles.title}>{title}</Text>
@@ -68,11 +111,23 @@ const DashboardSlide: React.FC<DashboardSlideProps> = ({ title }) => {
                 </Text>
               </View>
             )}
+            <View style={[styles.statBox, { backgroundColor: '#ede9fe' }]}>
+              <Text style={styles.statLabel}>Модулі quiz</Text>
+              <Text style={[styles.statValue, { color: '#7c3aed' }]}>
+                {quizRatings ? quizRatings + '/5': '...' }
+              </Text>
+            </View>
 
             {/* <View style={[styles.statBox, { backgroundColor: '#ede9fe' }]}>
               <Text style={styles.statLabel}>Курси</Text>
               <Text style={[styles.statValue, { color: '#7c3aed' }]}>5</Text>
             </View> */}
+            <View style={[styles.statBox, { backgroundColor: '#dbeafe' }]}>
+              <Text style={styles.statLabel}>Середній бал</Text>
+              <Text style={[styles.statValue, { color: '#2563eb' }]}>
+              {quizRatings && average ? ((Number(quizRatings) + Number(average.toFixed(1)))/2) + '/5': '...' }
+              </Text>
+            </View>
           </View>
         </View>
 

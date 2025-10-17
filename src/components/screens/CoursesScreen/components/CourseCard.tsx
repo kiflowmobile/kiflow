@@ -58,6 +58,11 @@ const handleResetProgress = async (e?: any) => {
   console.log('reset progress')
   try {
     resetCourseProgress(course.id)
+
+    const storageQuizeKey = `course-progress-${course.id}`;
+    await AsyncStorage.removeItem(storageQuizeKey);
+    const storageChatKey = `course-chat-${course.id}`;
+    await AsyncStorage.removeItem(storageChatKey);
     
   } catch (err) {
     console.error('Error resetting course progress:', err);
@@ -79,12 +84,21 @@ return (
       
       {/* Кнопка скидання прогресу */}
       {isDeveloper && courseProgress > 0 && (
-        <TouchableOpacity
-          style={styles.resetButton}
-          onPress={handleResetProgress}
+        <TouchableOpacity style={styles.resetButton} onPress={handleResetProgress}>
+        <Svg
+          width={24}
+          height={24}
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="#ffffff"
+          strokeWidth={1.5}
+          strokeLinecap="round"
+          strokeLinejoin="round"
         >
-          <MaterialIcons name="refresh" size={20} color="#fff" />
-        </TouchableOpacity>
+          <Path d="M20 11a8.1 8.1 0 0 0 -15.5 -2m-.5 -4v4h4" />
+          <Path d="M4 13a8.1 8.1 0 0 0 15.5 2m.5 4v-4h-4" />
+        </Svg>
+      </TouchableOpacity>
       )}
     </View>
 

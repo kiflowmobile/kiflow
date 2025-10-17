@@ -12,7 +12,7 @@ export default function CourseContentsScreen({ title, data }: CourseContentsScre
   const router = useRouter();
   const params = useLocalSearchParams<{ id?: string }>();
 
-  const handleModulePress = (module: secondSlideData) => {
+  const handleModulePress = (module: any) => {
     const moduleOrder = data.findIndex(m => m.id === module.id) + 1; 
   
     router.push(

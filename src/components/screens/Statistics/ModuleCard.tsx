@@ -10,6 +10,8 @@ import {
   ResponsiveContainer,
 } from 'recharts';
 import { useMainRatingStore } from '@/src/stores';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Message } from '@/src/constants/types/ai_chat';
 
 interface Skill {
   criterion_id: string;
@@ -26,6 +28,10 @@ interface ModuleCardProps {
 const ModuleCard: React.FC<ModuleCardProps> = ({ title, id, userId }) => {
   const { skills ,fetchSkills } = useMainRatingStore();
   const [loading, setLoading] = useState(true);
+
+
+
+  
 
   useEffect(() => {
     if (!userId || !id) return;

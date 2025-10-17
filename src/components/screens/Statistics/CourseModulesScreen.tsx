@@ -13,26 +13,58 @@ import { useLocalSearchParams } from 'expo-router';
 import { useAuthStore, useMainRatingStore } from '@/src/stores';
 import { Module } from '@/src/constants/types/modules';
 import { modulesService } from '@/src/services/modules';
+import { Message } from '@/src/constants/types/ai_chat';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import Svg, { Path } from 'react-native-svg';
 
 interface Skill {
   criterion_id: string;
   criterion_name: string;
   average_score: number;
+  
 }
+
+const calculateQuizRating = (quizData: Record<string, { selectedAnswer: number; correctAnswer: number }>) => {
+  const entries = Object.values(quizData);
+  const total = entries.length;
+  if (total === 0) return 0;
+
+  const correct = entries.filter(q => q.selectedAnswer === q.correctAnswer).length;
+  const rating = (correct / total) * 5;
+
+  return Number(rating.toFixed(1)); 
+};
 
 const CourseModulesScreen: React.FC = () => {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { user } = useAuthStore();
   const { fetchSkills } = useMainRatingStore();
-
   const [courseModules, setCourseModules] = useState<Module[]>([]);
   const [moduleSkillsMap, setModuleSkillsMap] = useState<Record<string, Skill[]>>({});
   const [loadingModules, setLoadingModules] = useState(true);
   const [loadingSkills, setLoadingSkills] = useState(true);
 
   const courseTitle = 'JavaScript для початківців';
+  const [quizRatings, setQuizRatings] = useState<number | null>(null);
 
-  // Завантажуємо модулі конкретного курсу
+  useEffect(() => {
+    const loadQuizRatings = async () => {
+      try {
+        const stored = await AsyncStorage.getItem(`course-progress-${id}`);
+        if (!stored) return;
+        const parsed = JSON.parse(stored);
+        
+  
+        const quizScore = calculateQuizRating(parsed);
+        setQuizRatings(quizScore);
+      } catch (err) {
+        console.error('Error loading quiz ratings:', err);
+      }
+    };
+  
+    if (id) loadQuizRatings();
+  }, [id]);
+
   useEffect(() => {
     if (!id) return;
 
@@ -52,7 +84,6 @@ const CourseModulesScreen: React.FC = () => {
     loadModules();
   }, [id]);
 
-  // Завантажуємо навички для всіх модулів після завантаження модулів
   useEffect(() => {
     if (!user || !courseModules.length) return;
 
@@ -84,11 +115,24 @@ const CourseModulesScreen: React.FC = () => {
     return (total / allSkills.length).toFixed(1);
   };
 
+
   return (
     <ScrollView style={styles.screen} contentContainerStyle={{ paddingBottom: 40 }}>
       <View style={styles.card}>
-        <View style={styles.iconWrapper}>
-          <MaterialIcons name="insert-chart" size={40} color="#7c3aed" />
+      <View style={styles.iconWrapper}>
+          <Svg
+            width={40}
+            height={40}
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="#7c3aed"
+            strokeWidth={1.5}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <Path d="M10 3.2a9 9 0 1 0 10.8 10.8a1 1 0 0 0 -1 -1h-3.8a4.1 4.1 0 1 1 -5 -5v-4a.9 .9 0 0 0 -1 -.8" />
+            <Path d="M15 3.5a9 9 0 0 1 5.5 5.5h-4.5a9 9 0 0 0 -1 -1v-4.5" />
+          </Svg>
         </View>
 
         <Text style={styles.title}>{courseTitle}</Text>
@@ -98,16 +142,21 @@ const CourseModulesScreen: React.FC = () => {
           <Text style={styles.statsTitle}>Статистика курсу</Text>
           <View style={styles.statsRow}>
             <View style={[styles.statBox, { backgroundColor: '#dcfce7' }]}>
-              <Text style={styles.statLabel}>Середній бал</Text>
+              <Text style={styles.statLabel}>Оцінка ai</Text>
               <Text style={[styles.statValue, { color: '#15803d' }]}>
-                {loadingSkills ? '...' : getCourseAverage()} / 5
+                {loadingSkills ? '...' : getCourseAverage() + '/5'}
               </Text>
             </View>
-
             <View style={[styles.statBox, { backgroundColor: '#ede9fe' }]}>
-              <Text style={styles.statLabel}>Модулі</Text>
+              <Text style={styles.statLabel}>Модулі quiz</Text>
               <Text style={[styles.statValue, { color: '#7c3aed' }]}>
-                {loadingModules ? '...' : courseModules.length}
+                {quizRatings ? quizRatings + '/5': '...' }
+              </Text>
+            </View>
+            <View style={[styles.statBox, { backgroundColor: '#dbeafe' }]}>
+              <Text style={styles.statLabel}>Середній бал</Text>
+              <Text style={[styles.statValue, { color: '#2563eb' }]}>
+                {quizRatings ? ((Number(getCourseAverage()) + Number(quizRatings)) / 2).toFixed(1) + '/5' : '...'}
               </Text>
             </View>
           </View>
@@ -187,4 +236,5 @@ const styles = StyleSheet.create({
   },
   moduleTitle: { fontSize: 16, fontWeight: '700', marginBottom: 8 },
   chartPlaceholderText: { color: '#64748b', textAlign: 'center', marginTop: 16 },
+
 });
