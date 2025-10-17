@@ -11,8 +11,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 export default function RootLayout() {
   const { initFromLocal } = useUserProgressStore();
-  const { user } = useAuthStore();
-  const { isGuest } = useAuthStore();
+  const { user, isGuest, isLoading } = useAuthStore();
   const router = useRouter();
 
   const [loaded] = useFonts({
@@ -27,13 +26,14 @@ export default function RootLayout() {
 
   useEffect(() => {
     initFromLocal();
-  }, [user]);
+  }, [user, initFromLocal]);
 
   useEffect(() => {
-    if (isGuest) {
+    // Only navigate when auth state is fully loaded, fonts are loaded, and user is confirmed as guest
+    if (loaded && !isLoading && isGuest === true) {
       router.replace('/');
     }
-  }, [isGuest, router]);
+  }, [isGuest, isLoading, loaded, router]);
 
   if (!loaded) {
     return null;

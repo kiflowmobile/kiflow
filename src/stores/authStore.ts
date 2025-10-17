@@ -3,6 +3,7 @@ import { upsertUserProfile } from '@/src/services/users';
 import { Session, User } from '@supabase/supabase-js';
 import { create } from 'zustand';
 import { useUserProgressStore } from './userProgressStore';
+import { useQuizStore } from './quizStore';
 // import { devtools } from 'zustand/middleware';
 
 interface AuthState {
@@ -149,33 +150,36 @@ export const useAuthStore = create<AuthState>()(
     },
 
     signOut: async () => {
+      console.log('log out')
       set({ isLoading: true, error: null });
       try {
         // Спочатку перевіряємо, чи є активна сесія
-        // const { data: sessionData } = await supabase.auth.getSession();
+        const { data: sessionData } = await supabase.auth.getSession();
 
         // Якщо сесії не існує, повертаємо успіх без спроби виходу
-        // if (!sessionData?.session) {
-        //   set({
-        //     user: null,
-        //     session: null,
-        //     isGuest: true,
-        //     isLoading: false
-        //   });
-        //   return;
-        // }
+        if (!sessionData?.session) {
+          set({
+            user: null,
+            session: null,
+            isGuest: true,
+            isLoading: false
+          });
+          return;
+        }
         await useUserProgressStore.getState().syncProgressToDB();
+        await useQuizStore.getState().syncQuizToDB();
+
 
         // Продовжуємо з signOut, якщо у нас є сесія
-        // const { error } = await supabase.auth.signOut();
-        // if (error) throw error;
+        const { error } = await supabase.auth.signOut();
+        if (error) throw error;
 
-        // set({
-        //   user: null,
-        //   session: null,
-        //   isGuest: true,
-        //   isLoading: false
-        // });
+        set({
+          user: null,
+          session: null,
+          isGuest: true,
+          isLoading: false
+        });
       } catch (error: any) {
         console.error('Error during signOut:', error);
         set({
