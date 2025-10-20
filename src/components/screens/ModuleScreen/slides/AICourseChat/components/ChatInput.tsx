@@ -41,7 +41,9 @@ const ChatInput: React.FC<ChatInputProps> = ({
     />
     <View style={styles.buttonContainer}>
       <AudioRecorder onAudioProcessed={onAudioProcessed} disabled={loading || answered} />
-      <TouchableOpacity onPress={onSend} disabled={loading || answered}>
+      <TouchableOpacity onPress={onSend} 
+      disabled={loading || answered}
+      >
         <Icon as={Send} size={24} color={loading || answered ? '#94a3b8' : '#0f172a'} />
       </TouchableOpacity>
     </View>

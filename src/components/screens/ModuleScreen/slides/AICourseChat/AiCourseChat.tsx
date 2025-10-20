@@ -144,7 +144,7 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
   useEffect(() => {
     if (slideId) {
       fetchPromptBySlide(slideId);
-      loadChat(); // ✅ спробуємо підвантажити історію
+      loadChat(); 
     }
   }, [slideId]);
 
