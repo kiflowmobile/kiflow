@@ -32,31 +32,6 @@ interface SlidesState {
 }
 type UUID = string & { readonly brand: unique symbol };
 
-// const STORAGE_KEY = 'slides-store-answeredBySlideId';
-
-// const readPersistedAnswered = async (): Promise<Record<string, boolean>> => {
-//   try {
-//     if (Platform.OS === 'web') {
-//       const raw = window.localStorage.getItem(STORAGE_KEY);
-//       return raw ? JSON.parse(raw) : {};
-//     }
-//     const raw = await AsyncStorage.getItem(STORAGE_KEY);
-//     return raw ? JSON.parse(raw) : {};
-//   } catch {
-//     return {};
-//   }
-// };
-
-// const writePersistedAnswered = async (value: Record<string, boolean>): Promise<void> => {
-//   try {
-//     const serialized = JSON.stringify(value);
-//     if (Platform.OS === 'web') {
-//       window.localStorage.setItem(STORAGE_KEY, serialized);
-//       return;
-//     }
-//     await AsyncStorage.setItem(STORAGE_KEY, serialized);
-//   } catch {}
-// };
 
 export const useSlidesStore = create<SlidesState>()((set, get) => ({
   slides: [],
@@ -90,7 +65,6 @@ export const useSlidesStore = create<SlidesState>()((set, get) => ({
 
       set({
         slides: [...fetchedSlides, dashboardSlide],
-        // slides: fetchedSlides,
         currentSlideIndex: 0,
         isLoading: false,
         error: null,
@@ -132,7 +106,6 @@ export const useSlidesStore = create<SlidesState>()((set, get) => ({
       currentModuleId: null,
       answeredBySlideId: {},
     });
-    // writePersistedAnswered({});
   },
 
   setSlides: (slides: Slide[]) => set({ slides }),
@@ -153,7 +126,6 @@ export const useSlidesStore = create<SlidesState>()((set, get) => ({
     if (!slideId) return;
     set((state) => {
       const next = { ...state.answeredBySlideId, [slideId]: true };
-      // writePersistedAnswered(next);
       return { answeredBySlideId: next };
     });
   },
@@ -163,15 +135,7 @@ export const useSlidesStore = create<SlidesState>()((set, get) => ({
       const next = Object.fromEntries(
         Object.keys(state.answeredBySlideId).map((key) => [key, false]),
       );
-      // writePersistedAnswered(next);
       return { answeredBySlideId: next };
     });
   },
 }));
-
-// (async () => {
-//   const initial = await readPersistedAnswered();
-//   if (initial && typeof initial === 'object') {
-//     useSlidesStore.setState({ answeredBySlideId: initial });
-//   }
-// })();

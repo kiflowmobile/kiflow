@@ -16,12 +16,15 @@ interface QuizStore {
   syncQuizToDB: () => Promise<void>;
   clearQuizProgress: () => void;
   syncQuizFromDBToLocalStorage: () => void
+  
+  getModuleScore: (courseId: string, moduleId: string) => Promise<number>;
+  getCourseScore: (courseId: string) => Promise<number>;
+  getTotalScore: () => Promise<number>;
 }
 
 export const useQuizStore = create<QuizStore>((set, get) => ({
   quizProgress: {},
 
-  // ✅ Встановлення відповіді для конкретного запитання
   setQuizAnswer: (quizId, selectedAnswer, correctAnswer) => {
     const updated = {
       ...get().quizProgress,
@@ -31,7 +34,6 @@ export const useQuizStore = create<QuizStore>((set, get) => ({
     localStorage.setItem('quizProgress', JSON.stringify(updated));
   },
 
-  // ✅ Завантаження з localStorage при старті
   loadFromLocalStorage: () => {
     const saved = localStorage.getItem('quizProgress');
     if (saved) {
@@ -39,13 +41,11 @@ export const useQuizStore = create<QuizStore>((set, get) => ({
     }
   },
 
-  // ✅ Збереження в localStorage
   saveToLocalStorage: () => {
     const data = get().quizProgress;
     localStorage.setItem('quizProgress', JSON.stringify(data));
   },
 
-  // ✅ Синхронізація з БД перед виходом
   syncQuizToDB: async () => {
     const { user } = useAuthStore.getState();
     if(!user) return
@@ -181,5 +181,64 @@ export const useQuizStore = create<QuizStore>((set, get) => ({
   clearQuizProgress: () => {
     set({ quizProgress: {} });
     localStorage.removeItem('quizProgress');
+  },
+
+  getModuleScore: async (courseId: string, moduleId: string) => {
+    const key = `course-progress-${courseId}`;
+    const value = await AsyncStorage.getItem(key);
+    if (!value) return 0;
+  
+    const data = Object.values(JSON.parse(value)) as QuizData[];
+
+    const correct = data.filter(
+      (q) => q.selectedAnswer === q.correctAnswer
+    ).length;
+
+    return Math.round((correct / data.length) * 5);
+
+  },
+
+  // 2️⃣ Оцінка по курсу
+  getCourseScore: async (courseId) => {
+    const key = `course-progress-${courseId}`;
+    const value = await AsyncStorage.getItem(key);
+    if (!value) return 0;
+
+    const data = Object.values(JSON.parse(value)) as QuizData[];
+    if (data.length === 0) return 0;
+
+    const correct = data.filter((q) => q.selectedAnswer === q.correctAnswer).length;
+    return Math.round((correct / data.length) * 5);
+  },
+
+  // 3️⃣ Загальна оцінка по всіх курсах
+  getTotalScore: async () => {
+    const allKeys = await AsyncStorage.getAllKeys();
+    const quizKeys = allKeys.filter((k) => k.startsWith('course-progress-'));
+
+    // console.log('quizKeys', quizKeys)
+
+    if (quizKeys.length === 0) return 0;
+
+    const keyValues = await AsyncStorage.multiGet(quizKeys);
+
+    console.log('quizKeys', quizKeys)
+    let totalQuestions = 0;
+    let totalCorrect = 0;
+
+    for (const [, value] of keyValues) {
+      if (!value) continue;
+      const data = Object.values(JSON.parse(value)) as QuizData[];
+
+      totalQuestions += data.length;
+      totalCorrect += data.filter((q) => q.selectedAnswer === q.correctAnswer).length;
+    }
+
+    console.log('totalQuestions', totalQuestions)
+    console.log('totalCorrect', totalCorrect)
+
+    return totalQuestions === 0
+      ? 0
+      : (totalCorrect / totalQuestions) *5;
   },
 }));
