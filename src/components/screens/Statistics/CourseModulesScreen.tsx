@@ -10,12 +10,13 @@ import {
   ResponsiveContainer,
 } from 'recharts';
 import { useLocalSearchParams } from 'expo-router';
-import { useAuthStore, useMainRatingStore } from '@/src/stores';
+import { useAuthStore, useCourseStore, useMainRatingStore } from '@/src/stores';
 import { Module } from '@/src/constants/types/modules';
 import { modulesService } from '@/src/services/modules';
 import { Message } from '@/src/constants/types/ai_chat';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Svg, { Path } from 'react-native-svg';
+import { useQuizStore } from '@/src/stores/quizStore';
 
 interface Skill {
   criterion_id: string;
@@ -23,17 +24,6 @@ interface Skill {
   average_score: number;
   
 }
-
-const calculateQuizRating = (quizData: Record<string, { selectedAnswer: number; correctAnswer: number }>) => {
-  const entries = Object.values(quizData);
-  const total = entries.length;
-  if (total === 0) return 0;
-
-  const correct = entries.filter(q => q.selectedAnswer === q.correctAnswer).length;
-  const rating = (correct / total) * 5;
-
-  return Number(rating.toFixed(1)); 
-};
 
 const CourseModulesScreen: React.FC = () => {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -43,27 +33,10 @@ const CourseModulesScreen: React.FC = () => {
   const [moduleSkillsMap, setModuleSkillsMap] = useState<Record<string, Skill[]>>({});
   const [loadingModules, setLoadingModules] = useState(true);
   const [loadingSkills, setLoadingSkills] = useState(true);
+  const [quizAverages, setQuizAverages] = useState<null| number>(null);
+  const quizStore = useQuizStore.getState();
 
   const courseTitle = 'JavaScript для початківців';
-  const [quizRatings, setQuizRatings] = useState<number | null>(null);
-
-  useEffect(() => {
-    const loadQuizRatings = async () => {
-      try {
-        const stored = await AsyncStorage.getItem(`course-progress-${id}`);
-        if (!stored) return;
-        const parsed = JSON.parse(stored);
-        
-  
-        const quizScore = calculateQuizRating(parsed);
-        setQuizRatings(quizScore);
-      } catch (err) {
-        console.error('Error loading quiz ratings:', err);
-      }
-    };
-  
-    if (id) loadQuizRatings();
-  }, [id]);
 
   useEffect(() => {
     if (!id) return;
@@ -116,6 +89,25 @@ const CourseModulesScreen: React.FC = () => {
   };
 
 
+
+  useEffect(() => {
+    const loadQuizScores = async () => {
+        const score = await quizStore.getCourseScore(id);
+
+      setQuizAverages(score);
+    };
+
+    if (id) {
+      loadQuizScores();
+    }
+  }, [id]);
+
+
+  console.log('courseModules[0]', courseModules.length)
+
+
+
+
   return (
     <ScrollView style={styles.screen} contentContainerStyle={{ paddingBottom: 40 }}>
       <View style={styles.card}>
@@ -147,16 +139,16 @@ const CourseModulesScreen: React.FC = () => {
                 {loadingSkills ? '...' : getCourseAverage() + '/5'}
               </Text>
             </View>
-            <View style={[styles.statBox, { backgroundColor: '#ede9fe' }]}>
+            {/* <View style={[styles.statBox, { backgroundColor: '#ede9fe' }]}>
               <Text style={styles.statLabel}>Модулі quiz</Text>
               <Text style={[styles.statValue, { color: '#7c3aed' }]}>
                 {quizRatings ? quizRatings + '/5': '...' }
               </Text>
-            </View>
+            </View> */}
             <View style={[styles.statBox, { backgroundColor: '#dbeafe' }]}>
-              <Text style={styles.statLabel}>Середній бал</Text>
+              <Text style={styles.statLabel}>Модулі quiz</Text>
               <Text style={[styles.statValue, { color: '#2563eb' }]}>
-                {quizRatings ? ((Number(getCourseAverage()) + Number(quizRatings)) / 2).toFixed(1) + '/5' : '...'}
+              {quizAverages && id ? quizAverages + '/5' : '...'}
               </Text>
             </View>
           </View>

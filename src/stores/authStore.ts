@@ -4,7 +4,8 @@ import { Session, User } from '@supabase/supabase-js';
 import { create } from 'zustand';
 import { useUserProgressStore } from './userProgressStore';
 import { useQuizStore } from './quizStore';
-// import { devtools } from 'zustand/middleware';
+import { useChatStore } from './chatStore';
+import { clearUserLocalData } from '../utils/asyncStorege';
 
 interface AuthState {
   // Стан
@@ -34,7 +35,6 @@ interface AuthState {
 export const useAuthStore = create<AuthState>()(
   // devtools(
   (set, get) => ({
-    // Початковий стан
     user: null,
     session: null,
     isLoading: true,
@@ -59,6 +59,10 @@ export const useAuthStore = create<AuthState>()(
           isGuest,
           isLoading: false,
         });
+
+        await useQuizStore.getState().syncQuizFromDBToLocalStorage();
+        await useChatStore.getState().syncChatFromDBToLocalStorage();
+
       } catch (error: any) {
         set({
           error: error.message || 'Sign in failed',
@@ -150,7 +154,6 @@ export const useAuthStore = create<AuthState>()(
     },
 
     signOut: async () => {
-      console.log('log out')
       set({ isLoading: true, error: null });
       try {
         // Спочатку перевіряємо, чи є активна сесія
@@ -168,6 +171,9 @@ export const useAuthStore = create<AuthState>()(
         }
         await useUserProgressStore.getState().syncProgressToDB();
         await useQuizStore.getState().syncQuizToDB();
+        await useChatStore.getState().syncChatFromLocalStorageToDB();
+
+        await clearUserLocalData();
 
 
         // Продовжуємо з signOut, якщо у нас є сесія

@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { FlatList, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from "react-native";
-import { MaterialIcons } from "@expo/vector-icons";
 import { useCourseStore } from "@/src/stores/courseStore";
 import { useCriteriaStore } from "@/src/stores/criterias";
 import { useMainRatingStore } from "@/src/stores/mainRatingStore";
@@ -8,7 +7,7 @@ import { useAuthStore, useModulesStore } from "@/src/stores";
 import { useRouter } from "expo-router";
 import { shadow } from "../../ui/styles/shadow";
 import Svg, { Path } from "react-native-svg";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useQuizStore } from "@/src/stores/quizStore";
 
 export default function StatisticsScreen() {
   const { width } = useWindowDimensions(); 
@@ -22,6 +21,9 @@ export default function StatisticsScreen() {
   const { user } = useAuthStore();
   const router = useRouter();
 
+  const quizStore = useQuizStore.getState();
+
+  const [quizAverages, setQuizAverages] = useState<Record<string, number>>({});
 
   useEffect(() => {
     if (user?.id) {
@@ -37,9 +39,23 @@ export default function StatisticsScreen() {
     }
   }, [courses]);
 
-  const getModulesCount = (courseId: string) => {
-    return modules.filter((m) => m.course_id === courseId).length;
-  };
+  useEffect(() => {
+    const loadQuizScores = async () => {
+      const result: Record<string, number> = {};
+      for (const course of courses) {
+        const score = await quizStore.getCourseScore(course.id);
+        result[course.id] = score;
+      }
+      setQuizAverages(result);
+    };
+
+    if (courses.length) {
+      loadQuizScores();
+    }
+  }, [courses]);
+
+  const getModulesCount = (courseId: string) =>
+    modules.filter((m) => m.course_id === courseId).length;
 
   const getCourseAverageFromRatings = (courseId: string) => {
     const courseCriterias = criterias.filter((c) => c.course_id === courseId);
@@ -56,26 +72,27 @@ export default function StatisticsScreen() {
 
   return (
     <View style={styles.screen}>
-        <View style={styles.iconWrapper}>
-          <Svg
-            width={40}
-            height={40}
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="#7c3aed"
-            strokeWidth={1.5}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <Path d="M10 3.2a9 9 0 1 0 10.8 10.8a1 1 0 0 0 -1 -1h-3.8a4.1 4.1 0 1 1 -5 -5v-4a.9 .9 0 0 0 -1 -.8" />
-            <Path d="M15 3.5a9 9 0 0 1 5.5 5.5h-4.5a9 9 0 0 0 -1 -1v-4.5" />
-          </Svg>
-        </View>
+      <View style={styles.iconWrapper}>
+        <Svg
+          width={40}
+          height={40}
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="#7c3aed"
+          strokeWidth={1.5}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <Path d="M10 3.2a9 9 0 1 0 10.8 10.8a1 1 0 0 0 -1 -1h-3.8a4.1 4.1 0 1 1 -5 -5v-4a.9 .9 0 0 0 -1 -.8" />
+          <Path d="M15 3.5a9 9 0 0 1 5.5 5.5h-4.5a9 9 0 0 0 -1 -1v-4.5" />
+        </Svg>
+      </View>
 
-        <Text style={styles.title}>Статистика</Text>
-        <Text style={styles.subtitle}>Тут відображається статистика по кожному курсу</Text>
+      <Text style={styles.title}>Статистика</Text>
+      <Text style={styles.subtitle}>Тут відображається статистика по кожному курсу</Text>
 
-        {coursesLoading && <Text>Завантаження курсів...</Text>}
+      {coursesLoading && <Text>Завантаження курсів...</Text>}
+
       <ScrollView
         contentContainerStyle={[
           styles.scrollContent,
@@ -83,13 +100,15 @@ export default function StatisticsScreen() {
         ]}
         showsVerticalScrollIndicator={false}
       >
-
-
         {!coursesLoading &&
           courses.map((course) => (
             <Pressable
               key={course.id}
-              style={[styles.card, isLargeScreen && styles.cardLarge, isXLargeScreen && styles.cardXLarge]}
+              style={[
+                styles.card,
+                isLargeScreen && styles.cardLarge,
+                isXLargeScreen && styles.cardXLarge,
+              ]}
               onPress={() =>
                 router.push({
                   pathname: "/statistics/[id]",
@@ -106,16 +125,18 @@ export default function StatisticsScreen() {
                     {getCourseAverageFromRatings(course.id)} / 5
                   </Text>
                 </View>
+
                 <View style={[styles.statBox, { backgroundColor: "#ede9fe" }]}>
                   <Text style={styles.statLabel}>Модулів</Text>
                   <Text style={[styles.statValue, { color: "#7c3aed" }]}>
                     {getModulesCount(course.id)}
                   </Text>
                 </View>
+
                 <View style={[styles.statBox, { backgroundColor: "#ede9fe" }]}>
-                  <Text style={styles.statLabel}>Оцінка quize</Text>
+                  <Text style={styles.statLabel}>Оцінка квізів</Text>
                   <Text style={[styles.statValue, { color: "#7c3aed" }]}>
-                    {getModulesCount(course.id)}
+                    {quizAverages[course.id] ?? 0}/5
                   </Text>
                 </View>
               </View>
@@ -146,9 +167,14 @@ export default function StatisticsScreen() {
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, padding: 16, backgroundColor: "#ffffff",},
+  screen: { flex: 1, padding: 16, backgroundColor: "#ffffff" },
   scrollContent: { paddingBottom: 32 },
-  scrollContentLarge: { flexDirection: "row", flexWrap: "wrap", justifyContent: "center", gap: 16 },
+  scrollContentLarge: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "center",
+    gap: 16,
+  },
   iconWrapper: {
     alignSelf: "center",
     backgroundColor: "#f3e8ff",
@@ -156,8 +182,19 @@ const styles = StyleSheet.create({
     borderRadius: 50,
     marginBottom: 12,
   },
-  title: { fontSize: 22, fontWeight: "800", textAlign: "center", color: "#0f172a", marginBottom: 4 },
-  subtitle: { fontSize: 16, textAlign: "center", color: "#475569", marginBottom: 16 },
+  title: {
+    fontSize: 22,
+    fontWeight: "800",
+    textAlign: "center",
+    color: "#0f172a",
+    marginBottom: 4,
+  },
+  subtitle: {
+    fontSize: 16,
+    textAlign: "center",
+    color: "#475569",
+    marginBottom: 16,
+  },
   card: {
     marginBottom: 16,
     padding: 16,
@@ -166,15 +203,15 @@ const styles = StyleSheet.create({
     width: "100%",
     ...shadow,
   },
-  cardLarge: {
-    width: "45%", // планшети
-    margin: 8,
-  },
-  cardXLarge: {
-    width: "30%", // десктоп/великий планшет
-  },
+  cardLarge: { width: "45%", margin: 8 },
+  cardXLarge: { width: "30%" },
   statsRow: { flexDirection: "row", justifyContent: "space-between", gap: 8 },
-  statBox: { flex: 1, borderRadius: 12, padding: 12, alignItems: "center" },
+  statBox: {
+    flex: 1,
+    borderRadius: 12,
+    padding: 12,
+    alignItems: "center",
+  },
   statLabel: { fontSize: 13, color: "#475569", marginBottom: 4 },
   statValue: { fontSize: 18, fontWeight: "700" },
   courseTitle: { fontSize: 16, fontWeight: "700", color: "#1e293b", marginBottom: 8 },
@@ -191,6 +228,6 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderBottomWidth: 0,
   },
-  tableCell: { flex: 1, fontSize: 14, color: "#334155", },
+  tableCell: { flex: 1, fontSize: 14, color: "#334155" },
   tableHeaderText: { fontWeight: "700", color: "#0f172a" },
 });
