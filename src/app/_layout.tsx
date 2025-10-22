@@ -25,23 +25,19 @@ export default function RootLayout() {
   }, [checkSession]);
 
   useEffect(() => {
-    if (user) {
-      initFromLocal();
-    }
+    initFromLocal();
   }, [user, initFromLocal]);
 
   useEffect(() => {
+    // Only navigate when auth state is fully loaded, fonts are loaded, and user is confirmed as guest
     if (loaded && !isLoading && isGuest === true) {
       router.replace('/');
     }
   }, [isGuest, isLoading, loaded, router]);
 
-  const isReady = loaded && !isLoading && isGuest !== undefined;
-
-  if (!isReady) {
-    return null; // або <LoadingScreen />
+  if (!loaded) {
+    return null;
   }
-
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
@@ -66,4 +62,3 @@ export default function RootLayout() {
     </GestureHandlerRootView>
   );
 }
-
