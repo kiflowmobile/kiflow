@@ -30,29 +30,21 @@ export const navigateToCourse = async (
     }
 
     if (moduleId) {
-      if (typeof window !== 'undefined') {
-        // on web push query style to avoid creating extra path segments
-        router.push({
-          pathname: '/module/[moduleId]',
-          params: { moduleId, courseId, slideId: lastSlideId ?? undefined },
-        });
-      } else {
-        router.push({
-          pathname: '/module/[moduleId]',
-          params: {
-            moduleId,
-            courseId,
-            slideId: lastSlideId ?? undefined,
-          },
-        });
-      }
+      router.push({
+        pathname: '/module/[moduleId]',
+        params: {
+          moduleId,
+          courseId,
+          slideId: lastSlideId ?? undefined,
+        },
+      });
     } else {
       router.push({
         pathname: '/courses/[id]',
         params: { id: courseId },
       });
     }
-  } catch {
-    // console.error('Failed to navigate to course');
+  } catch (err) {
+    // console.error('Failed to navigate to course:', err);
   }
 };
