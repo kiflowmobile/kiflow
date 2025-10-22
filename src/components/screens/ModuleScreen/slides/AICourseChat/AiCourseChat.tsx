@@ -11,6 +11,8 @@ import { useAuthStore, useCriteriaStore, useMainRatingStore, useSlidesStore } fr
 
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { askGemini } from './askGemini';
+import { getCurrentUserCode } from '@/src/services/users';
+import { getCompanyByCode } from '@/src/services/company';
 import ChatHeader from './components/ChatHeader';
 import ChatMessages from './components/ChatMessages';
 import ChatInput from './components/ChatInput';
@@ -55,7 +57,7 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
       const parsed = JSON.parse(stored);
       if (parsed[slideId]) {
         setMessages(parsed[slideId]);
-        setAnswered(true); 
+        setAnswered(true);
       }
     } catch (err) {
       console.error('Error loading chat:', err);
@@ -110,19 +112,19 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
           if (parsed[slideId]) {
             setMessages(parsed[slideId]);
             setAnswered(true);
-            return; 
+            return;
           }
         }
-  
+
         const slidePrompt = prompt[slideId]?.question;
         if (!slidePrompt) return;
-  
+
         const aiMsg: Message = {
           id: Date.now().toString(),
           role: 'ai',
           text: slidePrompt,
         };
-  
+
         setMessages([aiMsg]);
         setAnswered(useSlidesStore.getState().isSlideAnswered(slideId));
         setInput('');
@@ -130,12 +132,11 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
         console.error('Error loading chat or prompt:', err);
       }
     };
-  
+
     if (slideId) {
       loadChatOrPrompt();
     }
   }, [slideId, prompt]);
-  
 
   useEffect(() => {
     if (courseId) fetchCriterias(courseIdStr);
@@ -144,32 +145,50 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
   useEffect(() => {
     if (slideId) {
       fetchPromptBySlide(slideId);
-      loadChat(); 
+      loadChat();
     }
   }, [slideId]);
 
   const handleSend = async () => {
     if (!input.trim() || answered || loading) return;
-  
+
     const userMsg: Message = { id: Date.now().toString(), role: 'user', text: input.trim() };
     setMessages((prev) => [...prev, userMsg]);
     setInput('');
     setLoading(true);
     setAnswered(true);
     useSlidesStore.getState().markSlideAnswered(slideId);
-  
+
     try {
       const slidePrompt = prompt[slideId]?.prompt || '';
       const criteriasText = criterias.map((item) => `${item.key} - ${item.name.trim()}`).join('\n');
-  
+
       // генеруємо відповідь
+      // Попробуем получить companyId из current_code пользователя
+      let companyIdToUse: string | undefined = undefined;
+      try {
+        const { code, error: codeError } = await getCurrentUserCode();
+        if (code && !codeError) {
+          const { data: companyData, error: companyError } = await getCompanyByCode(code);
+          if (companyData && !companyError) {
+            companyIdToUse = companyData.id;
+          } else {
+            console.warn('No company found for code', code, companyError);
+          }
+        }
+      } catch (err) {
+        console.warn('Failed to resolve current user companyId', err);
+      }
+
       const aiResponse = await askGemini(
         [...messages, userMsg],
         slidePrompt,
         messages.length === 0,
         criteriasText,
+        undefined,
+        companyIdToUse,
       );
-  
+
       // зберігаємо оцінки, якщо вони є
       if (user && aiResponse.rating?.criteriaScores && moduleId) {
         const criteriaScores = aiResponse.rating.criteriaScores;
@@ -181,7 +200,7 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
           }
         }
       }
-  
+
       // форматуємо текст від AI
       const chatText = formatAIResponseForChat(aiResponse);
       const aiMsg: Message = {
@@ -189,11 +208,11 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
         role: 'ai',
         text: chatText,
       };
-  
+
       // створюємо оновлений масив повідомлень
       const updatedMessages = [...messages, userMsg, aiMsg];
       setMessages(updatedMessages);
-  
+
       // ✅ нова логіка збереження чату
       try {
         const existing = await AsyncStorage.getItem(CHAT_STORAGE_KEY);
@@ -203,14 +222,12 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
       } catch (err) {
         console.error('Error saving chat:', err);
       }
-  
     } catch (e) {
       console.error(e);
     } finally {
       setLoading(false);
     }
   };
-  
 
   const handleAudioProcessed = (transcribedText: string) => {
     if (answered) return;
@@ -234,7 +251,6 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
   const handleBlur = () => {
     unlockPageScroll();
   };
-
 
   return (
     <SafeAreaView style={styles.screen}>
