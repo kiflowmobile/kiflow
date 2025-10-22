@@ -20,6 +20,6 @@
     { "src": "/auth/registration$", "dest": "/dist/server/auth/registration.html" },
     { "src": "/module/(?<id>[^/]+)$", "dest": "/dist/server/module/[id].html" },
     { "src": "/courses/(?<id>[^/]+)$", "dest": "/dist/server/courses/[id].html" },
-    { "src": "/(.*)", "dest": "/dist/server/+not-found.html" }
+    { "src": "/(.*)", "dest": "/dist/server/index.html" }
   ]
 }
