@@ -23,7 +23,7 @@ interface SkillSummaryItem {
 
 interface MainRatingState {
   average: number | null;
-  ratings: RatingItem[]; // 🔥 нове поле
+  ratings: RatingItem[]; 
   skills: SkillSummaryItem[];
   isLoading: boolean;
   error: string | null;
@@ -38,7 +38,7 @@ interface MainRatingState {
     courseId: string,
   ) => Promise<void>;
   fetchUserAverage: (userId: string) => Promise<void>;
-  fetchUserRatings: (userId: string) => Promise<void>; // 🔥 новий метод
+  fetchUserRatings: (userId: string) => Promise<void>; 
 
   clear: () => void;
 }

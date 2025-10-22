@@ -1,7 +1,6 @@
 import { shadow } from '@/src/components/ui/styles/shadow';
 import { useAuthStore, useModulesStore } from '@/src/stores';
 import { useMainRatingStore } from '@/src/stores/mainRatingStore';
-import { MaterialIcons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { useEffect, useState } from 'react';
 import { Platform, StyleSheet, Text, View, ScrollView} from 'react-native';
@@ -41,8 +40,6 @@ const DashboardSlide: React.FC<DashboardSlideProps> = ({ courseId, title }) => {
     skills,
     fetchAverage,
     fetchSkills,
-    isLoading,
-    error,
   } = useMainRatingStore();
   const [quizRatings, setQuizRatings] = useState<number | null>(null);
 
