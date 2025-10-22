@@ -11,6 +11,7 @@
     { "src": "/assets/node_modules/(.*)", "dest": "/dist/client/assets/vendor_modules/$1" },
     { "src": "/assets/(.*)", "dest": "/dist/client/assets/$1" },
     { "src": "/favicon.ico", "dest": "/dist/client/favicon.ico" },
+
     { "src": "/$", "dest": "/dist/server/index.html" },
     { "src": "/home$", "dest": "/dist/server/home.html" },
     { "src": "/course-code$", "dest": "/dist/server/course-code.html" },
@@ -18,8 +19,10 @@
     { "src": "/courses$", "dest": "/dist/server/courses/index.html" },
     { "src": "/auth/login$", "dest": "/dist/server/auth/login.html" },
     { "src": "/auth/registration$", "dest": "/dist/server/auth/registration.html" },
-    { "src": "/module/(?<id>[^/]+)$", "dest": "/dist/server/module/[id].html" },
-    { "src": "/courses/(?<id>[^/]+)$", "dest": "/dist/server/courses/[id].html" },
+
+    { "src": "/module/(?<id>[^/]+)$", "dest": "/dist/server/index.html" },
+    { "src": "/courses/(?<id>[^/]+)$", "dest": "/dist/server/index.html" },
+
     { "src": "/(.*)", "dest": "/dist/server/index.html" }
   ]
 }
