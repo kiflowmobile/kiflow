@@ -1,4 +1,9 @@
-import { useAuthStore, useMainRatingStore, useSlidesStore, useUserProgressStore } from '@/src/stores';
+import {
+  useAuthStore,
+  useMainRatingStore,
+  useSlidesStore,
+  useUserProgressStore,
+} from '@/src/stores';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
@@ -48,13 +53,27 @@ export default function ModuleScreen() {
   }, [height, width]);
 
   const [currentSlideId, setCurrentSlideId] = useState<string | undefined>(slideId);
-  const [currentSlideIndex, setCurrentSlideIndex] = useState<number | undefined>(0);
 
   const showPagination = useMemo(() => slides.length > 1, [slides.length]);
 
-  const updateUrl = (id: string) => {
-    router.setParams({ slideId: id });
-  };
+  const updateUrl = useCallback(
+    (id: string) => {
+      if (Platform.OS === 'web') {
+        if (moduleId) {
+          router.replace({
+            pathname: '/module/[moduleId]',
+            params: { moduleId, slideId: id },
+          });
+          return;
+        }
+        router.setParams({ slideId: id });
+        return;
+      }
+
+      router.setParams({ slideId: id });
+    },
+    [moduleId, router],
+  );
 
   const { setModuleProgressSafe } = useUserProgressStore();
   const lastScrollIndexRef = useRef<number>(-1);
@@ -99,7 +118,6 @@ export default function ModuleScreen() {
       if (index < 0 || index >= slides.length) return;
 
       setCurrentSlideId(slides[index].id);
-      setCurrentSlideIndex(index);
       updateUrl(slides[index].id);
 
       if (!user || !courseId || !moduleId) return;
@@ -109,7 +127,7 @@ export default function ModuleScreen() {
         lastSavedIndexRef.current = index;
       }
     },
-    [moduleId, courseId, user?.id, slides],
+    [moduleId, courseId, user, slides, setModuleProgressSafe, updateUrl],
   );
 
   const onScroll = useAnimatedScrollHandler({
@@ -128,10 +146,9 @@ export default function ModuleScreen() {
     if (slides.length > 0 && !currentSlideId) {
       const firstSlide = slides[0];
       setCurrentSlideId(firstSlide.id);
-      setCurrentSlideIndex(0);
       updateUrl(firstSlide.id);
     }
-  }, [slides, currentSlideId]);
+  }, [slides, currentSlideId, updateUrl]);
 
   const goToNextSlide = () => {
     const currentIndex = slides.findIndex((s) => s.id === currentSlideId);
@@ -156,25 +173,18 @@ export default function ModuleScreen() {
           animated: false,
         });
         setCurrentSlideId(slideId);
-        setCurrentSlideIndex(index);
       }
     }
   }, [slides, pageH, slideId]);
 
-  const {
-    average,
-    skills,
-    fetchAverage,
-    fetchSkills,
-
-  } = useMainRatingStore();
+  const { fetchAverage, fetchSkills } = useMainRatingStore();
 
   useEffect(() => {
     if (!user?.id || !moduleId) return;
 
     fetchAverage(user.id, moduleId);
-    fetchSkills(user.id, moduleId)
-  }, [user, moduleId]);
+    fetchSkills(user.id, moduleId);
+  }, [user, moduleId, fetchAverage, fetchSkills]);
 
   if (error)
     return (
