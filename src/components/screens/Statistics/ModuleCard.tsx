@@ -1,23 +1,7 @@
-// ModuleCard.tsx
 import React, { useEffect, useState } from 'react';
 import { Platform, StyleSheet, Text, View } from 'react-native';
-import {
-  PolarAngleAxis,
-  PolarGrid,
-  PolarRadiusAxis,
-  Radar,
-  RadarChart,
-  ResponsiveContainer,
-} from 'recharts';
 import { useMainRatingStore } from '@/src/stores';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Message } from '@/src/constants/types/ai_chat';
-
-interface Skill {
-  criterion_id: string;
-  criterion_name: string;
-  average_score: number;
-}
+import SkillsChart from '../../ui/SkillsChart';
 
 interface ModuleCardProps {
   title: string;
@@ -28,11 +12,6 @@ interface ModuleCardProps {
 const ModuleCard: React.FC<ModuleCardProps> = ({ title, id, userId }) => {
   const { skills ,fetchSkills } = useMainRatingStore();
   const [loading, setLoading] = useState(true);
-
-
-
-  
-
   useEffect(() => {
     if (!userId || !id) return;
 
@@ -47,42 +26,13 @@ const ModuleCard: React.FC<ModuleCardProps> = ({ title, id, userId }) => {
         setLoading(false);
       }
     };
-
     loadSkills();
   }, [userId, id, fetchSkills]);
-
-
 
   return (
     <View style={styles.moduleCard}>
       <Text style={styles.moduleTitle}>{title}</Text>
-
-      {Platform.OS === 'web' ? (
-        loading ? (
-          <Text style={styles.chartPlaceholderText}>Завантаження...</Text>
-        ) : skills?.length ? (
-          <ResponsiveContainer width="100%" height={300}>
-            <RadarChart data={skills}>
-              <PolarGrid />
-              <PolarAngleAxis dataKey="criterion_name" />
-              <PolarRadiusAxis angle={30} domain={[0, 5]} />
-              <Radar
-                name="Оцінка"
-                dataKey="average_score"
-                stroke="#7c3aed"
-                fill="#7c3aed"
-                fillOpacity={0.6}
-              />
-            </RadarChart>
-          </ResponsiveContainer>
-        ) : (
-          <Text style={styles.chartPlaceholderText}>Немає даних для відображення</Text>
-        )
-      ) : (
-        <Text style={styles.chartPlaceholderText}>
-          📊 Графік доступний лише у веб-версії
-        </Text>
-      )}
+      <SkillsChart skills={skills}  />
     </View>
   );
 };

@@ -86,7 +86,6 @@ const CourseModulesScreen: React.FC = () => {
     return parseFloat((total / allSkills.length).toFixed(1));
   }, [skillsMap]);
 
-  // 🧮 Середнє по AI + Quiz
   const combinedAverage = useMemo(() => {
     if (quizAverage == null || !courseAverage) return null;
     return parseFloat(((quizAverage + courseAverage) / 2).toFixed(1));

@@ -1,18 +1,26 @@
-// import { useIsGuestUser } from '@/src/hooks/auth/useIsGuestUser';
-import { useRouter } from 'expo-router';
+import { useRootNavigationState, useRouter } from 'expo-router';
 import { Image, Text as RNText, StyleSheet, View } from 'react-native';
 import Button from '../../ui/button';
+import { useEffect } from 'react';
+import { useAuthStore } from '@/src/stores';
 
 export default function WelcomeScreen() {
   const router = useRouter();
-  // const isGuestValue = useIsGuestUser();
-  // const isGuest = isGuestValue === null ? true : isGuestValue;
+  const user = useAuthStore()
+  const rootNavigationState = useRootNavigationState();
+  const { justSignedUp} = useAuthStore();
 
-  // useEffect(()=>{
-  //   if(!isGuest){
-  //     router.push('/home');
-  //   }
-  // },[isGuest])
+
+  useEffect(() => {
+    if (!rootNavigationState?.key) return;
+  
+    if (!user.isGuest && !justSignedUp) {
+      setTimeout(() => {
+        router.replace('/home');
+      }, 0);
+    }
+  }, [user, justSignedUp, rootNavigationState]);
+
 
   const handleSignIn = () => {
     try {

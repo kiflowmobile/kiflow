@@ -15,6 +15,8 @@ import Button from '../../ui/button';
 import { Input, InputField } from '../../ui/input';
 import { getCurrentUserCode, } from '../../../services/users';
 import { useCourseStore } from '@/src/stores/courseStore';
+import { useAuthStore } from '@/src/stores';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function CourseCodeScreen() {
   const [courseCode, setCourseCode] = useState('');
@@ -97,6 +99,9 @@ export default function CourseCodeScreen() {
         'Сталася помилка при приєднанні до компанії. Перевірте підключення до інтернету та спробуйте ще раз.',
       );
     } finally {
+      useAuthStore.setState({ justSignedUp: false });
+      await AsyncStorage.removeItem('justSignedUp');
+
       setLoading(false);
     }
   };
@@ -110,6 +115,7 @@ export default function CourseCodeScreen() {
       console.error('Error skipping company code:', err);
       showError('Сталася помилка при пропуску. Спробуйте ще раз.');
     } finally {
+      useAuthStore.setState({ justSignedUp: false });
       setLoading(false);
     }
   };
