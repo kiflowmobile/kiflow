@@ -7,19 +7,16 @@ export const navigateToCourse = async (
   lastSlideId?: string | null,
   moduleProgress?: number,
 ) => {
-
   try {
-
-    if(moduleProgress === 100) {
+    if (moduleProgress === 100) {
       router.push({
         pathname: '/courses/[id]',
         params: { id: courseId },
       });
-      return
+      return;
     }
 
     let moduleId: string | undefined;
-
 
     if (lastSlideId) {
       const { data, error } = await supabase
@@ -32,12 +29,11 @@ export const navigateToCourse = async (
       moduleId = data?.module_id;
     }
 
-
     if (moduleId) {
       router.push({
         pathname: '/module/[moduleId]',
         params: {
-          moduleId,   
+          moduleId,
           courseId,
           slideId: lastSlideId ?? undefined,
         },

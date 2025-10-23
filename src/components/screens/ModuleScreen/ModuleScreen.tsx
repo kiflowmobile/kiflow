@@ -1,4 +1,9 @@
-import { useAuthStore, useMainRatingStore, useSlidesStore, useUserProgressStore } from '@/src/stores';
+import {
+  useAuthStore,
+  useMainRatingStore,
+  useSlidesStore,
+  useUserProgressStore,
+} from '@/src/stores';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
@@ -161,19 +166,13 @@ export default function ModuleScreen() {
     }
   }, [slides, pageH, slideId]);
 
-  const {
-    average,
-    skills,
-    fetchAverage,
-    fetchSkills,
-
-  } = useMainRatingStore();
+  const { average, skills, fetchAverage, fetchSkills } = useMainRatingStore();
 
   useEffect(() => {
     if (!user?.id || !moduleId) return;
 
     fetchAverage(user.id, moduleId);
-    fetchSkills(user.id, moduleId)
+    fetchSkills(user.id, moduleId);
   }, [user, moduleId]);
 
   if (error)

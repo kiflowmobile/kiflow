@@ -1,34 +1,48 @@
 import { create } from 'zustand';
-import { supabase } from '../config/supabaseClient';
 import { useSlidesStore } from './slidesStore';
 import { useModulesStore } from './modulesStore';
 import { useAuthStore } from './authStore';
-import { useCourseStore } from './courseStore';
 import { loadProgressLocal, saveProgressLocal } from '../utils/progressAsyncStorage';
 import { UserCourseSummary } from '../constants/types/progress';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 
+type ModuleProgressEntry = {
+  module_id: string;
+  progress: number;
+  last_slide_id: string | null;
+  total_slides?: number;
+};
 
 interface UserProgressStore {
   courses: UserCourseSummary[];
   isLoading: boolean;
   error: string | null;
+
   initFromLocal: () => Promise<void>;
   fetchUserProgress: (userId: string) => Promise<void>;
+
   setCourseProgress: (courseId: string, progress: number, lastSlideId?: string | null) => void;
   getCourseProgress: (courseId: string) => number;
-  
+
   setModuleProgressSafe: (
     courseId: string,
-    moduleId: string, 
-    currentSlideIndex: number, 
-    totalSlides: number, 
-    lastSlideId?: string
-  ) => Promise<void>;
-    getModuleProgress: (courseId:string,moduleId: string) => number;
-    syncProgressToDB: () => Promise<void>
-    resetCourseProgress: (courseId: string) => Promise<void>
+    moduleId: string,
+    currentSlideIndex: number,
+    totalSlides: number,
+    lastSlideId?: string | null,
+  ) => void;
+
+  getModuleProgress: (courseId: string, moduleId: string) => number;
+
+  syncProgressToDB: () => Promise<void>;
+
+  resetCourseProgress: (courseId: string) => Promise<void>;
 }
+
+const computeArithmeticCourseProgress = (modules: { progress: number }[]): number => {
+  if (!modules || modules.length === 0) return 0;
+  const sum = modules.reduce((acc, m) => acc + (Number.isFinite(m.progress) ? m.progress : 0), 0);
+  return Math.round(sum / modules.length);
+};
 
 const persistCourses = (courses: UserCourseSummary[]) => {
   const { user } = useAuthStore.getState();
@@ -36,7 +50,7 @@ const persistCourses = (courses: UserCourseSummary[]) => {
     saveProgressLocal(user.id, courses);
   }
   return courses;
-}
+};
 
 export const useUserProgressStore = create<UserProgressStore>((set, get) => ({
   courses: [],
@@ -60,158 +74,177 @@ export const useUserProgressStore = create<UserProgressStore>((set, get) => ({
   fetchUserProgress: async (userId: string) => {
     set({ isLoading: true, error: null });
     try {
-      const { data, error } = await supabase
-      .from('user_course_summaries')
-      .select('course_id, progress, last_slide_id, modules')
-      .eq('user_id', userId);
-
       const localData = await loadProgressLocal(userId);
-
-      if (localData.length === data?.length) {
-        set({ courses: localData });
-        return;
-      }
-      const courses = (data || []).map(c => ({
-        course_id: c.course_id,
-        progress: c.progress,
-        last_slide_id: c.last_slide_id,
-        modules: c.modules || [], 
-      }));
-        set({ courses });
-
-      await saveProgressLocal(userId, courses);
-
+      set({ courses: localData ?? [] });
     } catch (err: any) {
-      set({ error: err.message });
+      set({ error: err.message, courses: [] });
     } finally {
       set({ isLoading: false });
     }
   },
 
   setCourseProgress: (courseId, progress, lastSlideId = null) => {
-    const { user } = useAuthStore.getState();
-    set(state => {
-      const updatedCourses = state.courses.map(c =>
-        c.course_id === courseId
-          ? { ...c, progress, last_slide_id: lastSlideId }
-          : c
-      );
-      if (user) saveProgressLocal(user.id, updatedCourses);
-      return { courses: updatedCourses };
+    set((state) => {
+      const updated = [...state.courses];
+      const idx = updated.findIndex((c) => c.course_id === courseId);
+      const sanitizedLastSlideId = lastSlideId ?? null;
+
+      if (idx >= 0) {
+        updated[idx] = {
+          ...updated[idx],
+          progress,
+          last_slide_id: sanitizedLastSlideId,
+        };
+      } else {
+        updated.push({
+          course_id: courseId,
+          progress,
+          last_slide_id: sanitizedLastSlideId,
+          modules: [],
+        });
+      }
+
+      return { courses: persistCourses(updated) };
     });
   },
 
-  getCourseProgress: (courseId) => {
-    return get().courses.find(c => c.course_id === courseId)?.progress ?? 0;
-  },
+  setModuleProgressSafe: (courseId, moduleId, currentSlideIndex, totalSlides, lastSlideId) => {
+    if (!courseId) return;
+    if (!Number.isFinite(totalSlides) || totalSlides <= 0) return;
 
-  setModuleProgressSafe: async (courseId, moduleId, currentSlideIndex, totalSlides, lastSlideId) => {
-    const { user } = useAuthStore.getState();
-    if (!user || !courseId) return;
+    // защита входных данных
+    const clampedIndex = Math.max(0, Math.min(currentSlideIndex, totalSlides - 1));
 
-    const percent = Math.round(((currentSlideIndex + 1) / totalSlides) * 100);
-  
-    set(state => {
-      const course = state.courses.find(c => c.course_id === courseId);
-      if (!course) return state;
-  
-      const moduleIndex = course.modules.findIndex(m => m.module_id === moduleId);
-      if (moduleIndex >= 0) {
-        course.modules[moduleIndex] = {
-          module_id: moduleId,
-          progress: percent,
-          last_slide_id: lastSlideId || null,
-        };
-      } else {
-        course.modules.push({
-          module_id: moduleId,
-          progress: percent,
-          last_slide_id: lastSlideId || null,
+    const basePercent = Math.floor(((clampedIndex + 1) / totalSlides) * 100);
+    const percent = clampedIndex === totalSlides - 1 ? 100 : Math.min(basePercent, 99);
+
+    const sanitizedLastSlideId = lastSlideId ?? null;
+
+    set((state) => {
+      const updatedCourses = [...state.courses];
+      const courseIndex = updatedCourses.findIndex((c) => c.course_id === courseId);
+      const existingCourse = courseIndex >= 0 ? updatedCourses[courseIndex] : null;
+
+      const existingModules = (existingCourse?.modules ?? []) as unknown as ModuleProgressEntry[];
+
+      const moduleMap = new Map<string, ModuleProgressEntry>(
+        existingModules.map((m) => [
+          m.module_id,
+          {
+            module_id: m.module_id,
+            progress: Number.isFinite(m.progress) ? m.progress : 0,
+            last_slide_id: m.last_slide_id ?? null,
+            total_slides:
+              Number.isFinite(m.total_slides) && (m.total_slides ?? 0) > 0
+                ? m.total_slides
+                : undefined,
+          },
+        ]),
+      );
+
+      moduleMap.set(moduleId, {
+        module_id: moduleId,
+        progress: percent,
+        last_slide_id: sanitizedLastSlideId,
+        total_slides: totalSlides,
+      });
+
+      const { modules: modulesState } = useModulesStore.getState() as any;
+      const courseModuleIds =
+        modulesState?.filter((m: any) => m.course_id === courseId)?.map((m: any) => m.id) ?? [];
+
+      let normalizedModules: ModuleProgressEntry[] =
+        courseModuleIds.length > 0
+          ? courseModuleIds.map(
+              (id: string) =>
+                moduleMap.get(id) ?? {
+                  module_id: id,
+                  progress: 0,
+                  last_slide_id: null,
+                  total_slides: undefined,
+                },
+            )
+          : Array.from(moduleMap.values()).map((m) => ({
+              ...m,
+              total_slides:
+                Number.isFinite(m.total_slides) && (m.total_slides ?? 0) > 0
+                  ? m.total_slides
+                  : undefined,
+            }));
+
+      if (courseModuleIds.length > 0) {
+        moduleMap.forEach((module, id) => {
+          if (!courseModuleIds.includes(id)) {
+            normalizedModules.push({
+              ...module,
+              total_slides:
+                Number.isFinite(module.total_slides) && (module.total_slides ?? 0) > 0
+                  ? module.total_slides
+                  : undefined,
+            });
+          }
         });
       }
-  
-      // перерахуємо прогрес курсу
-      const courseProgress = Math.round(
-        course.modules.reduce((sum, m) => sum + m.progress, 0) / course.modules.length
-      );
-      course.progress = courseProgress;
-      course.last_slide_id = lastSlideId
-  
-      const updatedCourses = [...state.courses];
+
+      const courseProgress = computeArithmeticCourseProgress(normalizedModules);
+
+      const updatedCourse: UserCourseSummary = {
+        course_id: courseId,
+        progress: courseProgress,
+        last_slide_id: sanitizedLastSlideId,
+        modules: normalizedModules as any,
+      };
+
+      if (courseIndex >= 0) {
+        updatedCourses[courseIndex] = updatedCourse;
+      } else {
+        updatedCourses.push(updatedCourse);
+      }
+
       return { courses: persistCourses(updatedCourses) };
     });
   },
 
-  getModuleProgress: (courseId?: string, moduleId?: string) => {
-    if (!courseId || !moduleId) return 0;
-    const course = get().courses.find(c => c.course_id === courseId);
-    const module = course?.modules.find(m => m.module_id === moduleId);
+  getModuleProgress: (courseId: string, moduleId: string) => {
+    const course = get().courses.find((c) => c.course_id === courseId);
+    const module = course?.modules.find((m) => m.module_id === moduleId);
     return module?.progress ?? 0;
   },
 
+  getCourseProgress: (courseId) => {
+    return get().courses.find((c) => c.course_id === courseId)?.progress ?? 0;
+  },
+
   syncProgressToDB: async () => {
-    const { user } = useAuthStore.getState();
-    if (!user) return;
-  
-    try {
-      const { courses } = get();
-  
-      for (const course of courses) {
-        const { course_id, progress, last_slide_id, modules } = course;
-  
-        const { error } = await supabase
-          .from('user_course_summaries')
-          .upsert({
-            user_id: user.id,
-            course_id,
-            progress,
-            last_slide_id,
-            modules, 
-          },
-          { onConflict: 'user_id, course_id'} 
-        );
-  
-        if (error) throw error;
-
-        await AsyncStorage.removeItem(`progress_${user.id}`);
-
-      }
-    
-      await AsyncStorage.removeItem(`progress_${user.id}`);
-  
-    } catch (err: any) {
-      console.error('Помилка синхронізації прогресу з БД:', err.message);
-    }
+    return;
   },
 
   resetCourseProgress: async (courseId: string) => {
     const { user } = useAuthStore.getState();
     if (!user) return;
-  
-    // Очистити відповіді AI слайдів
+
     useSlidesStore.getState().clearAnsweredSlides();
-  
-    set(state => {
-      const updatedCourses = state.courses.map(course => {
+
+    set((state) => {
+      const updatedCourses = state.courses.map((course) => {
         if (course.course_id === courseId) {
           return {
             ...course,
             progress: 0,
             last_slide_id: null,
-            modules: course.modules.map(m => ({
-              ...m,
+            modules: course.modules.map((m: any) => ({
+              module_id: m.module_id,
               progress: 0,
               last_slide_id: null,
+              total_slides: undefined,
             })),
           };
         }
         return course;
       });
-  
-      saveProgressLocal(user.id, updatedCourses);  
+
+      saveProgressLocal(user.id, updatedCourses);
       return { courses: updatedCourses };
     });
   },
-  
-  
 }));
