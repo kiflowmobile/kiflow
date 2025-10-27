@@ -180,3 +180,82 @@ export const joinCompanyByCode = async (
     return { success: false, error: err };
   }
 };
+
+/**
+ * Отримати всі компанії
+ */
+export const getAllCompanies = async (): Promise<{ data: Company[] | null; error: any }> => {
+  try {
+    const { data, error } = await supabase
+      .from('companies')
+      .select(`id, name, code, service_standards, created_at`);
+
+    return { data, error };
+  } catch (err) {
+    console.error('Error fetching all companies:', err);
+    return { data: null, error: err };
+  }
+};
+
+/**
+ * Отримати компанію по id
+ */
+export const getCompanyById = async (
+  companyId: string,
+): Promise<{ data: Company | null; error: any }> => {
+  try {
+    const { data, error } = await supabase
+      .from('companies')
+      .select('id, name, code, service_standards, created_at')
+      .eq('id', companyId)
+      .maybeSingle();
+
+    console.log('getCompanyById supabase response:', { data, error });
+
+    return { data, error };
+  } catch (err) {
+    console.error('Error fetching company by id:', err);
+    return { data: null, error: err };
+  }
+};
+
+/**
+ * Оновити поле service_standards для компанії
+ */
+export const updateCompanyServiceStandards = async (
+  companyId: string,
+  standards: any,
+): Promise<{ data: Company | null; error: any }> => {
+  try {
+    const resp = await supabase
+      .from('companies')
+      .update({ service_standards: standards })
+      .eq('id', companyId)
+      .select();
+
+    const { data, error } = resp as { data: any; error: any };
+
+    // Debug: логируем ответ от Supabase для упрощения дебага
+    console.log('updateCompanyServiceStandards supabase response:', { data, error });
+
+    if (error) {
+      return { data: null, error };
+    }
+
+    // Если массив пустой => не найдено строк для обновления
+    if (!data || (Array.isArray(data) && data.length === 0)) {
+      const noRowsError = {
+        message: 'No rows updated',
+        details: 'The update matched 0 rows',
+      };
+      return { data: null, error: noRowsError };
+    }
+
+    // Если вернулся массив, берем первый элемент
+    const updated = Array.isArray(data) ? data[0] : data;
+    return { data: updated as Company, error: null };
+  } catch (err) {
+    console.error('Error updating company service_standards:', err);
+    return { data: null, error: err };
+  }
+};

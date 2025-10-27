@@ -1,13 +1,14 @@
-import { Message } from "@/src/constants/types/ai_chat";
-import { buildPrompt } from "./buildPrompt";
-import { jsonrepair } from "jsonrepair";
+import { Message } from '@/src/constants/types/ai_chat';
+import { buildPrompt } from './buildPrompt';
+import { getCompanyById } from '@/src/services/company';
+import { jsonrepair } from 'jsonrepair';
 
 const GEMINI_API_KEY = process.env.EXPO_PUBLIC_GEMINI_API_KEY;
 
 export interface GeminiResponse {
   content: string;
   rating: any | null;
-  criterias:string
+  criterias: string;
 }
 
 export async function askGemini(
@@ -15,12 +16,13 @@ export async function askGemini(
   slidePrompt: string,
   isFirstMessage: boolean,
   criteriasText: string,
-  model: string = "gemini-2.0-flash"
+  model: string = 'gemini-2.0-flash',
+  companyId?: string,
 ): Promise<GeminiResponse> {
   if (!GEMINI_API_KEY) {
-    console.error("❌ GEMINI_API_KEY не налаштований");
+    console.error('❌ GEMINI_API_KEY не налаштований');
     return {
-      content: "⚠️ Помилка: відсутній API ключ.",
+      content: '⚠️ Помилка: відсутній API ключ.',
       rating: null,
       criterias: criteriasText, // завжди передаємо
     };
@@ -28,13 +30,51 @@ export async function askGemini(
 
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
 
-  const lastUserMessage = messages.filter((m) => m.role === "user").slice(-1)[0];
+  const lastUserMessage = messages.filter((m) => m.role === 'user').slice(-1)[0];
+
+  // Если передан companyId, пробуем загрузить standards и безопасно распарсить их
+  let companyStandards: any = undefined;
+  if (companyId) {
+    try {
+      const { data: companyData, error: companyError } = await getCompanyById(companyId);
+      if (companyError) console.warn('Warning: getCompanyById error', companyError);
+      const raw = companyData?.service_standards;
+      if (raw) {
+        try {
+          companyStandards = typeof raw === 'string' ? JSON.parse(raw) : raw;
+        } catch {
+          // Попробуем отремонтировать некорректный JSON
+          try {
+            const repaired = jsonrepair(typeof raw === 'string' ? raw : JSON.stringify(raw));
+            companyStandards = JSON.parse(repaired);
+            console.log('askGemini: repaired companyStandards JSON');
+          } catch {
+            console.warn('askGemini: failed to parse or repair companyStandards');
+            // В крайнем случае передадим raw (строку или объект) — buildPrompt обработает
+            companyStandards = raw;
+          }
+        }
+      }
+    } catch (err) {
+      console.warn('Warning: failed to fetch company by id', err);
+    }
+  }
 
   const body = {
     contents: [
       {
-        role: "user",
-        parts: [{ text: buildPrompt(slidePrompt, isFirstMessage, lastUserMessage, criteriasText) }],
+        role: 'user',
+        parts: [
+          {
+            text: buildPrompt(
+              slidePrompt,
+              isFirstMessage,
+              lastUserMessage,
+              criteriasText,
+              companyStandards,
+            ),
+          },
+        ],
       },
     ],
     generationConfig: {
@@ -45,9 +85,15 @@ export async function askGemini(
   };
 
   try {
+    console.log('askGemini: companyStandards:', companyStandards);
+  } catch (err) {
+    console.warn('askGemini: failed to log prompt preview', err);
+  }
+
+  try {
     const response = await fetch(`${url}?key=${GEMINI_API_KEY}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
     });
 
@@ -58,12 +104,12 @@ export async function askGemini(
 
     const data = await response.json();
 
-    let rawText = data.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
-    rawText = rawText.replace(/```json|```/g, "").trim();
+    let rawText = data.candidates?.[0]?.content?.parts?.[0]?.text ?? '';
+    rawText = rawText.replace(/```json|```/g, '').trim();
 
-    if (!rawText.startsWith("{")) {
-      const start = rawText.indexOf("{");
-      const end = rawText.lastIndexOf("}");
+    if (!rawText.startsWith('{')) {
+      const start = rawText.indexOf('{');
+      const end = rawText.lastIndexOf('}');
       if (start !== -1 && end !== -1) rawText = rawText.slice(start, end + 1);
     }
 
@@ -71,13 +117,13 @@ export async function askGemini(
     try {
       parsed = JSON.parse(rawText);
     } catch (err) {
-      console.warn("⚠️ JSON parse error, trying to repair:", err);
+      console.warn('⚠️ JSON parse error, trying to repair:', err);
       try {
         const repairedJson = jsonrepair(rawText);
         parsed = JSON.parse(repairedJson);
-        console.log("✅ JSON successfully repaired");
+        console.log('✅ JSON successfully repaired');
       } catch (repairErr) {
-        console.error("❌ JSON repair failed:", repairErr, rawText);
+        console.error('❌ JSON repair failed:', repairErr, rawText);
         parsed = { content: rawText, rating: null, criterias: criteriasText };
       }
     }
@@ -86,11 +132,11 @@ export async function askGemini(
 
     return parsed;
   } catch (err) {
-    console.error("Gemini API error", err);
+    console.error('Gemini API error', err);
     return {
-      content: "⚠️ Сталася помилка при отриманні відповіді від AI.",
+      content: '⚠️ Сталася помилка при отриманні відповіді від AI.',
       rating: null,
-      criterias: criteriasText, 
+      criterias: criteriasText,
     };
   }
 }
