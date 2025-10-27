@@ -1,24 +1,16 @@
+import SkillsChart from '@/src/components/ui/SkillsChart';
 import { shadow } from '@/src/components/ui/styles/shadow';
 import { useAuthStore, useModulesStore } from '@/src/stores';
 import { useMainRatingStore } from '@/src/stores/mainRatingStore';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Platform, StyleSheet, Text, View, ScrollView} from 'react-native';
 import Svg, { Path } from 'react-native-svg';
-import {
-  PolarAngleAxis,
-  PolarGrid,
-  PolarRadiusAxis,
-  Radar,
-  RadarChart,
-  ResponsiveContainer,
-} from 'recharts';
 
 interface DashboardSlideProps {
   title: string;
   courseId: string
 }
-
 
 const calculateQuizRating = (quizData: Record<string, { selectedAnswer: number; correctAnswer: number }>) => {
   const entries = Object.values(quizData);
@@ -69,6 +61,14 @@ const DashboardSlide: React.FC<DashboardSlideProps> = ({ courseId, title }) => {
     fetchSkills(user.id, currentModuleId);
   }, [user, currentModuleId]);
 
+  const combinedAverage = useMemo(() => {
+    if (quizRatings !== null && average !== null) {
+      const avg = (quizRatings + Number(average.toFixed(1))) / 2;
+      return `${avg.toFixed(1)}/5`;
+    }
+    return '...';
+  }, [quizRatings, average]);
+
 
   return (
     <View style={styles.screen}>
@@ -114,50 +114,15 @@ const DashboardSlide: React.FC<DashboardSlideProps> = ({ courseId, title }) => {
                 {quizRatings ? quizRatings + '/5': '...' }
               </Text>
             </View>
-
-            {/* <View style={[styles.statBox, { backgroundColor: '#ede9fe' }]}>
-              <Text style={styles.statLabel}>Курси</Text>
-              <Text style={[styles.statValue, { color: '#7c3aed' }]}>5</Text>
-            </View> */}
             <View style={[styles.statBox, { backgroundColor: '#dbeafe' }]}>
               <Text style={styles.statLabel}>Середній бал</Text>
               <Text style={[styles.statValue, { color: '#2563eb' }]}>
-              {quizRatings && average ? ((Number(quizRatings) + Number(average.toFixed(1)))/2) + '/5': '...' }
+                {combinedAverage}
               </Text>
             </View>
           </View>
         </View>
-
-        {average !== null?
-
-        (<View style={styles.skillsCard}>
-          <Text style={styles.statsTitle}>Порівняння навичок</Text>
-          {Platform.OS === 'web' ? (
-            <ResponsiveContainer width="100%" height={300}>
-              <RadarChart data={skills}>
-                <PolarGrid />
-                <PolarAngleAxis dataKey="criterion_name" />
-                <PolarRadiusAxis angle={30} domain={[0, 5]} />
-                <Radar
-                  name="Оцінка"
-                  dataKey="average_score"
-                  stroke="#7c3aed"
-                  fill="#7c3aed"
-                  fillOpacity={0.6}
-                />
-              </RadarChart>
-            </ResponsiveContainer>
-          ) : (
-            <Text style={styles.chartPlaceholderText}>
-              📊 Графік доступний лише у веб-версії
-            </Text>
-          )}
-        </View>)
-        : (
-          <Text style={styles.noScoresText}>😔 Ви ще не маєте оцінок</Text>
-        )
-
-}
+        <SkillsChart skills={skills} average={average} />
         </ScrollView>
       </View>
     </View>

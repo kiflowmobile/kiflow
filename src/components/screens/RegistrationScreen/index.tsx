@@ -1,6 +1,6 @@
 import { useAuthStore } from '@/src/stores/authStore';
-import { useRouter } from 'expo-router';
-import React, { useCallback, useMemo, useState } from 'react';
+import { useRootNavigationState, useRouter } from 'expo-router';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   KeyboardAvoidingView,
   StyleSheet,
@@ -12,6 +12,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import Button from '../../ui/button';
 import { Input, InputField } from '../../ui/input';
 import Svg, { Path } from 'react-native-svg';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 type Form = {
   firstName: string;
@@ -35,7 +36,7 @@ const normalizeEmail = (v: string) => v.trim().toLowerCase();
 
 export default function RegisterScreen() {
   const router = useRouter();
-  const { signUp, isLoading, error, clearError } = useAuthStore();
+  const { signUp, isLoading, error, clearError, justSignedUp} = useAuthStore();
 
   const [form, setForm] = useState<Form>({
     firstName: '',
@@ -50,6 +51,8 @@ export default function RegisterScreen() {
   const [submitting, setSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const rootNavigationState = useRootNavigationState();
+  const {user} = useAuthStore()
 
 
   const setField = useCallback(
@@ -154,6 +157,7 @@ export default function RegisterScreen() {
 
     if (submitting || isLoading) return;
     setSubmitting(true);
+
     try {
       await signUp(
         normalizeEmail(form.email),
@@ -161,7 +165,10 @@ export default function RegisterScreen() {
         normalizeName(form.firstName),
         normalizeName(form.lastName),
       );
-      router.replace('/course-code');
+      const updatedJustSignedUp = useAuthStore.getState().justSignedUp; 
+      if(updatedJustSignedUp) {
+        router.replace('/course-code');
+      }
     } catch (err) {
       const message = mapAuthErrorToMessage(err);
       setFormError(message);
@@ -171,6 +178,22 @@ export default function RegisterScreen() {
   };
 
   const handleGoToLogin = () => router.push('/auth/login');
+
+  useEffect(() => {
+    if (!rootNavigationState?.key) return;
+  
+    const checkRedirect = async () => {
+      const justSignedUpStored = await AsyncStorage.getItem('justSignedUp');
+      
+      if (user && !justSignedUpStored) {
+        setTimeout(() => {
+          router.replace('/home');
+        }, 0);
+      }
+    };
+  
+    checkRedirect();
+  }, [user, rootNavigationState]);
 
   return (
     <SafeAreaView style={styles.container}>

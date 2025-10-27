@@ -69,15 +69,12 @@ export const useChatStore = create<ChatStore>(() => ({
         return;
       }
 
-console.log('rowsToUpsert', rowsToUpsert)
-      // 3️⃣ UPSERT у Supabase
       const { error } = await supabase
         .from('chat_history')
         .upsert(rowsToUpsert, { onConflict: 'user_id, slide_id' });
 
       if (error) throw error;
 
-      console.log(`✅ Synced ${rowsToUpsert.length} chat entries to DB`);
     } catch (err) {
       console.error('❌ Failed to sync chat data from local storage:', err);
     }
@@ -122,8 +119,6 @@ console.log('rowsToUpsert', rowsToUpsert)
           );
           await AsyncStorage.multiSet(multiSetData);
       
-          console.log(`✅ Synced ${multiSetData.length} course chat(s) from DB → local`);
-
     }catch(err) {
         console.error('❌ Failed to sync chat message data from DB:', err);
     }

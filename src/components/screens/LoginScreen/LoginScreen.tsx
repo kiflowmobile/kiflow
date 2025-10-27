@@ -1,5 +1,5 @@
 import { useAuthStore } from '@/src/stores/authStore';
-import { useRouter } from 'expo-router';
+import { useRootNavigationState, useRouter } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
 import {
   KeyboardAvoidingView,
@@ -28,6 +28,7 @@ export default function LoginScreen() {
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
   const [touched, setTouched] = useState<{ email?: boolean; password?: boolean }>({});
+  const user = useAuthStore()
 
   const [formError, setFormError] = useState<string | null>(null);
 
@@ -38,6 +39,25 @@ export default function LoginScreen() {
 
   const normalizeEmail = (value: string) => value.trim().toLowerCase();
   const normalizePassword = (value: string) => value;
+
+  // const router = useRouter();
+  const rootNavigationState = useRootNavigationState();
+
+  useEffect(() => {
+    // 🟣 Якщо навігація ще не готова — просто виходимо
+    if (!rootNavigationState?.key) return;
+
+    // 🟢 Тільки після того, як навігація готова, перевіряємо користувача
+    console.log(user.isGuest)
+    if (!user.isGuest ) {
+      // 👇 невелика затримка гарантує, що replace виконається після монтування
+      setTimeout(() => {
+        router.replace('/home');
+      }, 0);
+    }
+  }, [user, rootNavigationState]);
+  
+ 
 
   const validate = (nextEmail = email, nextPassword = password) => {
     const nextErrors: typeof errors = {};

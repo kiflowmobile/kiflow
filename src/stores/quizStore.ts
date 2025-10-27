@@ -171,8 +171,6 @@ export const useQuizStore = create<QuizStore>((set, get) => ({
       if (pairs.length > 0) {
         await AsyncStorage.multiSet(pairs);
       }
-  
-      console.log(`✅ Synced quiz data for ${pairs.length} course(s) from DB → local storage`);
     } catch (err) {
       console.error('❌ Failed to sync quiz data from DB:', err);
     }

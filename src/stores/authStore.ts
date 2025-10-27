@@ -6,6 +6,7 @@ import { useUserProgressStore } from './userProgressStore';
 import { useQuizStore } from './quizStore';
 import { useChatStore } from './chatStore';
 import { clearUserLocalData } from '../utils/asyncStorege';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 interface AuthState {
   // Стан
@@ -14,6 +15,7 @@ interface AuthState {
   isLoading: boolean;
   isGuest: boolean | null;
   error: string | null;
+  justSignedUp: boolean
 
   // Дії
   signIn: (email: string, password: string) => Promise<void>;
@@ -40,6 +42,7 @@ export const useAuthStore = create<AuthState>()(
     isLoading: true,
     isGuest: null,
     error: null,
+    justSignedUp: false,
 
     // Дії
     signIn: async (email: string, password: string) => {
@@ -143,7 +146,10 @@ export const useAuthStore = create<AuthState>()(
           session: data.session,
           isGuest,
           isLoading: false,
+          justSignedUp: true,
         });
+        await AsyncStorage.setItem('justSignedUp', 'true');
+
       } catch (error: any) {
         set({
           error: error.message || 'Sign up failed',
