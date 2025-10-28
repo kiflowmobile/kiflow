@@ -38,6 +38,8 @@ export default function RootLayout() {
   if (!loaded) {
     return null;
   }
+
+  // useSaveProgressOnExit()
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
