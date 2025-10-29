@@ -81,14 +81,14 @@ export default function CourseCodeScreen() {
             text: 'OK',
             onPress: async () => {
               await fetchCourses();
-              router.push('/home'); 
+              router.push('/courses'); 
             },
           },
         ]);
 
         setTimeout(async () => {
           await fetchCourses();
-          router.push('/home');
+          router.push('/courses');
         }, 1000);
       } else {
         showError('Невірний код курсу. Перевірте правильність введення та спробуйте ще раз.');
@@ -110,7 +110,7 @@ export default function CourseCodeScreen() {
     setLoading(true);
     try {
       await fetchCourses();
-      router.push('/home');
+      router.push('/courses');
     } catch (err) {
       console.error('Error skipping company code:', err);
       showError('Сталася помилка при пропуску. Спробуйте ще раз.');

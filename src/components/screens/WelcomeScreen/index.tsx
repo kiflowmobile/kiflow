@@ -16,7 +16,7 @@ export default function WelcomeScreen() {
   
     if (!user.isGuest && !justSignedUp) {
       setTimeout(() => {
-        router.replace('/home');
+        router.replace('/courses');
       }, 0);
     }
   }, [user, justSignedUp, rootNavigationState]);

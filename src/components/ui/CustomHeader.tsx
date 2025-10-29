@@ -8,7 +8,7 @@ export default function CustomHeader() {
   const insets = useSafeAreaInsets();
 
   const navigateToHome = () => {
-    router.push('/home' as Href);
+    router.push('/courses' as Href);
   };
 
   return (
