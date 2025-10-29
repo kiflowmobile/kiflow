@@ -1,4 +1,4 @@
-import 'react-native-reanimated'; // ⚡️ цей імпорт має бути найпершим
+import 'react-native-reanimated';
 
 import { useAuthStore } from '@/src/stores/authStore';
 import { useFonts } from 'expo-font';
@@ -8,6 +8,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useUserProgressStore } from '../stores';
 import CustomHeader from '../components/ui/CustomHeader';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import "../firebase"; 
 
 export default function RootLayout() {
   const { initFromLocal } = useUserProgressStore();
