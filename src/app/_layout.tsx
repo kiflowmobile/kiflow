@@ -38,6 +38,8 @@ export default function RootLayout() {
   if (!loaded) {
     return null;
   }
+
+  // useSaveProgressOnExit()
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
@@ -48,7 +50,7 @@ export default function RootLayout() {
         >
           <Stack.Screen name="index" options={{ headerShown: false }} />
           <Stack.Screen name="course-code" options={{ headerShown: false }} />
-          <Stack.Screen name="home" options={{ headerShown: false }} />
+          
           <Stack.Screen name="module/[moduleId]" options={{ headerShown: false }} />
           <Stack.Screen name="auth/login" options={{ headerShown: false }} />
           <Stack.Screen name="auth/registration" options={{ headerShown: false }} />

@@ -52,7 +52,7 @@ export default function LoginScreen() {
     if (!user.isGuest ) {
       // 👇 невелика затримка гарантує, що replace виконається після монтування
       setTimeout(() => {
-        router.replace('/home');
+        router.replace('/courses');
       }, 0);
     }
   }, [user, rootNavigationState]);
@@ -124,7 +124,7 @@ export default function LoginScreen() {
 
     try {
       await signIn(normalizeEmail(email), normalizePassword(password));
-      router.replace('/home');
+      router.replace('/courses');
     } catch (err: unknown) {
       const authErr = err as AuthError;
       const message = mapAuthErrorToMessage(authErr);
