@@ -1,4 +1,4 @@
-import 'react-native-reanimated'; // ⚡️ цей імпорт має бути найпершим
+import 'react-native-reanimated';
 
 import { useAuthStore } from '@/src/stores/authStore';
 import { useFonts } from 'expo-font';
@@ -8,6 +8,9 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useUserProgressStore } from '../stores';
 import CustomHeader from '../components/ui/CustomHeader';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import "../firebase"; 
+import { initAmplitude } from '../amplitude';
+import { logEvent } from 'firebase/analytics';
 
 export default function RootLayout() {
   const { initFromLocal } = useUserProgressStore();
@@ -39,11 +42,16 @@ export default function RootLayout() {
     return null;
   }
 
+  useEffect(() => {
+    initAmplitude();
+    // logE('app_started');
+  }, []);
+
   // useSaveProgressOnExit()
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
-        <Stack
+      <Stack
           screenOptions={{
             header: () => <CustomHeader />,
           }}

@@ -13,6 +13,7 @@ import Button from '../../ui/button';
 import { Input, InputField } from '../../ui/input';
 import Svg, { Path } from 'react-native-svg';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useAnalyticsStore } from '@/src/stores/analyticsStore';
 
 type Form = {
   firstName: string;
@@ -52,6 +53,7 @@ export default function RegisterScreen() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const rootNavigationState = useRootNavigationState();
+  const analyticsStore = useAnalyticsStore.getState();
   const {user} = useAuthStore()
 
 
@@ -144,6 +146,8 @@ export default function RegisterScreen() {
   };
 
   const handleRegister = async () => {
+    analyticsStore.trackEvent('sign_up_screen__submit__click');
+
     setTouched({
       firstName: true,
       lastName: true,
@@ -194,6 +198,11 @@ export default function RegisterScreen() {
   
     checkRedirect();
   }, [user, rootNavigationState]);
+
+
+  useEffect(() => {
+    analyticsStore.trackEvent('sign_up_screen__load');
+  }, []);
 
   return (
     <SafeAreaView style={styles.container}>

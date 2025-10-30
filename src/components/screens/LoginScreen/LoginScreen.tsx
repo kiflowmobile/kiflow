@@ -12,6 +12,7 @@ import Button from '../../ui/button';
 import { Input, InputField } from '../../ui/input';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
+import { useAnalyticsStore } from '@/src/stores/analyticsStore';
 
 interface AuthError {
   message?: string;
@@ -29,6 +30,7 @@ export default function LoginScreen() {
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
   const [touched, setTouched] = useState<{ email?: boolean; password?: boolean }>({});
   const user = useAuthStore()
+  const analyticsStore = useAnalyticsStore.getState();
 
   const [formError, setFormError] = useState<string | null>(null);
 
@@ -40,17 +42,11 @@ export default function LoginScreen() {
   const normalizeEmail = (value: string) => value.trim().toLowerCase();
   const normalizePassword = (value: string) => value;
 
-  // const router = useRouter();
   const rootNavigationState = useRootNavigationState();
 
   useEffect(() => {
-    // 🟣 Якщо навігація ще не готова — просто виходимо
     if (!rootNavigationState?.key) return;
-
-    // 🟢 Тільки після того, як навігація готова, перевіряємо користувача
-    console.log(user.isGuest)
     if (!user.isGuest ) {
-      // 👇 невелика затримка гарантує, що replace виконається після монтування
       setTimeout(() => {
         router.replace('/courses');
       }, 0);
@@ -85,7 +81,6 @@ export default function LoginScreen() {
   useEffect(() => {
     if (formError) setFormError(null);
     if (error) clearError();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [email, password]);
 
   const mapAuthErrorToMessage = (err: AuthError): string => {
@@ -119,6 +114,8 @@ export default function LoginScreen() {
   };
 
   const handleLogin = async () => {
+    analyticsStore.trackEvent('sign_in_screen__submit__click');
+
     setTouched({ email: true, password: true });
     if (!validate()) return;
 
@@ -135,6 +132,11 @@ export default function LoginScreen() {
   const handleGoToRegister = () => {
     router.push('/auth/registration');
   };
+
+
+  useEffect(() => {
+    analyticsStore.trackEvent('sign_in_screen__load');
+  }, []);
 
   return (
     <SafeAreaView style={styles.container}>

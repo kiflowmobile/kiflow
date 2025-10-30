@@ -1,5 +1,6 @@
 import { getCurrentUser } from '@/src/utils/authUtils';
 import { supabase } from '../config/supabaseClient';
+import { useAnalyticsStore } from '../stores/analyticsStore';
 
 export interface Company {
   id: string;
@@ -128,8 +129,11 @@ export const joinCompanyByCode = async (
   code: string,
 ): Promise<{ success: boolean; error?: any; company?: Company; alreadyMember?: boolean }> => {
   try {
+    const analyticsStore = useAnalyticsStore.getState();
     // Отримуємо поточного користувача
     const user = await getCurrentUser();
+
+    
 
     if (!user) {
       return { success: false, error: 'User not authenticated' };
@@ -160,6 +164,13 @@ export const joinCompanyByCode = async (
     // Додаємо користувача до компанії
     const { error: addError } = await addUserToCompany(user.id, company.id, code);
 
+
+    if (existingMember) {
+      // Логування події для користувача, який вже член компанії
+      analyticsStore.trackEvent('join_company__already_member', { companyCode: code });
+      return { success: true, company, alreadyMember: true };
+    }
+
     if (addError) {
       return { success: false, error: addError };
     }
@@ -173,6 +184,7 @@ export const joinCompanyByCode = async (
     if (updateError) {
       return { success: false, error: updateError };
     }
+
 
     return { success: true, company };
   } catch (err) {
