@@ -41,6 +41,7 @@ export default function HomeScreen() {
     return () => { // <-- повертаємо callback
       analyticsStore.trackEvent(trackEventParam);
       router.push(routerParam);
+      // () => logAmplitudeEven('home_screen__courses__click')
     };
   };
 

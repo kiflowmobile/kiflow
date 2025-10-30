@@ -15,6 +15,9 @@
     "lint": "expo lint"
   },
   "dependencies": {
+    "@amplitude/analytics-browser": "^2.29.0",
+    "@amplitude/analytics-react-native": "^1.5.16",
+    "@amplitude/plugin-session-replay-react-native": "^0.4.3",
     "@expo/vector-icons": "^15.0.2",
     "@gluestack-ui/button": "^1.0.14",
     "@gluestack-ui/icon": "^0.1.27",

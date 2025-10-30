@@ -9,6 +9,8 @@ import { useUserProgressStore } from '../stores';
 import CustomHeader from '../components/ui/CustomHeader';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import "../firebase"; 
+import { initAmplitude } from '../amplitude';
+import { logEvent } from 'firebase/analytics';
 
 export default function RootLayout() {
   const { initFromLocal } = useUserProgressStore();
@@ -39,6 +41,11 @@ export default function RootLayout() {
   if (!loaded) {
     return null;
   }
+
+  useEffect(() => {
+    initAmplitude();
+    // logE('app_started');
+  }, []);
 
   // useSaveProgressOnExit()
   return (
