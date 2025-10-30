@@ -13,6 +13,11 @@ export default function TabsLayout() {
         tabBarBackground: Platform.select({
           default: undefined,
         }),
+        tabBarStyle: {
+          borderTopWidth: 0,
+          backgroundColor: '#ffffff',
+          height: 64,
+        },
       }}
     >
       <Tabs.Screen
@@ -20,7 +25,7 @@ export default function TabsLayout() {
         options={{
           title: 'Courses',
           tabBarIcon: ({ color }: { color: string }) => (
-            <IconSymbol name="book.fill" size={22} color={color} />
+            <IconSymbol name="book.fill" size={24} color={color} />
           ),
         }}
       />
@@ -29,7 +34,7 @@ export default function TabsLayout() {
         options={{
           title: 'Progress',
           tabBarIcon: ({ color }: { color: string }) => (
-            <IconSymbol name="chart.bar.fill" size={22} color={color} />
+            <IconSymbol name="chart.bar.fill" size={24} color={color} />
           ),
         }}
       />
@@ -38,7 +43,7 @@ export default function TabsLayout() {
         options={{
           title: 'Profile',
           tabBarIcon: ({ color }: { color: string }) => (
-            <IconSymbol name="person.fill" size={22} color={color} />
+            <IconSymbol name="person.fill" size={24} color={color} />
           ),
         }}
       />
