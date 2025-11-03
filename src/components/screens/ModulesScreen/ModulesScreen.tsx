@@ -5,7 +5,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect } from 'react';
 import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 
-const DOT_SIZE = 14;
+const DOT_SIZE = 16;
 const LINE_DEFAULT = '#D9D9D9';
 const LINE_COMPLETED = '#27AE60';
 
@@ -54,13 +54,6 @@ export default function CourseScreen() {
     const isCurrent = currentModule?.id === item.id;
     const isCompleted = progress >= 100;
 
-    let dotStyle = styles.statusDotNotStarted;
-    if (isCompleted) {
-      dotStyle = styles.statusDotCompleted;
-    } else if (isCurrent) {
-      dotStyle = styles.statusDotCurrent;
-    }
-
     const isFirst = index === 0;
     const isLast = index === modules.length - 1;
 
@@ -86,7 +79,19 @@ export default function CourseScreen() {
             )}
 
             <View style={styles.dotHolder}>
-              <View style={[styles.statusDot, dotStyle]} />
+              {isCompleted ? (
+                <View style={[styles.statusDot, styles.statusDotCompleted]}>
+                  <Text style={styles.checkmark} allowFontScaling={false}>
+                    ✓
+                  </Text>
+                </View>
+              ) : isCurrent ? (
+                <View style={[styles.statusDot, styles.statusDotCurrent]}>
+                  <View style={styles.statusDotCurrentInner} />
+                </View>
+              ) : (
+                <View style={[styles.statusDot, styles.statusDotNotStarted]} />
+              )}
             </View>
 
             {!isLast ? (
@@ -150,7 +155,7 @@ const styles = StyleSheet.create({
     position: 'relative',
     padding: 16,
     marginBottom: 12,
-    marginLeft: 28, // чтобы таймлайн был снаружи
+    marginLeft: 28,
     borderRadius: 12,
     backgroundColor: 'rgba(0, 0, 0, 0.03)',
     shadowColor: '#000',
@@ -176,6 +181,7 @@ const styles = StyleSheet.create({
     width: 2,
     flex: 1,
     marginBottom: -12,
+    borderRadius: 1,
   },
 
   dotHolder: {
@@ -188,17 +194,36 @@ const styles = StyleSheet.create({
     width: DOT_SIZE,
     height: DOT_SIZE,
     borderRadius: DOT_SIZE / 2,
-    backgroundColor: '#C4C4C4',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 
   statusDotNotStarted: {
-    backgroundColor: '#C4C4C4',
+    backgroundColor: '#fff',
+    borderWidth: 2,
+    borderColor: '#D9D9D9',
   },
+
   statusDotCompleted: {
     backgroundColor: '#27AE60',
   },
+  checkmark: {
+    color: '#fff',
+    fontSize: 10,
+    fontWeight: '700',
+    lineHeight: 12,
+    includeFontPadding: false,
+    textAlignVertical: 'center',
+  },
+
   statusDotCurrent: {
     backgroundColor: '#000',
+  },
+  statusDotCurrentInner: {
+    width: DOT_SIZE * 0.5,
+    height: DOT_SIZE * 0.5,
+    borderRadius: (DOT_SIZE * 0.5) / 2,
+    backgroundColor: '#fff',
   },
 
   moduleTitle: {
