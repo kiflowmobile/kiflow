@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { Spinner, SPINNER_SIZES } from '../../ui/spinner';
 import { Text, View } from 'react-native';
 import TextSlide from './slides/TextSlide';
@@ -10,6 +10,7 @@ import MediaPlaceholder from './slides/MediaPlaceholder';
 import { useSlidesStore } from '@/src/stores';
 import VideoPlayer from './VideoPlayer';
 import { useLocalSearchParams } from 'expo-router';
+import { useAnalyticsStore } from '@/src/stores/analyticsStore';
 
 interface CourseSlideProps {
   slideId: string | number;
@@ -32,6 +33,8 @@ const ModuleSlide: React.FC<CourseSlideProps> = ({
   const { moduleId, courseId } = useLocalSearchParams();
   const moduleIdStr = Array.isArray(moduleId) ? moduleId[0] : moduleId;
   const courseIdStr = Array.isArray(courseId) ? courseId[0] : courseId;
+  const analyticsStore = useAnalyticsStore.getState(); 
+
 
   if (isLoading) {
     return (
@@ -45,16 +48,9 @@ const ModuleSlide: React.FC<CourseSlideProps> = ({
   if (error || !slideData) {
     return (
       <View className="flex-1 items-center justify-center">
-        {/* <Text className='text-danger-600'>{error?.message || 'Slide data is missing'}</Text> */}
       </View>
     );
   }
-
-  // useEffect(() => {
-  //   if (!isActive && videoRef.current) {
-  //     videoRef.current.pause();
-  //   }
-  // }, [isActive]);
 
   switch (slideData.slide_type) {
     case 'text':
@@ -90,18 +86,12 @@ const ModuleSlide: React.FC<CourseSlideProps> = ({
       return <DashboardSlide courseId={courseIdStr} title={slideData.slide_title} />;
     default:
       return (
-        // <View
-        //   style={{
-        //     width: SCREEN_W,
-        //     height: SCREEN_H,
-        //     justifyContent: 'center',
-        //     alignItems: 'center',
-        //   }}
-        // >
         <MediaPlaceholder message={`Слайд типу "${slideData.slide_type}" ще не підтримується`} />
-        // </View>
       );
   }
+
+
+
 };
 
 export default ModuleSlide;

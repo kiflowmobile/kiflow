@@ -5,11 +5,14 @@ import { useAuthStore } from '@/src/stores/authStore';
 import { useState } from 'react';
 import { Alert, Platform, StyleSheet } from 'react-native';
 import ProfileField from './ProfileField';
+import { useAnalyticsStore } from '@/src/stores/analyticsStore';
 
 export default function PasswordSection() {
   const { changePassword } = useAuthStore();
   const [isChangingPassword, setIsChangingPassword] = useState(false);
   const [showPasswordFields, setShowPasswordFields] = useState(false);
+  const analyticsStore = useAnalyticsStore.getState();
+
   const [passwordData, setPasswordData] = useState({
     currentPassword: '',
     newPassword: '',
@@ -17,6 +20,8 @@ export default function PasswordSection() {
   });
 
   const handleChangePassword = async () => {
+    analyticsStore.trackEvent('profile_screen__submit_password__click');
+
     if (passwordData.newPassword !== passwordData.confirmPassword) {
       const message = 'Нові паролі не співпадають';
       if (Platform.OS === 'web') {
@@ -68,6 +73,7 @@ export default function PasswordSection() {
   };
 
   const handleCancel = () => {
+    analyticsStore.trackEvent('profile_screen__sign_out__click');
     setPasswordData({
       currentPassword: '',
       newPassword: '',
@@ -76,13 +82,18 @@ export default function PasswordSection() {
     setShowPasswordFields(false);
   };
 
+  const handleShowPasswordFields = () =>{ 
+    analyticsStore.trackEvent('profile_screen__cancel_password__click');
+    setShowPasswordFields(true)
+  }
+
   return (
     <VStack space="md" style={styles.passwordSection}>
       
       {!showPasswordFields ? (
         <Button
           title="Змінити пароль"
-          onPress={() => setShowPasswordFields(true)}
+          onPress={handleShowPasswordFields}
           textStyle={styles.buttonText}
           size="lg"
         />

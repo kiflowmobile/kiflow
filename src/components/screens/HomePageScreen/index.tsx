@@ -30,8 +30,6 @@ export default function HomeScreen() {
     }
   }, [user]);
 
-
-
   useEffect(() => {
     analyticsStore.trackEvent('home_screen__load');
   }, []);

@@ -4,6 +4,7 @@ import { useCourseProgress } from '@/src/hooks/useCourseProgress';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect } from 'react';
 import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
+import { useAnalyticsStore } from '@/src/stores/analyticsStore';
 
 export default function CourseScreen() {
   const params = useLocalSearchParams<{ id?: string }>();
@@ -18,6 +19,8 @@ export default function CourseScreen() {
   const { getModuleProgress } = useUserProgressStore();
   const { setCurrentModule } = useModulesStore.getState();
   const { modules: progressModules } = useCourseProgress((params.id as string) || '');
+  const analyticsStore = useAnalyticsStore.getState(); 
+
 
 
   useEffect(() => {
@@ -28,7 +31,15 @@ export default function CourseScreen() {
     });
   }, [params.id, fetchModulesByCourse]);
 
-  const handleModulePress = (module: any) => {
+  const handleModulePress = (module: any, index: number) => {
+    const progress = getModuleProgress(params.id!, module.id);
+
+    analyticsStore.trackEvent('modules_screen__module__click', {
+      id: module.id,
+      index,
+      progress,
+    });
+
     setCurrentModule(module);
     const progressEntry = progressModules?.find(m => m.module_id === module.id);
     const slideId = progressEntry?.last_slide_id || undefined;
@@ -42,6 +53,10 @@ export default function CourseScreen() {
     });
   };
 
+
+  useEffect(() => {
+    analyticsStore.trackEvent('modules_screen__load');
+  }, []);
 
   return (
     <View style={styles.container}>
@@ -68,8 +83,8 @@ export default function CourseScreen() {
         <FlatList
           data={modules}
           keyExtractor={(item) => item.id.toString()}
-          renderItem={({ item }) => (
-            <Pressable style={styles.moduleItem} onPress={() => handleModulePress(item)}>
+          renderItem={({ item, index }) => (
+            <Pressable style={styles.moduleItem} onPress={() => handleModulePress(item, index)}>
               <Text style={styles.moduleTitle}>{item.title}</Text>
               {item.description ? (
                 <Text style={styles.moduleDescription}>{item.description}</Text>

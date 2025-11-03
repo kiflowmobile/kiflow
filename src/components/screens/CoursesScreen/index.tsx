@@ -5,9 +5,12 @@ import { ScrollView, StyleSheet, View } from 'react-native';
 import CourseCard from './components/CourseCard';
 import { useEffect } from 'react';
 import { useSaveProgressOnExit } from '@/src/hooks/useSaveProgressOnExit';
+import { useAnalyticsStore } from '@/src/stores/analyticsStore';
 
 const CoursesScreen = () => {
   const { courses, isLoading, error, fetchCourses, clearError } = useCourseStore();
+  const analyticsStore = useAnalyticsStore.getState();
+
 
   useEffect(() => {
     fetchCourses().catch((err) => {
@@ -16,6 +19,11 @@ const CoursesScreen = () => {
   }, [fetchCourses]);
 
   useSaveProgressOnExit()
+
+
+  useEffect(() => {
+    analyticsStore.trackEvent('courses_screen__load');
+  }, []);
 
 
   return (

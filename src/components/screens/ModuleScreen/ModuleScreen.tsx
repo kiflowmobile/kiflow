@@ -19,6 +19,9 @@ import Animated, { useAnimatedScrollHandler, runOnJS } from 'react-native-reanim
 import ModuleSlide from './ModuleSlide';
 import { useSaveProgressOnExit } from '@/src/hooks/useSaveProgressOnExit';
 import PaginationDots from './components/PaginationDot';
+import { useAnalyticsStore } from '@/src/stores/analyticsStore';
+const analyticsStore = useAnalyticsStore.getState();
+
 
 export default function ModuleScreen() {
   const { moduleId, courseId, slideId } = useLocalSearchParams<{
@@ -175,6 +178,19 @@ export default function ModuleScreen() {
     fetchSkills(user.id, moduleId);
   }, [user, moduleId]);
 
+  useEffect(() => {
+    if (!moduleId || slides.length === 0) return;
+  
+    const index = slides.findIndex((s) => s.id === slideId);
+    const currentIndex = index >= 0 ? index : 0;
+  
+    analyticsStore.trackEvent('course_screen__load', {
+      id: moduleId,
+      index: currentIndex,
+      pages: slides.length,
+    });
+  }, [moduleId, slides.length, slideId]);
+
   if (error)
     return (
       <View style={styles.errorContainer}>
@@ -204,6 +220,9 @@ export default function ModuleScreen() {
         <Text style={styles.noSlidesText}>Слайди не знайдено</Text>
       </View>
     );
+
+
+
 
   return (
     <View style={{ flex: 1 }}>

@@ -1,4 +1,5 @@
 import { View } from '@/src/components/ui/view';
+import { useAnalyticsStore } from '@/src/stores/analyticsStore';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { useEffect, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text } from 'react-native';
@@ -20,6 +21,8 @@ interface QuizProps {
 const QuizSlide: React.FC<QuizProps> = ({id, title, subtitle, quiz, courseId }) => {
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
   const isAnswered = selectedAnswer !== null;
+  const analyticsStore = useAnalyticsStore.getState();
+
 
   const STORAGE_KEY = `course-progress-${courseId}`;
 
@@ -42,6 +45,12 @@ const QuizSlide: React.FC<QuizProps> = ({id, title, subtitle, quiz, courseId }) 
 
   const handleSelect = async (index: number) => {
     setSelectedAnswer(index);
+
+
+    analyticsStore.trackEvent('course_screen__vote__click', {
+      id,
+      index,
+    });
 
     try {
       const existing = await AsyncStorage.getItem(STORAGE_KEY);

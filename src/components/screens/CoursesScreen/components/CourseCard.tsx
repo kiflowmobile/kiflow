@@ -13,6 +13,7 @@ import { useAuthStore, useUserProgressStore } from '@/src/stores';
 import { MaterialIcons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Svg, { Path } from 'react-native-svg';
+import { useAnalyticsStore } from '@/src/stores/analyticsStore';
 
 interface CourseCardProps {
   course: Course;
@@ -24,6 +25,8 @@ const CourseCard: React.FC<CourseCardProps> = ({ course }) => {
   const { courseProgress, lastSlideId, modules} = useCourseProgress(course.id);
   const router = useRouter();
   const [isDeveloper, setIsDeveloper] = React.useState(false);
+  const analyticsStore = useAnalyticsStore.getState();
+
 
 
   useEffect(() => {
@@ -33,6 +36,11 @@ const CourseCard: React.FC<CourseCardProps> = ({ course }) => {
   }, [user]);
 
   const handleStartCourse = () => {
+    analyticsStore.trackEvent('courses_screen__course__click', {
+      id: course.id,
+      progress: courseProgress,
+    });
+
     const moduleProgress = modules?.find(module=>module.last_slide_id ===lastSlideId)?.progress
     navigateToCourse(router, course.id, lastSlideId, moduleProgress);
   };
