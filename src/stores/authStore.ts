@@ -7,6 +7,10 @@ import { useQuizStore } from './quizStore';
 import { useChatStore } from './chatStore';
 import { clearUserLocalData } from '../utils/asyncStorege';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useAnalyticsStore } from './analyticsStore';
+
+const analyticsStore = useAnalyticsStore.getState();
+
 
 interface AuthState {
   // Стан
@@ -35,7 +39,6 @@ interface AuthState {
 }
 
 export const useAuthStore = create<AuthState>()(
-  // devtools(
   (set, get) => ({
     user: null,
     session: null,
@@ -44,7 +47,6 @@ export const useAuthStore = create<AuthState>()(
     error: null,
     justSignedUp: false,
 
-    // Дії
     signIn: async (email: string, password: string) => {
       set({ isLoading: true, error: null });
       try {
@@ -62,6 +64,14 @@ export const useAuthStore = create<AuthState>()(
           isGuest,
           isLoading: false,
         });
+
+
+        const currentUser = get().user;
+        if (currentUser) {
+          analyticsStore.setUserId(currentUser.id);
+          analyticsStore.trackEvent('start_screen__sign_in__click');
+        }
+
 
         await useQuizStore.getState().syncQuizFromDBToLocalStorage();
         await useChatStore.getState().syncChatFromDBToLocalStorage();
@@ -105,40 +115,6 @@ export const useAuthStore = create<AuthState>()(
           last_name: lastName || undefined,
         });
 
-        // 3️⃣ Отримуємо всі курси
-        // const { data: courses, error: coursesError } = await supabase
-        //   .from('courses')
-        //   .select('id');
-
-        // if (coursesError) throw coursesError;
-
-        // 4️⃣ Отримуємо всі модулі
-        // const { data: modules, error: modulesError } = await supabase
-        //   .from('modules')
-        //   .select('id, course_id');
-
-        // if (modulesError) throw modulesError;
-
-        // 5️⃣ Формуємо записи для user_course_summaries
-        // const progressRows = (courses || []).map(course => ({
-        //   user_id: data.user!.id,
-        //   course_id: course.id,
-        //   progress: 0,
-        //   last_slide_id: null,
-        //   modules: (modules || [])
-        //     .filter(m => m.course_id === course.id)
-        //     .map(m => ({ module_id: m.id, progress: 0, last_slide_id: null })),
-        // }));
-
-        // 6️⃣ Вставляємо прогрес у БД
-        // if (progressRows.length > 0) {
-        //   const { error: insertError } = await supabase
-        //     .from('user_course_summaries')
-        //     .upsert(progressRows, { onConflict: 'user_id,course_id' }); // <-- рядок, не масив
-
-        //   if (insertError) throw insertError;
-        // }
-
         // 7️⃣ Встановлюємо стан
         const isGuest = !data.session || !data.session.user || data.session.user.is_anonymous;
         set({
@@ -148,6 +124,13 @@ export const useAuthStore = create<AuthState>()(
           isLoading: false,
           justSignedUp: true,
         });
+
+        const currentUser = get().user;
+        if (currentUser) {
+          analyticsStore.setUserId(currentUser.id);
+          analyticsStore.trackEvent('start_screen__sign_up__click');
+        }
+
         await AsyncStorage.setItem('justSignedUp', 'true');
 
       } catch (error: any) {
@@ -337,10 +320,7 @@ export const useAuthStore = create<AuthState>()(
     setLoading: (loading: boolean) => set({ isLoading: loading }),
     setError: (error: string | null) => set({ error }),
   }),
-  // ,{
-  //   name: 'auth-store',
-  // }
-  // )
+
 );
 
 // Ініціалізуємо слухача стану автентифікації

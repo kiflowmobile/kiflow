@@ -15,6 +15,9 @@
     "lint": "expo lint"
   },
   "dependencies": {
+    "@amplitude/analytics-browser": "^2.29.0",
+    "@amplitude/analytics-react-native": "^1.5.16",
+    "@amplitude/plugin-session-replay-react-native": "^0.4.3",
     "@expo/vector-icons": "^15.0.2",
     "@gluestack-ui/button": "^1.0.14",
     "@gluestack-ui/icon": "^0.1.27",
@@ -48,6 +51,7 @@
     "expo-updates": "~29.0.10",
     "expo-video": "~3.0.11",
     "expo-web-browser": "~15.0.7",
+    "firebase": "^12.4.0",
     "jsonrepair": "^3.13.1",
     "lucide-react-native": "^0.542.0",
     "react": "19.1.0",

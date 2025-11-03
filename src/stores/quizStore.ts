@@ -58,7 +58,6 @@ export const useQuizStore = create<QuizStore>((set, get) => ({
 
 
     if (quizKeys.length === 0) {
-      console.log('No local quiz data to sync');
       return;
     }
     const keyValues = await AsyncStorage.multiGet(quizKeys);
@@ -214,13 +213,9 @@ export const useQuizStore = create<QuizStore>((set, get) => ({
     const allKeys = await AsyncStorage.getAllKeys();
     const quizKeys = allKeys.filter((k) => k.startsWith('course-progress-'));
 
-    // console.log('quizKeys', quizKeys)
-
     if (quizKeys.length === 0) return 0;
 
     const keyValues = await AsyncStorage.multiGet(quizKeys);
-
-    console.log('quizKeys', quizKeys)
     let totalQuestions = 0;
     let totalCorrect = 0;
 
@@ -231,9 +226,6 @@ export const useQuizStore = create<QuizStore>((set, get) => ({
       totalQuestions += data.length;
       totalCorrect += data.filter((q) => q.selectedAnswer === q.correctAnswer).length;
     }
-
-    console.log('totalQuestions', totalQuestions)
-    console.log('totalCorrect', totalCorrect)
 
     return totalQuestions === 0
       ? 0

@@ -1,16 +1,19 @@
 import { useAuthStore } from "@/src/stores/authStore";
-import { useRouter } from "expo-router";
+import { RelativePathString, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { Image, StyleSheet, Text, View } from "react-native";
 import Button from "../../ui/button";
 import { initUserProgress } from "@/src/services/course_summaries";
+import { useAnalyticsStore } from "@/src/stores/analyticsStore";
 
 
 export default function HomeScreen() {
   const router = useRouter();
   const [role, setRole] = useState<string | null>(null);
   const {  user } = useAuthStore();
-    const { getUserRole } = useAuthStore();
+  const analyticsStore = useAnalyticsStore.getState();
+  const { getUserRole } = useAuthStore();
+
 
   useEffect(() => {
     const fetchRole = async () => {
@@ -26,6 +29,22 @@ export default function HomeScreen() {
       initUserProgress(user.id);
     }
   }, [user]);
+
+
+
+  useEffect(() => {
+    analyticsStore.trackEvent('home_screen__load');
+  }, []);
+
+
+  const pressButton = (routerParam: RelativePathString, trackEventParam: string) => {
+    return () => { // <-- повертаємо callback
+      analyticsStore.trackEvent(trackEventParam);
+      router.push(routerParam);
+      // () => logAmplitudeEven('home_screen__courses__click')
+    };
+  };
+
 
 
   return (
@@ -46,14 +65,14 @@ export default function HomeScreen() {
             title="COURSES"
             variant="secondary"
             size="lg"
-            onPress={() => router.push('/courses/')}
+            onPress={pressButton('/courses/' as RelativePathString, 'home_screen__courses__click')}
             style={styles.navButton}
           />
           <Button
             title="STATISTICS"
             variant="secondary"
             size="lg"
-            onPress={() => router.push('/statistics')}
+            onPress={pressButton('/statistics/' as RelativePathString, 'home_screen__results__click')}
             style={styles.navButton}
           />
 
@@ -61,7 +80,7 @@ export default function HomeScreen() {
             title="PROFILE"
             variant="secondary"
             size="lg"
-            onPress={() => router.push('/profile')}
+            onPress={pressButton('/profile/' as RelativePathString, 'home_screen__profile__click')}
             style={styles.navButton}
           />
 

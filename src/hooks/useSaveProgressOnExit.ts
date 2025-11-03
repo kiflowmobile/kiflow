@@ -7,7 +7,6 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 
 
 export const useSaveProgressOnExit = () => {
-  console.log('useSaveProgressOnExit')
   const syncProgressToDB = useUserProgressStore(state => state.syncProgressToDB);
   const syncQuizToDB = useQuizStore(state => state.syncQuizToDB);
   const syncChatFromLocalStorageToDB = useChatStore(state => state.syncChatFromLocalStorageToDB);
@@ -18,7 +17,6 @@ export const useSaveProgressOnExit = () => {
         await syncProgressToDB();
         await syncQuizToDB();
         await syncChatFromLocalStorageToDB();
-        console.log("✅ All data synced successfully (app background or exit)");
       } catch (error) {
         console.log("❌ Error syncing data:", error);
       }
