@@ -59,7 +59,7 @@ export default function HomeScreen() {
         </View>
 
         <View style={styles.navSection}>
-          <Button
+          {/* <Button
             title="COURSES"
             variant="secondary"
             size="lg"
@@ -80,7 +80,7 @@ export default function HomeScreen() {
             size="lg"
             onPress={pressButton('/profile/' as RelativePathString, 'home_screen__profile__click')}
             style={styles.navButton}
-          />
+          /> */}
 
           {role === 'admin' && (
             <>

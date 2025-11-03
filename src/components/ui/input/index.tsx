@@ -10,8 +10,6 @@ import { Colors } from '../../../constants/Colors';
 
 const SCOPE = 'INPUT';
 
-// Використовуємо кольори з константи Colors
-
 const styles = StyleSheet.create({
   inputContainer: {
     borderWidth: 1,
@@ -24,11 +22,7 @@ const styles = StyleSheet.create({
   },
   inputContainerFocused: {
     borderColor: Colors.gray[400],
-    shadowColor: Colors.black,
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
+    boxShadow: '0px 1px 2px rgba(0, 0, 0, 0.1)',
   },
   inputContainerHover: {
     borderColor: Colors.gray[300],
@@ -59,7 +53,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  // Розміри (поліпшені для кращих touch-цілей)
   sizeXl: {
     height: 56,
     minHeight: 56,
@@ -76,7 +69,6 @@ const styles = StyleSheet.create({
     height: 44,
     minHeight: 44,
   },
-  // Варіанти
   variantUnderlined: {
     borderRadius: 0,
     borderBottomWidth: 1,
@@ -112,7 +104,6 @@ cssInterop(PrimitiveIcon, {
   },
 });
 
-// Типи для розмірів і варіантів
 type InputSize = 'sm' | 'md' | 'lg' | 'xl';
 type InputVariant = 'outline' | 'underlined' | 'rounded';
 
@@ -128,7 +119,6 @@ const Input = React.forwardRef<React.ComponentRef<typeof UIInput>, IInputProps>(
   { className, variant = 'outline', size = 'md', style, hapticFeedback = true, ...props },
   ref
 ) {
-  // Обробник для haptic feedback
   const handleFocus = (event: any) => {
     if (hapticFeedback) {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -138,7 +128,6 @@ const Input = React.forwardRef<React.ComponentRef<typeof UIInput>, IInputProps>(
     }
   };
 
-  // Комбінуємо стилі з StyleSheet
   const containerStyle = [
     styles.inputContainer,
     styles[`size${size.charAt(0).toUpperCase() + size.slice(1)}` as keyof typeof styles],
@@ -225,7 +214,6 @@ const InputField = React.forwardRef<React.ComponentRef<typeof UIInput.Input>, II
   function InputField({ className, style, ...props }, ref) {
     const { variant: parentVariant } = useStyleContext(SCOPE);
 
-    // Комбінуємо стилі для поля вводу
     const fieldStyle = [
       styles.inputField,
       parentVariant === 'underlined' && styles.inputFieldUnderlined,

@@ -172,12 +172,8 @@ const styles = StyleSheet.create({
     marginLeft: 28,
     borderRadius: 12,
     backgroundColor: 'rgba(0, 0, 0, 0.03)',
-    shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowRadius: 6,
-    elevation: 2,
+    boxShadow: '0px 2px 6px rgba(0, 0, 0, 0.05)',
   },
-
   statusDotWrapper: {
     position: 'absolute',
     left: -32,

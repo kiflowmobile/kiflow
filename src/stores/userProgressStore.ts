@@ -5,6 +5,9 @@ import { useAuthStore } from './authStore';
 import { loadProgressLocal, saveProgressLocal } from '../utils/progressAsyncStorage';
 import { UserCourseSummary } from '../constants/types/progress';
 
+const getAuthStore = () => require('./authStore').useAuthStore;
+
+
 type ModuleProgressEntry = {
   module_id: string;
   progress: number;
@@ -111,8 +114,6 @@ export const useUserProgressStore = create<UserProgressStore>((set, get) => ({
   setModuleProgressSafe: (courseId, moduleId, currentSlideIndex, totalSlides, lastSlideId) => {
     if (!courseId) return;
     if (!Number.isFinite(totalSlides) || totalSlides <= 0) return;
-
-    // защита входных данных
     const clampedIndex = Math.max(0, Math.min(currentSlideIndex, totalSlides - 1));
 
     const basePercent = Math.floor(((clampedIndex + 1) / totalSlides) * 100);

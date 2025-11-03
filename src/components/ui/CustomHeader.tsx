@@ -1,4 +1,3 @@
-// src/components/CustomHeader.tsx
 import { Href, useRouter } from 'expo-router';
 import { StyleSheet, TouchableOpacity, View, Image } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -14,7 +13,7 @@ export default function CustomHeader() {
   return (
     <View style={[styles.headerContainer, { paddingTop: insets.top }]}>
       <TouchableOpacity style={styles.logoWrap} onPress={navigateToHome}>
-        <Image source={require('@/src/assets/images/kiflow-logo.jpeg')} style={styles.logoImage} />
+        <Image source={require('@/src/assets/images/kiflow-logo.jpeg')} style={styles.logoImage} resizeMode="contain"/>
       </TouchableOpacity>
     </View>
   );
@@ -32,7 +31,6 @@ const styles = StyleSheet.create({
   logoImage: {
     width: 200,
     height: 40,
-    resizeMode: 'contain',
     marginTop: 8,
   },
   logoText: {

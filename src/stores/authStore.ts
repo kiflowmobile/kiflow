@@ -12,16 +12,13 @@ import { useAnalyticsStore } from './analyticsStore';
 const analyticsStore = useAnalyticsStore.getState();
 
 
-interface AuthState {
-  // Стан
+ export interface AuthState {
   user: User | null;
   session: Session | null;
   isLoading: boolean;
   isGuest: boolean | null;
   error: string | null;
   justSignedUp: boolean
-
-  // Дії
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, firstName?: string, lastName?: string) => Promise<void>;
   signOut: () => Promise<void>;
@@ -31,7 +28,6 @@ interface AuthState {
   getUserRole: () => Promise<string | null>;
   changePassword: (currentPassword: string, newPassword: string) => Promise<void>;
 
-  // Внутрішні дії
   setUser: (user: User | null) => void;
   setSession: (session: Session | null) => void;
   setLoading: (loading: boolean) => void;
@@ -65,13 +61,11 @@ export const useAuthStore = create<AuthState>()(
           isLoading: false,
         });
 
-
         const currentUser = get().user;
         if (currentUser) {
           analyticsStore.setUserId(currentUser.id);
           analyticsStore.trackEvent('start_screen__sign_in__click');
         }
-
 
         await useQuizStore.getState().syncQuizFromDBToLocalStorage();
         await useChatStore.getState().syncChatFromDBToLocalStorage();
@@ -89,7 +83,6 @@ export const useAuthStore = create<AuthState>()(
       set({ isLoading: true, error: null });
 
       try {
-        // 1️⃣ Реєстрація користувача
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
@@ -107,7 +100,6 @@ export const useAuthStore = create<AuthState>()(
 
         if (!data.user) throw new Error('User not created');
 
-        // 2️⃣ Створюємо профіль
         await upsertUserProfile(data.user.id, {
           email: data.user.email || email,
           full_name: firstName && lastName ? `${firstName} ${lastName}` : null,
@@ -115,7 +107,6 @@ export const useAuthStore = create<AuthState>()(
           last_name: lastName || undefined,
         });
 
-        // 7️⃣ Встановлюємо стан
         const isGuest = !data.session || !data.session.user || data.session.user.is_anonymous;
         set({
           user: data.user,
@@ -145,10 +136,7 @@ export const useAuthStore = create<AuthState>()(
     signOut: async () => {
       set({ isLoading: true, error: null });
       try {
-        // Спочатку перевіряємо, чи є активна сесія
         const { data: sessionData } = await supabase.auth.getSession();
-
-        // Якщо сесії не існує, повертаємо успіх без спроби виходу
         if (!sessionData?.session) {
           set({
             user: null,
@@ -163,9 +151,6 @@ export const useAuthStore = create<AuthState>()(
         await useChatStore.getState().syncChatFromLocalStorageToDB();
 
         await clearUserLocalData();
-
-
-        // Продовжуємо з signOut, якщо у нас є сесія
         const { error } = await supabase.auth.signOut();
         if (error) throw error;
 
@@ -188,23 +173,16 @@ export const useAuthStore = create<AuthState>()(
     signInWithGoogle: async () => {
       set({ isLoading: true, error: null });
       try {
-        // Очищаємо будь-яку існуючу сесію
         await supabase.auth.signOut();
-
-        // Запускаємо OAuth потік
         const { error } = await supabase.auth.signInWithOAuth({
           provider: 'google',
         });
 
         if (error) throw error;
-
-        // Чекаємо трохи, щоб упевнитися, що у нас є сесія
         const checkSession = async () => {
           const { data: sessionData } = await supabase.auth.getSession();
           return sessionData?.session;
         };
-
-        // Повторюємо кілька разів, щоб отримати сесію
         let session = null;
         let attempts = 0;
         const maxAttempts = 5;
@@ -276,7 +254,6 @@ export const useAuthStore = create<AuthState>()(
     changePassword: async (currentPassword: string, newPassword: string) => {
       set({ isLoading: true, error: null });
       try {
-        // Отримуємо поточного користувача
         const {
           data: { user },
           error: userError,
@@ -284,8 +261,6 @@ export const useAuthStore = create<AuthState>()(
         if (userError || !user || !user.email) {
           throw new Error('Користувач не автентифікований');
         }
-
-        // Перевіряємо поточний пароль через повторний вхід
         const { error: signInError } = await supabase.auth.signInWithPassword({
           email: user.email,
           password: currentPassword,
@@ -294,8 +269,6 @@ export const useAuthStore = create<AuthState>()(
         if (signInError) {
           throw new Error('Неправильний поточний пароль');
         }
-
-        // Оновлюємо пароль
         const { error: updateError } = await supabase.auth.updateUser({
           password: newPassword,
         });
@@ -314,7 +287,6 @@ export const useAuthStore = create<AuthState>()(
 
     clearError: () => set({ error: null }),
 
-    // Внутрішні дії
     setUser: (user: User | null) => set({ user }),
     setSession: (session: Session | null) => set({ session }),
     setLoading: (loading: boolean) => set({ isLoading: loading }),
@@ -323,7 +295,6 @@ export const useAuthStore = create<AuthState>()(
 
 );
 
-// Ініціалізуємо слухача стану автентифікації
 supabase.auth.onAuthStateChange((event, session) => {
   const { setUser, setSession, setLoading } = useAuthStore.getState();
 

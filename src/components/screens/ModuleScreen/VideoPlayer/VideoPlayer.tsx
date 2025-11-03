@@ -30,7 +30,6 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ uri, isActive }) => {
         className='h-full w-full self-center'
         contentFit='cover'
         allowsFullscreen={false}
-        // pointerEvents='none'
       />
     </Box>
   );

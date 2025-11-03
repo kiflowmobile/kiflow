@@ -61,11 +61,8 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     borderRadius: 12,
     backgroundColor: '#fff',
-    shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowRadius: 6,
-    elevation: 2,
-  },
+    boxShadow: '0px 2px 6px rgba(0, 0, 0, 0.05)',
+  },  
   moduleTitle: {
     fontSize: 16,
     fontWeight: '600',

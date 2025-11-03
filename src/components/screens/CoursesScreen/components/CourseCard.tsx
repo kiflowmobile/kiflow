@@ -95,6 +95,7 @@ return (
       <Image
         source={{ uri: course.image || 'https://picsum.photos/800/600' }}
         style={styles.image}
+        resizeMode="contain"
       />
       
       {/* Кнопка скидання прогресу */}
