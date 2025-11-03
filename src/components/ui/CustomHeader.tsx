@@ -1,5 +1,4 @@
 // src/components/CustomHeader.tsx
-import { useAnalyticsStore } from '@/src/stores/analyticsStore';
 import { Href, useRouter } from 'expo-router';
 import { StyleSheet, TouchableOpacity, View, Image } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -7,11 +6,9 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 export default function CustomHeader() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const analyticsStore = useAnalyticsStore.getState();
 
   const navigateToHome = () => {
-    analyticsStore.trackEvent('navigation_bar__home__click');
-    router.push('/home' as Href);
+    router.push('/courses' as Href);
   };
 
   return (

@@ -7,6 +7,7 @@ import { useAuthStore, useMainRatingStore } from '@/src/stores';
 import { modulesService } from '@/src/services/modules';
 import { useQuizStore } from '@/src/stores/quizStore';
 import type { Module } from '@/src/constants/types/modules';
+import { useAnalyticsStore } from '@/src/stores/analyticsStore';
 
 interface Skill {
   criterion_id: string;
@@ -24,6 +25,8 @@ const CourseModulesScreen: React.FC = () => {
   const [skillsMap, setSkillsMap] = useState<Record<string, Skill[]>>({});
   const [quizAverage, setQuizAverage] = useState<number | null>(null);
   const [loading, setLoading] = useState({ modules: true, skills: true, quiz: true });
+  const analyticsStore = useAnalyticsStore.getState();
+
 
   const courseTitle = 'JavaScript для початківців';
 
@@ -62,7 +65,6 @@ const CourseModulesScreen: React.FC = () => {
     loadSkills();
   }, [user?.id, modules]);
 
-  // 📙 Завантажуємо середній бал quiz
   useEffect(() => {
     if (!id) return;
     const loadQuiz = async () => {
@@ -92,6 +94,12 @@ const CourseModulesScreen: React.FC = () => {
   }, [quizAverage, courseAverage]);
 
   const isLoading = loading.modules || loading.skills || loading.quiz;
+
+  useEffect(() => {
+    if (id) {
+      analyticsStore.trackEvent('progress_course_screen__load', { id });
+    }
+  }, [id]);
 
   return (
     <ScrollView style={styles.screen} contentContainerStyle={{ paddingBottom: 40 }}>

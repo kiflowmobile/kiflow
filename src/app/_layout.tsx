@@ -51,14 +51,14 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
-        <Stack
+      <Stack
           screenOptions={{
             header: () => <CustomHeader />,
           }}
         >
           <Stack.Screen name="index" options={{ headerShown: false }} />
           <Stack.Screen name="course-code" options={{ headerShown: false }} />
-          <Stack.Screen name="home" options={{ headerShown: false }} />
+          
           <Stack.Screen name="module/[moduleId]" options={{ headerShown: false }} />
           <Stack.Screen name="auth/login" options={{ headerShown: false }} />
           <Stack.Screen name="auth/registration" options={{ headerShown: false }} />

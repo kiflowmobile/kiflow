@@ -153,6 +153,10 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
   }, [slideId]);
 
   const handleSend = async () => {
+    analyticsStore.trackEvent("course_screen__submit__click", {
+      courseIdStr, 
+      slideId,
+    });
     if (!input.trim() || answered || loading) return;
 
     const userMsg: Message = { id: Date.now().toString(), role: 'user', text: input.trim() };
@@ -285,6 +289,8 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
           onBlur={handleBlur}
           loading={loading}
           answered={answered}
+          id={courseIdStr}
+          slideId={slideId}
         />
       </KeyboardAvoidingView>
     </SafeAreaView>

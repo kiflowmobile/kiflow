@@ -36,6 +36,13 @@ const CourseCard: React.FC<CourseCardProps> = ({ course }) => {
   }, [user]);
 
   const handleStartCourse = () => {
+
+    if (!courseProgress || courseProgress === 0) {
+      console.log(courseProgress)
+
+      analyticsStore.trackEvent('course__start', { id: course.id });
+    }
+  
     analyticsStore.trackEvent('courses_screen__course__click', {
       id: course.id,
       progress: courseProgress,

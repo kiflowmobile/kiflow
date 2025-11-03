@@ -17,6 +17,7 @@ import { getCurrentUserCode, } from '../../../services/users';
 import { useCourseStore } from '@/src/stores/courseStore';
 import { useAuthStore } from '@/src/stores';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useAnalyticsStore } from '@/src/stores/analyticsStore';
 
 export default function CourseCodeScreen() {
   const [courseCode, setCourseCode] = useState('');
@@ -25,6 +26,8 @@ export default function CourseCodeScreen() {
   const [errorAnimation] = useState(new Animated.Value(0));
   const router = useRouter();
   const fetchCourses = useCourseStore((state) => state.fetchCourses);
+  const analyticsStore = useAnalyticsStore.getState();
+
 
   useEffect(() => {
     const fetchCurrentCode = async () => {
@@ -58,6 +61,8 @@ export default function CourseCodeScreen() {
   };
 
   const handleConfirm = async () => {
+    analyticsStore.trackEvent('company_screen__submit__click');
+
     if (!courseCode.trim()) {
       showError('Будь ласка, введіть код курсу');
       return;
@@ -81,14 +86,14 @@ export default function CourseCodeScreen() {
             text: 'OK',
             onPress: async () => {
               await fetchCourses();
-              router.push('/home'); 
+              router.push('/courses'); 
             },
           },
         ]);
 
         setTimeout(async () => {
           await fetchCourses();
-          router.push('/home');
+          router.push('/courses');
         }, 1000);
       } else {
         showError('Невірний код курсу. Перевірте правильність введення та спробуйте ще раз.');
@@ -107,10 +112,12 @@ export default function CourseCodeScreen() {
   };
 
   const handleSkip = async () => {
+    analyticsStore.trackEvent('company_screen__skip__click');
+
     setLoading(true);
     try {
       await fetchCourses();
-      router.push('/home');
+      router.push('/courses');
     } catch (err) {
       console.error('Error skipping company code:', err);
       showError('Сталася помилка при пропуску. Спробуйте ще раз.');
@@ -126,6 +133,10 @@ export default function CourseCodeScreen() {
       hideError();
     }
   };
+
+  useEffect(() => {
+    analyticsStore.trackEvent('company_screen__load');
+  }, []);
 
   return (
     <View style={styles.container}>

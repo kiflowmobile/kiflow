@@ -48,7 +48,7 @@ export default function LoginScreen() {
     if (!rootNavigationState?.key) return;
     if (!user.isGuest ) {
       setTimeout(() => {
-        router.replace('/home');
+        router.replace('/courses');
       }, 0);
     }
   }, [user, rootNavigationState]);
@@ -121,7 +121,7 @@ export default function LoginScreen() {
 
     try {
       await signIn(normalizeEmail(email), normalizePassword(password));
-      router.replace('/home');
+      router.replace('/courses');
     } catch (err: unknown) {
       const authErr = err as AuthError;
       const message = mapAuthErrorToMessage(authErr);

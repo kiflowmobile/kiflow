@@ -117,12 +117,13 @@ export default function StatisticsScreen() {
                 isLargeScreen && styles.cardLarge,
                 isXLargeScreen && styles.cardXLarge,
               ]}
-              onPress={() =>
+              onPress={() => {
+                analyticsStore.trackEvent('progress_screen__course__click', { id: course.id });
                 router.push({
                   pathname: "/statistics/[id]",
                   params: { id: course.id },
-                })
-              }
+                });
+              }}
             >
               <Text style={styles.courseTitle}>{course.title}</Text>
 
@@ -162,7 +163,7 @@ export default function StatisticsScreen() {
                   return (
                     <View style={styles.tableRow}>
                       <Text style={styles.tableCell}>{item.name}</Text>
-                      <Text style={styles.tableCell}>{skill?.rating ?? 0}</Text>
+                      <Text style={styles.tableCell}>{skill?.rating.toFixed(1) ?? 0}</Text>
                     </View>
                   );
                 }}

@@ -79,6 +79,8 @@ export default function ProfileScreen() {
   };
 
   const handleSave = async () => {
+    analyticsStore.trackEvent(' profile_screen__save__click');
+
     try {
       setUpdating(true);
 
@@ -109,6 +111,8 @@ export default function ProfileScreen() {
   };
 
   const handleCancel = () => {
+    analyticsStore.trackEvent(' profile_screen__cancel__click');
+
     if (user) {
       setFormData((prev) => ({
         ...prev,

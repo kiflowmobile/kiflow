@@ -191,7 +191,7 @@ export default function RegisterScreen() {
       
       if (user && !justSignedUpStored) {
         setTimeout(() => {
-          router.replace('/home');
+          router.replace('/courses');
         }, 0);
       }
     };
