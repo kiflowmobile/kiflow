@@ -3,6 +3,9 @@ import { supabase } from '@/src/config/supabaseClient';
 import { useAuthStore } from './authStore';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+const getAuthStore = () => require('./authStore').useAuthStore;
+
+
 interface QuizData {
   selectedAnswer: number;
   correctAnswer: number;
@@ -47,7 +50,9 @@ export const useQuizStore = create<QuizStore>((set, get) => ({
   },
 
   syncQuizToDB: async () => {
-    const { user } = useAuthStore.getState();
+    const { user } = getAuthStore().getState();
+
+    // const { user } = useAuthStore.getState();
     if(!user) return
 
     try {
@@ -113,7 +118,9 @@ export const useQuizStore = create<QuizStore>((set, get) => ({
 
   syncQuizFromDBToLocalStorage: async () => {
     try {
-      const { user } = useAuthStore.getState();
+      const { user } = getAuthStore().getState();
+
+      // const { user } = useAuthStore.getState();
       if (!user) return;
   
       // 1️⃣ Отримуємо відповіді користувача з БД
@@ -141,11 +148,8 @@ export const useQuizStore = create<QuizStore>((set, get) => ({
           correctAnswer: item.correct_answer,
         };
       }
+        const allKeys = await AsyncStorage.getAllKeys();
   
-      // 3️⃣ Отримуємо всі ключі з локального сховища
-      const allKeys = await AsyncStorage.getAllKeys();
-  
-      // 4️⃣ Якщо є збережені дані для курсу — об’єднуємо
       const pairs: [string, string][] = [];
   
       for (const [key, newData] of Object.entries(groupedByCourse)) {
@@ -158,7 +162,6 @@ export const useQuizStore = create<QuizStore>((set, get) => ({
               const parsed = JSON.parse(existingValue);
               mergedData = { ...parsed, ...newData };
             } catch {
-              // якщо старі дані некоректні — просто перезаписуємо
             }
           }
         }
@@ -166,7 +169,6 @@ export const useQuizStore = create<QuizStore>((set, get) => ({
         pairs.push([key, JSON.stringify(mergedData)]);
       }
   
-      // 5️⃣ Зберігаємо все разом — 1 запит на курс
       if (pairs.length > 0) {
         await AsyncStorage.multiSet(pairs);
       }
@@ -195,7 +197,6 @@ export const useQuizStore = create<QuizStore>((set, get) => ({
 
   },
 
-  // 2️⃣ Оцінка по курсу
   getCourseScore: async (courseId) => {
     const key = `course-progress-${courseId}`;
     const value = await AsyncStorage.getItem(key);
@@ -208,7 +209,6 @@ export const useQuizStore = create<QuizStore>((set, get) => ({
     return Math.round((correct / data.length) * 5);
   },
 
-  // 3️⃣ Загальна оцінка по всіх курсах
   getTotalScore: async () => {
     const allKeys = await AsyncStorage.getAllKeys();
     const quizKeys = allKeys.filter((k) => k.startsWith('course-progress-'));

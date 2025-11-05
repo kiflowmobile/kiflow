@@ -48,7 +48,7 @@ const computeArithmeticCourseProgress = (modules: { progress: number }[]): numbe
 };
 
 const persistCourses = (courses: UserCourseSummary[]) => {
-  const { user } = useAuthStore.getState();
+  const { user } = getAuthStore().getState();
   if (user) {
     saveProgressLocal(user.id, courses);
   }
@@ -61,7 +61,9 @@ export const useUserProgressStore = create<UserProgressStore>((set, get) => ({
   error: null,
 
   initFromLocal: async () => {
-    const { user } = useAuthStore.getState();
+    // const { user } = useAuthStore.getState();
+    const { user } = getAuthStore().getState();
+
     if (!user) return;
 
     try {
@@ -221,7 +223,9 @@ export const useUserProgressStore = create<UserProgressStore>((set, get) => ({
   },
 
   resetCourseProgress: async (courseId: string) => {
-    const { user } = useAuthStore.getState();
+    // const { user } = useAuthStore.getState();
+    const { user } = getAuthStore().getState();
+
     if (!user) return;
 
     useSlidesStore.getState().clearAnsweredSlides();
