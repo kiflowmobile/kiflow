@@ -8,6 +8,7 @@ import { useRouter } from "expo-router";
 import { shadow } from "../../ui/styles/shadow";
 import Svg, { Path } from "react-native-svg";
 import { useQuizStore } from "@/src/stores/quizStore";
+import { useAnalyticsStore } from "@/src/stores/analyticsStore";
 
 export default function StatisticsScreen() {
   const { width } = useWindowDimensions(); 
@@ -20,6 +21,8 @@ export default function StatisticsScreen() {
   const { modules, fetchMyModulesByCourses } = useModulesStore();
   const { user } = useAuthStore();
   const router = useRouter();
+  const analyticsStore = useAnalyticsStore.getState();
+
 
   const quizStore = useQuizStore.getState();
 
@@ -70,6 +73,11 @@ export default function StatisticsScreen() {
     return (total / courseRatings.length).toFixed(1);
   };
 
+
+  useEffect(() => {
+    analyticsStore.trackEvent('progress_screen__load');
+  }, []);
+
   return (
     <View style={styles.screen}>
       <View style={styles.iconWrapper}>
@@ -109,12 +117,13 @@ export default function StatisticsScreen() {
                 isLargeScreen && styles.cardLarge,
                 isXLargeScreen && styles.cardXLarge,
               ]}
-              onPress={() =>
+              onPress={() => {
+                analyticsStore.trackEvent('progress_screen__course__click', { id: course.id });
                 router.push({
                   pathname: "/statistics/[id]",
                   params: { id: course.id },
-                })
-              }
+                });
+              }}
             >
               <Text style={styles.courseTitle}>{course.title}</Text>
 

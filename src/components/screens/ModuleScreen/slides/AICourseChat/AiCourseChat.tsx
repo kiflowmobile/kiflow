@@ -21,6 +21,7 @@ import { shadow } from '@/src/components/ui/styles/shadow';
 import { useLocalSearchParams } from 'expo-router';
 import { useState, useRef, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useAnalyticsStore } from '@/src/stores/analyticsStore';
 
 interface Message {
   id: string;
@@ -48,6 +49,8 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
   const moduleIdStr = Array.isArray(moduleId) ? moduleId[0] : moduleId;
   const courseIdStr = Array.isArray(courseId) ? courseId[0] : courseId;
   const CHAT_STORAGE_KEY = `course-chat-${courseIdStr}`;
+  const analyticsStore = useAnalyticsStore.getState();
+
 
   const loadChat = async () => {
     try {
@@ -150,6 +153,10 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
   }, [slideId]);
 
   const handleSend = async () => {
+    analyticsStore.trackEvent("course_screen__submit__click", {
+      courseIdStr, 
+      slideId,
+    });
     if (!input.trim() || answered || loading) return;
 
     const userMsg: Message = { id: Date.now().toString(), role: 'user', text: input.trim() };
@@ -163,8 +170,6 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
       const slidePrompt = prompt[slideId]?.prompt || '';
       const criteriasText = criterias.map((item) => `${item.key} - ${item.name.trim()}`).join('\n');
 
-      // генеруємо відповідь
-      // Попробуем получить companyId из current_code пользователя
       let companyIdToUse: string | undefined = undefined;
       try {
         const { code, error: codeError } = await getCurrentUserCode();
@@ -188,8 +193,13 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
         undefined,
         companyIdToUse,
       );
+      analyticsStore.trackEvent('course_screen__response_success__load', {
+        id: slideId,
+        index: 0,
+        model: aiResponse?.model || 'gemini',
+        tokens: aiResponse?.usage?.totalTokens || 0,
+      });
 
-      // зберігаємо оцінки, якщо вони є
       if (user && aiResponse.rating?.criteriaScores && moduleId) {
         const criteriaScores = aiResponse.rating.criteriaScores;
         for (const [criteriaKey, score] of Object.entries(criteriaScores)) {
@@ -224,6 +234,10 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
       }
     } catch (e) {
       console.error(e);
+      analyticsStore.trackEvent('course_screen__response_fail__load', {
+        id: slideId,
+        index: 0,
+      });
     } finally {
       setLoading(false);
     }
@@ -275,6 +289,8 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
           onBlur={handleBlur}
           loading={loading}
           answered={answered}
+          id={courseIdStr}
+          slideId={slideId}
         />
       </KeyboardAvoidingView>
     </SafeAreaView>

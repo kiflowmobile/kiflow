@@ -1,5 +1,6 @@
 import { Icon } from '@/src/components/ui/icon';
 import { sendAudioToGemini } from '@/src/services/geminiAudio';
+import { useAnalyticsStore } from '@/src/stores/analyticsStore';
 import { Mic, Square } from 'lucide-react-native';
 import React, { useRef, useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
@@ -7,13 +8,17 @@ import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 interface AudioRecorderProps {
   onAudioProcessed: (text: string) => void;
   disabled: boolean;
+  id: string;  
+  slideId?: string;
 }
 
-const AudioRecorder: React.FC<AudioRecorderProps> = ({ onAudioProcessed, disabled }) => {
+const AudioRecorder: React.FC<AudioRecorderProps> = ({ onAudioProcessed, disabled , id, slideId}) => {
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const analyticsStore = useAnalyticsStore.getState();
+
 
   const handleStartRecording = async () => {
     setError(null);
@@ -61,6 +66,10 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ onAudioProcessed, disable
   };
 
   const handleToggleRecording = () => {
+    analyticsStore.trackEvent('course_screen__audio__click', {
+      id,
+      slideId,
+    });
     if (isRecording) {
       handleStopRecording();
     } else {

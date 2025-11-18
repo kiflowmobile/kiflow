@@ -1,8 +1,11 @@
 import { Tabs } from 'expo-router';
 import { Platform } from 'react-native';
 import { IconSymbol } from '@/src/components/ui/IconSymbol';
+import { useAnalyticsStore } from '@/src/stores/analyticsStore';
 
 export default function TabsLayout() {
+  const analyticsStore = useAnalyticsStore.getState();
+
   return (
     <Tabs
       initialRouteName="courses"
@@ -28,6 +31,9 @@ export default function TabsLayout() {
             <IconSymbol name="book.fill" size={24} color={color} />
           ),
         }}
+        listeners={{
+          focus: () => analyticsStore.trackEvent('tab_bar__courses__click'),
+        }}
       />
       <Tabs.Screen
         name="progress"
@@ -37,6 +43,9 @@ export default function TabsLayout() {
             <IconSymbol name="chart.bar.fill" size={24} color={color} />
           ),
         }}
+        listeners={{
+          focus: () => analyticsStore.trackEvent('tab_bar__results__click'),
+        }}
       />
       <Tabs.Screen
         name="profile"
@@ -45,6 +54,10 @@ export default function TabsLayout() {
           tabBarIcon: ({ color }: { color: string }) => (
             <IconSymbol name="person.fill" size={24} color={color} />
           ),
+          
+        }}
+        listeners={{
+          focus: () => analyticsStore.trackEvent('tab_bar__profile__click'),
         }}
       />
     </Tabs>

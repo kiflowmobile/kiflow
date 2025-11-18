@@ -17,6 +17,7 @@ import { getCurrentUserCode, } from '../../../services/users';
 import { useCourseStore } from '@/src/stores/courseStore';
 import { useAuthStore } from '@/src/stores';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useAnalyticsStore } from '@/src/stores/analyticsStore';
 
 export default function CourseCodeScreen() {
   const [courseCode, setCourseCode] = useState('');
@@ -25,6 +26,8 @@ export default function CourseCodeScreen() {
   const [errorAnimation] = useState(new Animated.Value(0));
   const router = useRouter();
   const fetchCourses = useCourseStore((state) => state.fetchCourses);
+  const analyticsStore = useAnalyticsStore.getState();
+
 
   useEffect(() => {
     const fetchCurrentCode = async () => {
@@ -58,6 +61,8 @@ export default function CourseCodeScreen() {
   };
 
   const handleConfirm = async () => {
+    analyticsStore.trackEvent('company_screen__submit__click');
+
     if (!courseCode.trim()) {
       showError('Будь ласка, введіть код курсу');
       return;
@@ -107,6 +112,8 @@ export default function CourseCodeScreen() {
   };
 
   const handleSkip = async () => {
+    analyticsStore.trackEvent('company_screen__skip__click');
+
     setLoading(true);
     try {
       await fetchCourses();
@@ -126,6 +133,10 @@ export default function CourseCodeScreen() {
       hideError();
     }
   };
+
+  useEffect(() => {
+    analyticsStore.trackEvent('company_screen__load');
+  }, []);
 
   return (
     <View style={styles.container}>

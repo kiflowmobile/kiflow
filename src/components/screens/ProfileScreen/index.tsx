@@ -12,6 +12,7 @@ import PasswordSection from './components/PasswordSection';
 import UserInfoSection from './components/UserInfoSection';
 import CompanyCode from './components/CompanyCode';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useAnalyticsStore } from '@/src/stores/analyticsStore';
 
 export default function ProfileScreen() {
   const router = useRouter();
@@ -21,6 +22,7 @@ export default function ProfileScreen() {
   const [updating, setUpdating] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [isDeveloper, setIsDeveloper] = useState(false);
+  const analyticsStore = useAnalyticsStore.getState();
 
 
   const [formData, setFormData] = useState<UserUpdateData>({
@@ -77,6 +79,8 @@ export default function ProfileScreen() {
   };
 
   const handleSave = async () => {
+    analyticsStore.trackEvent(' profile_screen__save__click');
+
     try {
       setUpdating(true);
 
@@ -107,6 +111,8 @@ export default function ProfileScreen() {
   };
 
   const handleCancel = () => {
+    analyticsStore.trackEvent(' profile_screen__cancel__click');
+
     if (user) {
       setFormData((prev) => ({
         ...prev,
@@ -134,14 +140,20 @@ export default function ProfileScreen() {
   };
 
   const handleEdit = () => {
+    analyticsStore.trackEvent(' profile_screen__edit__click');
+
     setEditMode(true);
   };
 
   const handleCourseCodePress = () => {
+    analyticsStore.trackEvent('profile_screen__change_company__click');
+
     router.push('/course-code');
   };
 
   const handleSignOut = async () => {
+    analyticsStore.trackEvent('profile_screen__sign_out__click');
+
     try {
       await signOut();
       router.replace('/');
@@ -161,6 +173,12 @@ export default function ProfileScreen() {
       console.error('Error saving isDeveloper:', error);
     }
   };
+
+  // useEffect(() => {
+  //   analyticsStore.trackEvent('profile_screen__load');
+  // }, []);
+
+
 
 
   return (

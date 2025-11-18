@@ -3,12 +3,15 @@ import { Image, Text as RNText, StyleSheet, View } from 'react-native';
 import Button from '../../ui/button';
 import { useEffect } from 'react';
 import { useAuthStore } from '@/src/stores';
+import { useAnalyticsStore } from '@/src/stores/analyticsStore';
 
 export default function WelcomeScreen() {
   const router = useRouter();
   const user = useAuthStore()
   const rootNavigationState = useRootNavigationState();
   const { justSignedUp} = useAuthStore();
+  const analyticsStore = useAnalyticsStore.getState();
+
 
 
   useEffect(() => {
@@ -23,6 +26,8 @@ export default function WelcomeScreen() {
 
 
   const handleSignIn = () => {
+    analyticsStore.trackEvent('start_screen__sign_in__click');
+
     try {
       router.push('/auth/login');
     } catch (error) {
@@ -31,12 +36,20 @@ export default function WelcomeScreen() {
   };
 
   const handleSignUp = () => {
+    analyticsStore.trackEvent('start_screen__sign_up__click');
+
     try {
       router.push('/auth/registration');
     } catch (error) {
       console.error('❌ WelcomeScreen: Error navigating to registration:', error);
     }
   };
+
+
+  useEffect(() => {
+    analyticsStore.trackEvent('start_screen__load');
+  }, []);
+
 
 
   return (

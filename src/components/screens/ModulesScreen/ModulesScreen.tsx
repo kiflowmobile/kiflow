@@ -4,6 +4,7 @@ import { useCourseProgress } from '@/src/hooks/useCourseProgress';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect } from 'react';
 import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
+import { useAnalyticsStore } from '@/src/stores/analyticsStore';
 
 const DOT_SIZE = 16;
 const LINE_DEFAULT = '#D9D9D9';
@@ -12,6 +13,8 @@ const LINE_COMPLETED = '#27AE60';
 export default function CourseScreen() {
   const params = useLocalSearchParams<{ id?: string }>();
   const router = useRouter();
+  const analyticsStore = useAnalyticsStore.getState();
+
 
   const {
     modules,
@@ -34,8 +37,13 @@ export default function CourseScreen() {
     });
   }, [params.id, fetchModulesByCourse]);
 
-  const handleModulePress = (module: any) => {
+  const handleModulePress = (module: any, index: number, progress: number) => {
     setCurrentModule(module);
+        analyticsStore.trackEvent('modules_screen__module__click', {
+          id: module.id,
+          index,
+          progress,
+        });
     const progressEntry = progressModules?.find((m) => m.module_id === module.id);
     const slideId = progressEntry?.last_slide_id || undefined;
     router.push({
@@ -69,7 +77,7 @@ export default function CourseScreen() {
     const bottomLineColor = isCompleted ? LINE_COMPLETED : LINE_DEFAULT;
 
     return (
-      <Pressable style={styles.moduleItem} onPress={() => handleModulePress(item)}>
+      <Pressable style={styles.moduleItem} onPress={() => handleModulePress(item, index, progress)}>
         <View style={styles.statusDotWrapper}>
           <View style={styles.lineContainer}>
             {!isFirst ? (
@@ -116,6 +124,12 @@ export default function CourseScreen() {
     );
   };
 
+
+  useEffect(() => {
+    analyticsStore.trackEvent('modules_screen__load');
+  }, []);
+  
+
   return (
     <View style={styles.container}>
       {error ? (
@@ -158,12 +172,8 @@ const styles = StyleSheet.create({
     marginLeft: 28,
     borderRadius: 12,
     backgroundColor: 'rgba(0, 0, 0, 0.03)',
-    shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowRadius: 6,
-    elevation: 2,
+    boxShadow: '0px 2px 6px rgba(0, 0, 0, 0.05)',
   },
-
   statusDotWrapper: {
     position: 'absolute',
     left: -32,
@@ -267,3 +277,5 @@ const styles = StyleSheet.create({
     textDecorationLine: 'underline',
   },
 });
+
+

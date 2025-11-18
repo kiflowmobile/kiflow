@@ -9,6 +9,10 @@ export interface GeminiResponse {
   content: string;
   rating: any | null;
   criterias: string;
+  model?: string; 
+  usage?: {
+    totalTokens?: number;
+  }; 
 }
 
 export async function askGemini(
@@ -24,7 +28,9 @@ export async function askGemini(
     return {
       content: '⚠️ Помилка: відсутній API ключ.',
       rating: null,
-      criterias: criteriasText, // завжди передаємо
+      criterias: criteriasText,
+      model,
+      usage: { totalTokens: 0 },
     };
   }
 
@@ -32,7 +38,6 @@ export async function askGemini(
 
   const lastUserMessage = messages.filter((m) => m.role === 'user').slice(-1)[0];
 
-  // Если передан companyId, пробуем загрузить standards и безопасно распарсить их
   let companyStandards: any = undefined;
   if (companyId) {
     try {
@@ -43,14 +48,12 @@ export async function askGemini(
         try {
           companyStandards = typeof raw === 'string' ? JSON.parse(raw) : raw;
         } catch {
-          // Попробуем отремонтировать некорректный JSON
           try {
             const repaired = jsonrepair(typeof raw === 'string' ? raw : JSON.stringify(raw));
             companyStandards = JSON.parse(repaired);
             console.log('askGemini: repaired companyStandards JSON');
           } catch {
             console.warn('askGemini: failed to parse or repair companyStandards');
-            // В крайнем случае передадим raw (строку или объект) — buildPrompt обработает
             companyStandards = raw;
           }
         }
@@ -83,12 +86,6 @@ export async function askGemini(
       maxOutputTokens: 10000,
     },
   };
-
-  try {
-    console.log('askGemini: companyStandards:', companyStandards);
-  } catch (err) {
-    console.warn('askGemini: failed to log prompt preview', err);
-  }
 
   try {
     const response = await fetch(`${url}?key=${GEMINI_API_KEY}`, {
@@ -128,15 +125,25 @@ export async function askGemini(
       }
     }
 
-    if (!parsed.criterias) parsed.criterias = criteriasText;
+    // ✅ додаємо модель і usage (токени)
+    const usage = {
+      totalTokens: data?.usageMetadata?.totalTokenCount || 0,
+    };
 
-    return parsed;
+    return {
+      ...parsed,
+      model,
+      usage,
+      criterias: parsed.criterias || criteriasText,
+    };
   } catch (err) {
     console.error('Gemini API error', err);
     return {
       content: '⚠️ Сталася помилка при отриманні відповіді від AI.',
       rating: null,
       criterias: criteriasText,
+      model,
+      usage: { totalTokens: 0 },
     };
   }
 }

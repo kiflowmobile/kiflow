@@ -1,8 +1,8 @@
 import { create } from 'zustand';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase } from '@/src/config/supabaseClient';
-import { useAuthStore } from '@/src/stores/authStore';
-import ContentWithExample from '../components/screens/ModuleScreen/slides/ContentWithExample';
+const getAuthStore = () => require('./authStore').useAuthStore;
+
 
 interface ChatMessage {
   id: string;
@@ -16,15 +16,13 @@ interface ChatStore {
 }
 
 export const useChatStore = create<ChatStore>(() => ({
-  // 🔹 Синхронізація чатів із локального сховища в базу
   syncChatFromLocalStorageToDB: async () => {
-    // console.log('💬 Syncing chats from local storage → DB');
+    // const { user } = useAuthStore.getState();
+    const { user } = getAuthStore().getState();
 
-    const { user } = useAuthStore.getState();
     if (!user) return;
 
     try {
-      // 1️⃣ Отримуємо всі ключі, що починаються з "course-chat-"
       const allKeys = await AsyncStorage.getAllKeys();
       const chatKeys = allKeys.filter((key) => key.startsWith('course-chat-'));
       if (chatKeys.length === 0) {
@@ -32,7 +30,6 @@ export const useChatStore = create<ChatStore>(() => ({
         return;
       }
 
-      // 2️⃣ Дістаємо всі значення
       const keyValues = await AsyncStorage.multiGet(chatKeys);
       const rowsToUpsert: {
         user_id: string;
@@ -53,7 +50,6 @@ export const useChatStore = create<ChatStore>(() => ({
           continue;
         }
 
-        // parsed = { slide_id: [ {id, role, text}, ... ] }
         for (const [slide_id, messages] of Object.entries(parsed)) {
           rowsToUpsert.push({
             user_id: user.id,
@@ -84,7 +80,9 @@ export const useChatStore = create<ChatStore>(() => ({
 
   syncChatFromDBToLocalStorage: async () => {
     try{
-        const { user } = useAuthStore.getState();
+      const { user } = getAuthStore().getState();
+
+        // const { user } = useAuthStore.getState();
         if (!user) return;
 
         const { data, error } = await supabase

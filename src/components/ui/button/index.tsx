@@ -33,7 +33,6 @@ const Button: React.FC<ButtonProps> = ({
 }) => {
   const handlePress = () => {
     if (hapticFeedback && !disabled) {
-      // Використовуємо різні типи haptic feedback в залежності від варіанта кнопки
       switch (variant) {
         case 'primary':
           Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -98,15 +97,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     flexDirection: 'row',
-    shadowColor: Colors.black,
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
   },
+  
   content: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -167,8 +160,6 @@ const styles = StyleSheet.create({
   errorText: {
     color: Colors.white,
   },
-
-  // Sizes
   sm: {
     paddingVertical: 4,
     paddingHorizontal: 8,
@@ -184,8 +175,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 32,
     minHeight: 48,
   },
-
-  // Text sizes
   smText: {
     fontSize: 14,
   },

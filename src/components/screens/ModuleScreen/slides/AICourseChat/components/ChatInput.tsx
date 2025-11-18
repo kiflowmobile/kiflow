@@ -1,8 +1,9 @@
-import React, { RefObject } from 'react';
-import { View, TextInput, TouchableOpacity, StyleSheet, } from 'react-native';
+import React, { RefObject, useRef } from 'react';
+import { View, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
 import { Icon } from '@/src/components/ui/icon';
 import { Send } from 'lucide-react-native';
 import AudioRecorder from '../AudioRecorder';
+import { useAnalyticsStore } from '@/src/stores/analyticsStore';
 
 interface ChatInputProps {
   input: string;
@@ -14,6 +15,8 @@ interface ChatInputProps {
   onBlur: () => void;
   loading: boolean;
   answered: boolean;
+  id: string;
+  slideId?: string;
 }
 
 const ChatInput: React.FC<ChatInputProps> = ({
@@ -26,29 +29,68 @@ const ChatInput: React.FC<ChatInputProps> = ({
   onBlur,
   loading,
   answered,
-}) => (
-  <View style={styles.footer}>
-    <TextInput
-      ref={inputRef}
-      style={styles.input}
-      placeholder="Введіть відповідь..."
-      value={input}
-      onChangeText={setInput}
-      onFocus={onFocus}
-      onBlur={onBlur}
-      multiline
-      editable={!answered && !loading}
-    />
-    <View style={styles.buttonContainer}>
-      <AudioRecorder onAudioProcessed={onAudioProcessed} disabled={loading || answered} />
-      <TouchableOpacity onPress={onSend} 
-      disabled={loading || answered}
-      >
-        <Icon as={Send} size={24} color={loading || answered ? '#94a3b8' : '#0f172a'} />
-      </TouchableOpacity>
+  id,
+  slideId,
+}) => {
+  const analyticsStore = useAnalyticsStore.getState();
+  const hasTrackedInputRef = useRef(false); // щоб не дублювати подію при кожному символі
+
+  const handleFocus = () => {
+    onFocus?.();
+    analyticsStore.trackEvent('course_screen__text__click', {
+      id,
+      slideId,
+      case: 'focus',
+    });
+  };
+
+  const handleChangeText = (text: string) => {
+    setInput(text);
+
+    // Трек події при першому введенні тексту
+    if (!hasTrackedInputRef.current && text.trim().length > 0) {
+      analyticsStore.trackEvent('course_screen__text__click', {
+        id,
+        slideId,
+        case: 'input',
+      });
+      hasTrackedInputRef.current = true;
+    }
+  };
+
+  return (
+    <View style={styles.footer}>
+      <TextInput
+        ref={inputRef}
+        style={styles.input}
+        placeholder="Введіть відповідь..."
+        value={input}
+        onChangeText={handleChangeText}
+        onFocus={handleFocus}
+        onBlur={onBlur}
+        multiline
+        editable={!answered && !loading}
+      />
+      <View style={styles.buttonContainer}>
+        <AudioRecorder
+          onAudioProcessed={onAudioProcessed}
+          disabled={loading || answered}
+          id={id}
+          slideId={slideId}
+        />
+        <TouchableOpacity onPress={onSend} disabled={loading || answered}>
+          <Icon
+            as={Send}
+            size={24}
+            color={loading || answered ? '#94a3b8' : '#0f172a'}
+          />
+        </TouchableOpacity>
+      </View>
     </View>
-  </View>
-);
+  );
+};
+
+export default ChatInput;
 
 const styles = StyleSheet.create({
   footer: {
@@ -73,5 +115,3 @@ const styles = StyleSheet.create({
     gap: 8,
   },
 });
-
-export default ChatInput;
