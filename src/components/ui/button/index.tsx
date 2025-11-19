@@ -1,9 +1,21 @@
 import * as Haptics from 'expo-haptics';
-import React from 'react';
-import { Image, ImageSourcePropType, Pressable, StyleSheet, Text, View } from 'react-native';
+import React, { ReactNode, useMemo } from 'react';
+import {
+  ActivityIndicator,
+  Image,
+  ImageSourcePropType,
+  Pressable,
+  StyleProp,
+  StyleSheet,
+  Text,
+  TextStyle,
+  View,
+  ViewStyle,
+} from 'react-native';
 import { Colors } from '../../../constants/Colors';
+import { FONT_FAMILY, FONT_SIZE, TEXT_VARIANTS } from '@/src/constants/Fonts';
 
-export type ButtonVariant = 'primary' | 'secondary' | 'success' | 'error';
+export type ButtonVariant = 'dark' | 'light' | 'accent' | 'outline';
 export type ButtonSize = 'sm' | 'md' | 'lg';
 
 interface ButtonProps {
@@ -14,78 +26,181 @@ interface ButtonProps {
   disabled?: boolean;
   image?: ImageSourcePropType;
   imagePosition?: 'left' | 'right';
-  style?: any;
-  textStyle?: any;
+  icon?: ReactNode;
+  iconPosition?: 'left' | 'right';
+  style?: StyleProp<ViewStyle>;
+  textStyle?: StyleProp<TextStyle>;
   hapticFeedback?: boolean;
+  loading?: boolean;
+  accessibilityLabel?: string;
 }
+
+/**
+ * Статические стили для вариантов (как в Figma):
+ * - dark    — чёрная заливка
+ * - light   — белая заливка
+ * - accent  — сиреневая/голубая заливка
+ * - outline — прозрачный фон + белая обводка
+ */
+const VARIANT_STYLES: Record<ButtonVariant, { container: ViewStyle; text: TextStyle }> = {
+  dark: {
+    container: {
+      backgroundColor: Colors.black,
+    },
+    text: {
+      color: Colors.white,
+    },
+  },
+  light: {
+    container: {
+      backgroundColor: Colors.white,
+      borderColor: Colors.white,
+    },
+    text: {
+      color: Colors.black,
+    },
+  },
+  accent: {
+    container: {
+      backgroundColor: Colors.blue,
+    },
+    text: {
+      color: Colors.black,
+    },
+  },
+  outline: {
+    container: {
+      backgroundColor: 'transparent',
+      borderColor: Colors.white,
+    },
+    text: {
+      color: Colors.white,
+      fontSize: FONT_SIZE.lg,
+    },
+  },
+};
+
+const SIZE_STYLES: Record<ButtonSize, { container: ViewStyle; text: TextStyle }> = {
+  sm: {
+    container: {
+      paddingVertical: 4,
+      paddingHorizontal: 8,
+      minHeight: 32,
+    },
+    text: {
+      fontSize: 14,
+    },
+  },
+  md: {
+    container: {
+      paddingVertical: 8,
+      paddingHorizontal: 24,
+      minHeight: 40,
+    },
+    text: {
+      fontSize: 16,
+      letterSpacing: 0.5,
+    },
+  },
+  lg: {
+    container: {
+      paddingVertical: 16,
+      paddingHorizontal: 24,
+      minHeight: 56,
+    },
+    text: {
+      fontSize: 18,
+      lineHeight: 24,
+      letterSpacing: 0,
+    },
+  },
+};
 
 const Button: React.FC<ButtonProps> = ({
   title,
   onPress,
-  variant = 'primary',
+  variant = 'dark',
   size = 'md',
   disabled = false,
   image,
   imagePosition = 'left',
+  icon,
+  iconPosition = 'left',
   style,
   textStyle,
   hapticFeedback = true,
+  loading = false,
+  accessibilityLabel,
 }) => {
+  const isDisabled = disabled || loading;
+
   const handlePress = () => {
-    if (hapticFeedback && !disabled) {
-      switch (variant) {
-        case 'primary':
-          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-          break;
-        case 'secondary':
-          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-          break;
-        case 'success':
-          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-          break;
-        case 'error':
-          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-          break;
-        default:
-          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-      }
+    if (isDisabled) {
+      return;
+    }
+    if (hapticFeedback) {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => undefined);
     }
     onPress();
   };
 
-  const buttonStyle = [
-    styles.base,
-    styles[variant],
-    styles[size],
-    disabled && styles.disabled,
-    style,
-  ];
+  const variantTheme = VARIANT_STYLES[variant];
+  const sizeTheme = SIZE_STYLES[size];
 
-  const textStyleCombined = [
-    styles.text,
-    styles[`${variant}Text`],
-    styles[`${size}Text`],
-    disabled && styles.disabledText,
-    textStyle,
-  ];
+  const adornment = useMemo(
+    () => ({
+      left:
+        icon && iconPosition === 'left' ? (
+          <View style={styles.iconWrapper}>{icon}</View>
+        ) : image && imagePosition === 'left' ? (
+          <Image source={image} style={styles.image} />
+        ) : null,
+      right:
+        icon && iconPosition === 'right' ? (
+          <View style={styles.iconWrapper}>{icon}</View>
+        ) : image && imagePosition === 'right' ? (
+          <Image source={image} style={styles.image} />
+        ) : null,
+    }),
+    [icon, iconPosition, image, imagePosition],
+  );
 
   return (
     <Pressable
-      style={({ pressed }) => [
-        ...buttonStyle,
-        pressed && styles.pressed,
-      ]}
+      accessibilityRole="button"
+      accessibilityLabel={accessibilityLabel || title}
+      accessibilityState={{ disabled: isDisabled, busy: loading }}
+      disabled={isDisabled}
       onPress={handlePress}
-      disabled={disabled}
+      style={({ pressed }) => [
+        styles.base,
+        variantTheme.container,
+        sizeTheme.container,
+        isDisabled && styles.disabled,
+        pressed && !isDisabled && styles.pressed,
+        style,
+      ]}
     >
       <View style={styles.content}>
-        {image && imagePosition === 'left' && (
-          <Image source={image} style={styles.image} />
+        {adornment.left}
+
+        <Text
+          style={[
+            styles.text,
+            variantTheme.text,
+            sizeTheme.text,
+            isDisabled && styles.disabledText,
+            textStyle,
+          ]}
+        >
+          {title}
+        </Text>
+
+        {loading && (
+          <ActivityIndicator style={styles.spinner} color={variantTheme.text.color} size="small" />
         )}
-        <Text style={textStyleCombined}>{title}</Text>
-        {image && imagePosition === 'right' && (
-          <Image source={image} style={styles.image} />
-        )}
+
+        {adornment.right}
       </View>
     </Pressable>
   );
@@ -93,13 +208,12 @@ const Button: React.FC<ButtonProps> = ({
 
 const styles = StyleSheet.create({
   base: {
-    borderRadius: 12,
+    borderRadius: 8,
+    borderWidth: 2,
     alignItems: 'center',
     justifyContent: 'center',
     flexDirection: 'row',
-    boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
   },
-  
   content: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -110,9 +224,13 @@ const styles = StyleSheet.create({
     height: 20,
     marginHorizontal: 8,
   },
+  iconWrapper: {
+    marginHorizontal: 8,
+  },
   text: {
-    fontWeight: '600',
+    ...TEXT_VARIANTS.button,
     textAlign: 'center',
+    fontFamily: FONT_FAMILY.primary,
   },
   pressed: {
     transform: [{ scale: 0.98 }],
@@ -124,67 +242,8 @@ const styles = StyleSheet.create({
   disabledText: {
     opacity: 0.6,
   },
-
-  // Variants
-  primary: {
-    backgroundColor: Colors.black,
-    borderWidth: 2,
-    borderColor: Colors.black,
-  },
-  secondary: {
-    backgroundColor: 'transparent',
-    borderWidth: 2,
-    borderColor: Colors.black,
-  },
-  success: {
-    backgroundColor: Colors.success,
-    borderWidth: 0,
-  },
-  error: {
-    backgroundColor: Colors.error,
-    borderWidth: 0,
-  },
-
-  // Text colors for variants
-  primaryText: {
-    color: Colors.white,
-  },
-  secondaryText: {
-    color: Colors.black,
-    fontWeight: '700',
-    letterSpacing: 0.8,
-  },
-  successText: {
-    color: Colors.white,
-  },
-  errorText: {
-    color: Colors.white,
-  },
-  sm: {
-    paddingVertical: 4,
-    paddingHorizontal: 8,
-    minHeight: 16,
-  },
-  md: {
-    paddingVertical: 8,
-    paddingHorizontal: 24,
-    minHeight: 36,
-  },
-  lg: {
-    paddingVertical: 14,
-    paddingHorizontal: 32,
-    minHeight: 48,
-  },
-  smText: {
-    fontSize: 14,
-  },
-  mdText: {
-    fontSize: 16,
-    letterSpacing: 0.5,
-  },
-  lgText: {
-    fontSize: 18,
-    letterSpacing: 0.5,
+  spinner: {
+    marginLeft: 8,
   },
 });
 

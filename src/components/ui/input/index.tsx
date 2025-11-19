@@ -13,7 +13,7 @@ const SCOPE = 'INPUT';
 const styles = StyleSheet.create({
   inputContainer: {
     borderWidth: 1,
-    borderColor: Colors.gray[200],
+    borderColor: Colors.darkGray,
     borderRadius: 8,
     backgroundColor: Colors.white,
     flexDirection: 'row',
@@ -21,11 +21,11 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   inputContainerFocused: {
-    borderColor: Colors.gray[400],
+    borderColor: Colors.darkGray,
     boxShadow: '0px 1px 2px rgba(0, 0, 0, 0.1)',
   },
   inputContainerHover: {
-    borderColor: Colors.gray[300],
+    borderColor: Colors.darkGray,
   },
   inputContainerDisabled: {
     opacity: 0.4,
@@ -47,7 +47,7 @@ const styles = StyleSheet.create({
   inputIcon: {
     justifyContent: 'center',
     alignItems: 'center',
-    color: Colors.gray[500],
+    color: Colors.darkGray,
   },
   inputSlot: {
     justifyContent: 'center',
@@ -226,7 +226,7 @@ const InputField = React.forwardRef<React.ComponentRef<typeof UIInput.Input>, II
         ref={ref}
         {...props}
         style={fieldStyle}
-        placeholderTextColor={Colors.gray[400]}
+        placeholderTextColor={Colors.darkGray}
       />
     );
   }

@@ -62,7 +62,7 @@ const styles = StyleSheet.create({
   infoSection: {
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: Colors.gray[200],
+    borderColor: Colors.darkGray,
     boxShadow: '0px 4px 12px rgba(0, 0, 0, 0.08)',
   },
   
