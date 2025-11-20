@@ -1,18 +1,12 @@
 import { useAuthStore } from '@/src/stores/authStore';
 import { useRootNavigationState, useRouter } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
-import {
-  KeyboardAvoidingView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import { KeyboardAvoidingView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Button from '../../ui/button';
-import { Input, InputField } from '../../ui/input';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
 import { useAnalyticsStore } from '@/src/stores/analyticsStore';
+import Input from '../../ui/input';
 
 interface AuthError {
   message?: string;
@@ -29,7 +23,7 @@ export default function LoginScreen() {
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
   const [touched, setTouched] = useState<{ email?: boolean; password?: boolean }>({});
-  const user = useAuthStore()
+  const user = useAuthStore();
   const analyticsStore = useAnalyticsStore.getState();
 
   const [formError, setFormError] = useState<string | null>(null);
@@ -38,7 +32,6 @@ export default function LoginScreen() {
 
   const { signIn, isLoading, error, clearError } = useAuthStore();
 
-
   const normalizeEmail = (value: string) => value.trim().toLowerCase();
   const normalizePassword = (value: string) => value;
 
@@ -46,14 +39,12 @@ export default function LoginScreen() {
 
   useEffect(() => {
     if (!rootNavigationState?.key) return;
-    if (!user.isGuest ) {
+    if (!user.isGuest) {
       setTimeout(() => {
         router.replace('/courses');
       }, 0);
     }
   }, [user, rootNavigationState]);
-  
- 
 
   const validate = (nextEmail = email, nextPassword = password) => {
     const nextErrors: typeof errors = {};
@@ -133,7 +124,6 @@ export default function LoginScreen() {
     router.push('/auth/registration');
   };
 
-
   useEffect(() => {
     analyticsStore.trackEvent('sign_in_screen__load');
   }, []);
@@ -142,7 +132,6 @@ export default function LoginScreen() {
     <SafeAreaView style={styles.container}>
       <KeyboardAvoidingView behavior="padding" style={styles.container}>
         <View style={styles.inner}>
-
           <Text style={styles.title}>Sign in</Text>
 
           <View style={styles.form}>
@@ -153,79 +142,76 @@ export default function LoginScreen() {
             ) : null}
 
             {/* Email */}
-            {touched.email && errors.email ? (
-              <View style={styles.formErrorBanner}>
-                <Text style={styles.formErrorText}>{errors.email}</Text>
-              </View>
-            ) : null}
             <Input
               variant="outline"
               size="xl"
-              style={[styles.input, touched.email && errors.email && styles.inputError]}
-            >
-              <InputField
-                placeholder="Email"
-                keyboardType="email-address"
-                autoCapitalize="none"
-                autoCorrect={false}
-                value={email}
-                onChangeText={setEmail}
-                onBlur={() => handleBlur('email')}
-                returnKeyType="next"
-              />
-            </Input>
+              value={email}
+              onChangeText={setEmail}
+              onBlur={() => handleBlur('email')}
+              placeholder="Email"
+              keyboardType="email-address"
+              autoCapitalize="none"
+              autoCorrect={false}
+              returnKeyType="next"
+              containerStyle={styles.input}
+              isInvalid={touched.email && !!errors.email}
+              errorMessage={touched.email ? errors.email : undefined}
+            />
 
             {/* Password */}
-            {touched.password && errors.password ? (
-              <View style={styles.formErrorBanner}>
-                <Text style={styles.formErrorText}>{errors.password}</Text>
-              </View>
-            ) : null}
-<View style={styles.passwordContainer}>
-  <Input
-    variant="outline"
-    size="xl"
-    style={[styles.input, touched.password && errors.password && styles.inputError]}
-  >
-    <InputField
-      placeholder="Password"
-      secureTextEntry={!showPassword}
-      autoCapitalize="none"
-      autoCorrect={false}
-      value={password}
-      onChangeText={setPassword}
-      onBlur={() => handleBlur('password')}
-      returnKeyType="go"
-      onSubmitEditing={handleLogin}
-      style={{ flex: 1 }}
-    />
-  </Input>
-
-  <TouchableOpacity
-    style={styles.eyeButton}
-    onPress={() => setShowPassword(!showPassword)}
-  >
-    {showPassword ? (
-      <Svg width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth={1} strokeLinecap="round" strokeLinejoin="round">
-        <Path d="M10.585 10.587a2 2 0 0 0 2.829 2.828" />
-        <Path d="M16.681 16.673a8.717 8.717 0 0 1 -4.681 1.327c-3.6 0 -6.6 -2 -9 -6c1.272 -2.12 2.712 -3.678 4.32 -4.674m2.86 -1.146a9.055 9.055 0 0 1 1.82 -.18c3.6 0 6.6 2 9 6c-.666 1.11 -1.379 2.067 -2.138 2.87" />
-        <Path d="M3 3l18 18" />
-      </Svg>
-    ) : (
-      <Svg width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth={1} strokeLinecap="round" strokeLinejoin="round">
-        <Path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
-        <Path d="M21 12c-2.4 4 -5.4 6 -9 6c-3.6 0 -6.6 -2 -9 -6c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6" />
-      </Svg>
-    )}
-  </TouchableOpacity>
-</View>
-
-
-            
+            <Input
+              variant="outline"
+              size="xl"
+              value={password}
+              onChangeText={setPassword}
+              onBlur={() => handleBlur('password')}
+              placeholder="Password"
+              secureTextEntry={!showPassword}
+              autoCapitalize="none"
+              autoCorrect={false}
+              returnKeyType="go"
+              onSubmitEditing={handleLogin}
+              containerStyle={styles.input}
+              isInvalid={touched.password && !!errors.password}
+              errorMessage={touched.password ? errors.password : undefined}
+              rightIcon={
+                showPassword ? (
+                  <Svg
+                    width={24}
+                    height={24}
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="#000"
+                    strokeWidth={1}
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <Path d="M10.585 10.587a2 2 0 0 0 2.829 2.828" />
+                    <Path d="M16.681 16.673a8.717 8.717 0 0 1 -4.681 1.327c-3.6 0 -6.6 -2 -9 -6c1.272 -2.12 2.712 -3.678 4.32 -4.674m2.86 -1.146a9.055 9.055 0 0 1 1.82 -.18c3.6 0 6.6 2 9 6c-.666 1.11 -1.379 2.067 -2.138 2.87" />
+                    <Path d="M3 3l18 18" />
+                  </Svg>
+                ) : (
+                  <Svg
+                    width={24}
+                    height={24}
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="#000"
+                    strokeWidth={1}
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <Path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+                    <Path d="M21 12c-2.4 4 -5.4 6 -9 6c-3.6 0 -6.6 -2 -9 -6c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6" />
+                  </Svg>
+                )
+              }
+              onPressRightIcon={() => setShowPassword((prev) => !prev)}
+            />
 
             <Button
               title={isLoading ? 'Signing in...' : 'Sign In'}
-              variant="primary"
+              variant="dark"
               size="lg"
               onPress={handleLogin}
               disabled={isLoading || !isValid}
@@ -261,8 +247,6 @@ const styles = StyleSheet.create({
   },
   formErrorText: { color: '#8a1c1c', fontSize: 14 },
   input: { marginBottom: 8 },
-  inputError: { borderColor: 'red' },
-  errorText: { color: 'red', fontSize: 13, marginBottom: 10, marginLeft: 4 },
   button: { marginTop: 6 },
   registerContainer: {
     flexDirection: 'row',
@@ -271,18 +255,4 @@ const styles = StyleSheet.create({
   },
   registerText: { color: '#555', fontSize: 14 },
   registerLink: { color: '#000000', fontWeight: '600', fontSize: 14 },
-  passwordContainer: {
-    position: 'relative',
-    width: '100%',
-    maxWidth: 400,
-  },
-  eyeButton: {
-    position: 'absolute',
-    right: 12,
-    top: 14,
-    padding: 4,
-  },
-  eyeIcon: {
-    fontSize: 18,
-  },
 });

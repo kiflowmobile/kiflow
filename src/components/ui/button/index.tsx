@@ -144,8 +144,8 @@ const Button: React.FC<ButtonProps> = ({
     onPress();
   };
 
-  const variantTheme = VARIANT_STYLES[variant];
-  const sizeTheme = SIZE_STYLES[size];
+  const variantTheme = VARIANT_STYLES[variant] ?? VARIANT_STYLES.dark;
+  const sizeTheme = SIZE_STYLES[size] ?? SIZE_STYLES.md;
 
   const adornment = useMemo(
     () => ({
@@ -197,7 +197,11 @@ const Button: React.FC<ButtonProps> = ({
         </Text>
 
         {loading && (
-          <ActivityIndicator style={styles.spinner} color={variantTheme.text.color} size="small" />
+          <ActivityIndicator
+            style={styles.spinner}
+            color={variantTheme.text?.color || Colors.white}
+            size="small"
+          />
         )}
 
         {adornment.right}
