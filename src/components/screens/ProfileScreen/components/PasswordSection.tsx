@@ -137,7 +137,7 @@ export default function PasswordSection() {
               title={isChangingPassword ? 'Збереження...' : 'Зберегти новий пароль'}
               onPress={handleChangePassword}
               disabled={isChangingPassword}
-              variant="success"
+              variant="accent"
               style={styles.saveButton}
               textStyle={styles.saveButtonText}
             />
@@ -146,7 +146,7 @@ export default function PasswordSection() {
               title="Скасувати"
               onPress={handleCancel}
               disabled={isChangingPassword}
-              variant="secondary"
+              variant="outline"
               style={styles.cancelButton}
               textStyle={styles.cancelButtonText}
             />
@@ -161,14 +161,14 @@ const styles = StyleSheet.create({
   passwordSection: {
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: Colors.gray[200],
+    borderColor: Colors.darkGray,
     boxShadow: '0px 4px 12px rgba(0, 0, 0, 0.08)',
   },
   
   sectionTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: Colors.gray[800],
+    color: Colors.darkGray,
     marginBottom: 16,
   },
   changePasswordButton: {

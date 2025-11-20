@@ -7,7 +7,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useUserProgressStore } from '../stores';
 import CustomHeader from '../components/ui/CustomHeader';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import "../firebase"; 
+import '../firebase';
 import { initAmplitude } from '../amplitude';
 
 export default function RootLayout() {
@@ -16,7 +16,7 @@ export default function RootLayout() {
   const router = useRouter();
 
   const [loaded] = useFonts({
-    SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
+    RobotoCondensed: require('../assets/fonts/RobotoCondensed.ttf'),
   });
 
   const checkSession = useAuthStore((state) => state.checkSession);
@@ -46,7 +46,7 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
-      <Stack
+        <Stack
           screenOptions={{
             header: () => <CustomHeader />,
           }}
