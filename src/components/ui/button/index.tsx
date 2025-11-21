@@ -99,8 +99,8 @@ const VARIANT_STYLES: Record<ButtonVariant, VariantStateStyles> = {
   },
   accent: {
     container: {
-      backgroundColor: Colors.blue,
-      borderColor: Colors.blue,
+      backgroundColor: Colors.buttonBlue,
+      borderColor: Colors.buttonBlue,
     },
     text: {
       color: Colors.black,
@@ -230,7 +230,13 @@ const Button: React.FC<ButtonProps> = ({
     [icon, iconPosition, image, imagePosition],
   );
 
-  return (
+  // Проверяем, есть ли flex в стиле
+  const styleArray = Array.isArray(style) ? style : style ? [style] : [];
+  const hasFlex = styleArray.some(
+    (s) => s && typeof s === 'object' && s !== null && ('flex' in s || 'flexGrow' in s || 'alignSelf' in s),
+  );
+
+  const pressableContent = (
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel || title}
@@ -249,7 +255,7 @@ const Button: React.FC<ButtonProps> = ({
               sizeTheme.container,
               isPressed && variantTheme.pressed?.container,
               isDisabled && (variantTheme.disabled?.container || styles.disabled),
-              style,
+              !hasFlex && style,
             ]}
           >
             <View style={styles.content}>
@@ -286,6 +292,13 @@ const Button: React.FC<ButtonProps> = ({
       }}
     </Pressable>
   );
+
+  // Если есть flex, оборачиваем в View для правильного растягивания
+  if (hasFlex) {
+    return <View style={style}>{pressableContent}</View>;
+  }
+
+  return pressableContent;
 };
 
 const styles = StyleSheet.create({

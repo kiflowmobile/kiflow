@@ -4,7 +4,6 @@ import { useEffect, useMemo, useState } from 'react';
 import { KeyboardAvoidingView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Button from '../../ui/button';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Svg, { Path } from 'react-native-svg';
 import { useAnalyticsStore } from '@/src/stores/analyticsStore';
 import Input from '../../ui/input';
 import { Colors } from '@/src/constants/Colors';
