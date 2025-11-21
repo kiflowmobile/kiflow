@@ -3,7 +3,6 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase } from '@/src/config/supabaseClient';
 const getAuthStore = () => require('./authStore').useAuthStore;
 
-
 interface ChatMessage {
   id: string;
   role: 'user' | 'ai';
