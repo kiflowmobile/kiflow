@@ -160,10 +160,10 @@ const SIZE_STYLES: Record<ButtonSize, { container: ViewStyle; text: TextStyle }>
     container: {
       paddingVertical: 8,
       paddingHorizontal: 24,
-      minHeight: 40,
+      minHeight: 48,
     },
     text: {
-      fontSize: 16,
+      fontSize: 18,
       letterSpacing: 0.5,
     },
   },

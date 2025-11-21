@@ -11,20 +11,17 @@ const CoursesScreen = () => {
   const { courses, isLoading, error, fetchCourses, clearError } = useCourseStore();
   const analyticsStore = useAnalyticsStore.getState();
 
-
   useEffect(() => {
     fetchCourses().catch((err) => {
       console.error('Непередбачена помилка при завантаженні курсів:', err);
     });
   }, [fetchCourses]);
 
-  useSaveProgressOnExit()
-
+  useSaveProgressOnExit();
 
   useEffect(() => {
     analyticsStore.trackEvent('courses_screen__load');
   }, []);
-
 
   return (
     <SafeAreaView style={styles.container}>

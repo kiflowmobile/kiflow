@@ -8,7 +8,8 @@ export const FONT_FAMILY = {
 
 // 2. Размеры шрифтов
 export const FONT_SIZE = {
-  xs: 12,
+  xxs: 12,
+  xs: 14,
   sm: 16,
   md: 18,
   lg: 20,
@@ -32,6 +33,12 @@ export const TEXT_VARIANTS = {
     lineHeight: LINE_HEIGHT.lg,
     fontWeight: '600',
   },
+  title2: {
+    fontFamily: FONT_FAMILY.primary,
+    fontSize: FONT_SIZE.md,
+    lineHeight: LINE_HEIGHT.md,
+    fontWeight: '500',
+  },
   title3: {
     fontFamily: FONT_FAMILY.primary,
     fontSize: FONT_SIZE.sm,
@@ -44,6 +51,12 @@ export const TEXT_VARIANTS = {
     lineHeight: LINE_HEIGHT.md,
     fontWeight: '600',
   },
+  label: {
+    fontFamily: FONT_FAMILY.primary,
+    fontSize: FONT_SIZE.xs,
+    fontWeight: '600',
+  },
+
   placeholder: {
     fontFamily: FONT_FAMILY.secondary,
     fontSize: FONT_SIZE.sm,
@@ -58,7 +71,7 @@ export const TEXT_VARIANTS = {
   },
   caption: {
     fontFamily: FONT_FAMILY.primary,
-    fontSize: FONT_SIZE.xs,
+    fontSize: FONT_SIZE.xxs,
     lineHeight: LINE_HEIGHT.xs,
   },
 } as const;
