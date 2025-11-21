@@ -1,6 +1,6 @@
 'use client';
 
-import React, { forwardRef, useState } from 'react';
+import React, { forwardRef, useEffect, useState } from 'react';
 import {
   View,
   TextInput,
@@ -15,28 +15,24 @@ import {
 import * as Haptics from 'expo-haptics';
 import { Colors } from '../../../constants/Colors';
 
-type InputSize = 'sm' | 'md' | 'lg' | 'xl';
-type InputVariant = 'outline' | 'underlined' | 'rounded';
-
 export type InputProps = TextInputProps & {
-  size?: InputSize;
-  variant?: InputVariant;
   errorMessage?: string;
   isInvalid?: boolean;
   disabled?: boolean;
   leftIcon?: React.ReactNode;
   rightIcon?: React.ReactNode;
   onPressRightIcon?: () => void;
+  /** доп. стили для контейнера (поверх базовых 327x56) */
   containerStyle?: StyleProp<ViewStyle>;
+  /** доп. стили для TextInput */
   inputStyle?: StyleProp<TextStyle>;
   hapticFeedback?: boolean;
+  renderCustomPlaceholder?: (state: { focused: boolean; hasError: boolean; disabled?: boolean }) => React.ReactNode;
 };
 
 const Input = forwardRef<TextInput, InputProps>(
   (
     {
-      size = 'md',
-      variant = 'outline',
       errorMessage,
       isInvalid,
       disabled,
@@ -49,11 +45,23 @@ const Input = forwardRef<TextInput, InputProps>(
       placeholderTextColor,
       onFocus,
       onBlur,
+      renderCustomPlaceholder,
+      onChangeText,
+      value,
+      defaultValue,
+      placeholder,
       ...rest
     },
     ref,
   ) => {
     const [focused, setFocused] = useState(false);
+    const [hasText, setHasText] = useState(() => Boolean(value ?? defaultValue ?? ''));
+
+    useEffect(() => {
+      if (value !== undefined && value !== null) {
+        setHasText(String(value).length > 0);
+      }
+    }, [value]);
 
     const handleFocus = (e: any) => {
       if (hapticFeedback) {
@@ -71,53 +79,72 @@ const Input = forwardRef<TextInput, InputProps>(
     const hasError = isInvalid ?? Boolean(errorMessage);
     const isDisabled = disabled;
 
-    const sizeStyle =
-      size === 'xl'
-        ? styles.sizeXl
-        : size === 'lg'
-        ? styles.sizeLg
-        : size === 'sm'
-        ? styles.sizeSm
-        : styles.sizeMd;
+    const flattenedContainerStyle = StyleSheet.flatten(containerStyle) || {};
 
-    const variantStyle =
-      variant === 'underlined'
-        ? styles.variantUnderlined
-        : variant === 'rounded'
-        ? styles.variantRounded
-        : styles.variantOutline;
+    const marginKeys: (keyof ViewStyle)[] = [
+      'margin',
+      'marginTop',
+      'marginRight',
+      'marginBottom',
+      'marginLeft',
+      'marginHorizontal',
+      'marginVertical',
+      'marginStart',
+      'marginEnd',
+    ];
+
+    const wrapperMarginStyle: ViewStyle = {};
+    const containerWithoutMargins: ViewStyle = {};
+
+    Object.entries(flattenedContainerStyle).forEach(([key, value]) => {
+      if (marginKeys.includes(key as keyof ViewStyle)) {
+        (wrapperMarginStyle as any)[key] = value;
+      } else {
+        (containerWithoutMargins as any)[key] = value;
+      }
+    });
 
     const containerStyles: StyleProp<ViewStyle> = [
       styles.inputContainer,
-      sizeStyle,
-      variantStyle,
       focused && styles.inputContainerFocused,
       isDisabled && styles.inputContainerDisabled,
       hasError && styles.inputContainerError,
-      containerStyle,
+      containerWithoutMargins,
     ];
 
-    const fieldStyles: StyleProp<TextStyle> = [
-      styles.inputField,
-      variant === 'underlined' && styles.inputFieldUnderlined,
-      variant === 'rounded' && styles.inputFieldRounded,
-      inputStyle,
-    ];
+    const fieldStyles: StyleProp<TextStyle> = [styles.inputField, inputStyle];
+
+    const handleChangeText = (text: string) => {
+      setHasText(text.length > 0);
+      onChangeText?.(text);
+    };
 
     return (
-      <View style={{ width: '100%' }}>
+      <View style={wrapperMarginStyle}>
         <View style={containerStyles}>
           {leftIcon ? <View style={styles.iconWrapper}>{leftIcon}</View> : null}
 
-          <TextInput
-            ref={ref}
-            editable={!isDisabled}
-            style={fieldStyles}
-            placeholderTextColor={placeholderTextColor ?? Colors.darkGray}
-            onFocus={handleFocus}
-            onBlur={handleBlur}
-            {...rest}
-          />
+          <View style={styles.fieldWrapper}>
+            <TextInput
+              ref={ref}
+              editable={!isDisabled}
+              style={fieldStyles}
+              placeholder={renderCustomPlaceholder ? undefined : placeholder}
+              value={value}
+              defaultValue={defaultValue}
+              onChangeText={handleChangeText}
+              placeholderTextColor={placeholderTextColor ?? '#a1a1a1'}
+              onFocus={handleFocus}
+              onBlur={handleBlur}
+              {...rest}
+            />
+
+            {renderCustomPlaceholder && !hasText ? (
+              <View pointerEvents="none" style={styles.customPlaceholder}>
+                {renderCustomPlaceholder({ focused, hasError, disabled: isDisabled })}
+              </View>
+            ) : null}
+          </View>
 
           {rightIcon ? (
             onPressRightIcon ? (
@@ -138,21 +165,18 @@ const Input = forwardRef<TextInput, InputProps>(
 
 const styles = StyleSheet.create({
   inputContainer: {
-    borderWidth: 1,
-    borderColor: Colors.darkGray,
-    borderRadius: 16,
+    width:'100%',
+    height: 56,
+    borderRadius: 8,
     backgroundColor: Colors.white,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
     flexDirection: 'row',
     alignItems: 'center',
     overflow: 'hidden',
   },
   inputContainerFocused: {
     borderColor: Colors.blue,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
   },
   inputContainerDisabled: {
     opacity: 0.4,
@@ -167,45 +191,26 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 16,
   },
-  inputFieldUnderlined: {
-    paddingHorizontal: 0,
+  fieldWrapper: {
+    flex: 1,
+    position: 'relative',
+    height: '100%',
+    justifyContent: 'center',
   },
-  inputFieldRounded: {
+  customPlaceholder: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: 0,
+    bottom: 0,
+    justifyContent: 'center',
     paddingHorizontal: 16,
+    color: '#000',
   },
   iconWrapper: {
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 12,
-  },
-  sizeXl: {
-    height: 56,
-    minHeight: 56,
-  },
-  sizeLg: {
-    height: 48,
-    minHeight: 48,
-  },
-  sizeMd: {
-    height: 44,
-    minHeight: 44,
-  },
-  sizeSm: {
-    height: 40,
-    minHeight: 40,
-  },
-  variantUnderlined: {
-    borderRadius: 0,
-    borderBottomWidth: 1,
-    borderWidth: 0,
-  },
-  variantOutline: {
-    borderRadius: 16,
-    borderWidth: 1,
-  },
-  variantRounded: {
-    borderRadius: 20,
-    borderWidth: 1,
   },
   errorText: {
     marginTop: 4,

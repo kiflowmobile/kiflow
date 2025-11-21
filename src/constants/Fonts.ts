@@ -3,16 +3,16 @@
 // 1. Имена шрифтов (ровно те, что в useFonts)
 export const FONT_FAMILY = {
   primary: 'RobotoCondensed',
+  secondary: 'Inter',
 } as const;
 
 // 2. Размеры шрифтов
 export const FONT_SIZE = {
   xs: 12,
-  sm: 14,
+  sm: 16,
   md: 18,
   lg: 20,
-  xl: 22,
-  '2xl': 24,
+  xl: 32,
 } as const;
 
 // 3. Line-height (можно в числах или коэффициентами)
@@ -21,8 +21,7 @@ export const LINE_HEIGHT = {
   sm: 20,
   md: 22,
   lg: 24,
-  xl: 28,
-  '2xl': 32,
+  xl: 32,
 } as const;
 
 // 4. Готовые текстовые пресеты (типография)
@@ -33,15 +32,23 @@ export const TEXT_VARIANTS = {
     lineHeight: LINE_HEIGHT.lg,
     fontWeight: '600',
   },
-  title: {
+  title3: {
     fontFamily: FONT_FAMILY.primary,
-    fontSize: FONT_SIZE.lg,
-    lineHeight: LINE_HEIGHT.lg,
+    fontSize: FONT_SIZE.sm,
+    lineHeight: LINE_HEIGHT.sm,
+    fontWeight: '500',
   },
-  body: {
+  largeTitle: {
     fontFamily: FONT_FAMILY.primary,
-    fontSize: FONT_SIZE.md,
+    fontSize: FONT_SIZE.xl,
     lineHeight: LINE_HEIGHT.md,
+    fontWeight: '600',
+  },
+  placeholder: {
+    fontFamily: FONT_FAMILY.secondary,
+    fontSize: FONT_SIZE.sm,
+    lineHeight: LINE_HEIGHT.sm,
+    fontWeight: '400',
   },
   button: {
     fontFamily: FONT_FAMILY.primary,

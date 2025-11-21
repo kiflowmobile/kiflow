@@ -1,7 +1,7 @@
 import 'react-native-reanimated';
 import { useAuthStore } from '@/src/stores/authStore';
 import { useFonts } from 'expo-font';
-import { Stack, useRouter } from 'expo-router';
+import { Stack, useRouter, useRootNavigationState } from 'expo-router';
 import { useEffect } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useUserProgressStore } from '../stores';
@@ -14,6 +14,8 @@ export default function RootLayout() {
   const { initFromLocal } = useUserProgressStore();
   const { user, isGuest, isLoading } = useAuthStore();
   const router = useRouter();
+  const navigationState = useRootNavigationState();
+  const isNavigationReady = Boolean(navigationState?.key);
 
   const [loaded] = useFonts({
     RobotoCondensed: require('../assets/fonts/RobotoCondensed.ttf'),
@@ -30,14 +32,10 @@ export default function RootLayout() {
   }, [user, initFromLocal]);
 
   useEffect(() => {
-    if (loaded && !isLoading && isGuest === true) {
+    if (loaded && !isLoading && isGuest === true && isNavigationReady) {
       router.replace('/');
     }
-  }, [isGuest, isLoading, loaded, router]);
-
-  if (!loaded) {
-    return null;
-  }
+  }, [isGuest, isLoading, isNavigationReady, loaded, router]);
 
   useEffect(() => {
     initAmplitude();

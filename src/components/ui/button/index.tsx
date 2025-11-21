@@ -18,6 +18,19 @@ import { FONT_FAMILY, FONT_SIZE, TEXT_VARIANTS } from '@/src/constants/Fonts';
 export type ButtonVariant = 'dark' | 'light' | 'accent' | 'outline';
 export type ButtonSize = 'sm' | 'md' | 'lg';
 
+type VariantStateStyles = {
+  container: ViewStyle;
+  text: TextStyle;
+  pressed?: {
+    container?: ViewStyle;
+    text?: TextStyle;
+  };
+  disabled?: {
+    container?: ViewStyle;
+    text?: TextStyle;
+  };
+};
+
 interface ButtonProps {
   title: string;
   onPress: () => void;
@@ -36,19 +49,30 @@ interface ButtonProps {
 }
 
 /**
- * Статические стили для вариантов (как в Figma):
- * - dark    — чёрная заливка
- * - light   — белая заливка
- * - accent  — сиреневая/голубая заливка
- * - outline — прозрачный фон + белая обводка
+ * Вариант + состояния (default, pressed, disabled)
  */
-const VARIANT_STYLES: Record<ButtonVariant, { container: ViewStyle; text: TextStyle }> = {
+const VARIANT_STYLES: Record<ButtonVariant, VariantStateStyles> = {
   dark: {
     container: {
       backgroundColor: Colors.black,
+      borderColor: Colors.black,
     },
     text: {
       color: Colors.white,
+    },
+    pressed: {
+      container: {
+        backgroundColor: '#111111',
+      },
+    },
+    disabled: {
+      container: {
+        backgroundColor: '#d4d4d4',
+        borderColor: '#d4d4d4',
+      },
+      text: {
+        color: Colors.white,
+      },
     },
   },
   light: {
@@ -59,13 +83,40 @@ const VARIANT_STYLES: Record<ButtonVariant, { container: ViewStyle; text: TextSt
     text: {
       color: Colors.black,
     },
+    pressed: {
+      container: {
+        backgroundColor: '#f2f2f2',
+      },
+    },
+    disabled: {
+      container: {
+        backgroundColor: '#e6e6e6',
+      },
+      text: {
+        color: '#999999',
+      },
+    },
   },
   accent: {
     container: {
       backgroundColor: Colors.blue,
+      borderColor: Colors.blue,
     },
     text: {
       color: Colors.black,
+    },
+    pressed: {
+      container: {
+        backgroundColor: '#5aa9ff',
+      },
+    },
+    disabled: {
+      container: {
+        backgroundColor: '#8cbfff',
+      },
+      text: {
+        color: '#333333',
+      },
     },
   },
   outline: {
@@ -76,6 +127,20 @@ const VARIANT_STYLES: Record<ButtonVariant, { container: ViewStyle; text: TextSt
     text: {
       color: Colors.white,
       fontSize: FONT_SIZE.lg,
+    },
+    pressed: {
+      container: {
+        backgroundColor: 'rgba(255,255,255,0.08)',
+      },
+    },
+    disabled: {
+      container: {
+        borderColor: 'rgba(255,255,255,0.4)',
+        backgroundColor: 'transparent',
+      },
+      text: {
+        color: 'rgba(255,255,255,0.6)',
+      },
     },
   },
 };
@@ -135,12 +200,12 @@ const Button: React.FC<ButtonProps> = ({
   const isDisabled = disabled || loading;
 
   const handlePress = () => {
-    if (isDisabled) {
-      return;
-    }
+    if (isDisabled) return;
+
     if (hapticFeedback) {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => undefined);
     }
+
     onPress();
   };
 
@@ -172,40 +237,53 @@ const Button: React.FC<ButtonProps> = ({
       accessibilityState={{ disabled: isDisabled, busy: loading }}
       disabled={isDisabled}
       onPress={handlePress}
-      style={({ pressed }) => [
-        styles.base,
-        variantTheme.container,
-        sizeTheme.container,
-        isDisabled && styles.disabled,
-        pressed && !isDisabled && styles.pressed,
-        style,
-      ]}
     >
-      <View style={styles.content}>
-        {adornment.left}
+      {({ pressed }) => {
+        const isPressed = pressed && !isDisabled;
 
-        <Text
-          style={[
-            styles.text,
-            variantTheme.text,
-            sizeTheme.text,
-            isDisabled && styles.disabledText,
-            textStyle,
-          ]}
-        >
-          {title}
-        </Text>
+        return (
+          <View
+            style={[
+              styles.base,
+              variantTheme.container,
+              sizeTheme.container,
+              isPressed && variantTheme.pressed?.container,
+              isDisabled && (variantTheme.disabled?.container || styles.disabled),
+              style,
+            ]}
+          >
+            <View style={styles.content}>
+              {adornment.left}
 
-        {loading && (
-          <ActivityIndicator
-            style={styles.spinner}
-            color={variantTheme.text?.color || Colors.white}
-            size="small"
-          />
-        )}
+              <Text
+                style={[
+                  styles.text,
+                  variantTheme.text,
+                  sizeTheme.text,
+                  isPressed && variantTheme.pressed?.text,
+                  isDisabled && (variantTheme.disabled?.text || styles.disabledText),
+                  textStyle,
+                ]}
+              >
+                {title}
+              </Text>
 
-        {adornment.right}
-      </View>
+              {loading && (
+                <ActivityIndicator
+                  style={styles.spinner}
+                  color={
+                    (isDisabled ? variantTheme.disabled?.text?.color : variantTheme.text?.color) ||
+                    Colors.white
+                  }
+                  size="small"
+                />
+              )}
+
+              {adornment.right}
+            </View>
+          </View>
+        );
+      }}
     </Pressable>
   );
 };
@@ -235,10 +313,6 @@ const styles = StyleSheet.create({
     ...TEXT_VARIANTS.button,
     textAlign: 'center',
     fontFamily: FONT_FAMILY.primary,
-  },
-  pressed: {
-    transform: [{ scale: 0.98 }],
-    opacity: 0.9,
   },
   disabled: {
     opacity: 0.4,
