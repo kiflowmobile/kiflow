@@ -46,16 +46,32 @@ export default function RootLayout() {
       <SafeAreaProvider>
         <Stack
           screenOptions={{
-            header: () => <CustomHeader />,
+            headerShown: false,
           }}
         >
-          <Stack.Screen name="index" options={{ headerShown: false }} />
-          <Stack.Screen name="course-code" options={{ headerShown: false }} />
-          <Stack.Screen name="module/[moduleId]" options={{ headerShown: false }} />
-          <Stack.Screen name="auth/login" options={{ headerShown: false }} />
-          <Stack.Screen name="auth/registration" options={{ headerShown: false }} />
-          <Stack.Screen name="+not-found" options={{ headerShown: false }} />
-          <Stack.Screen name="courses/[id]" />
+          <Stack.Screen name="index" />
+          <Stack.Screen name="course-code" />
+          <Stack.Screen name="module/[moduleId]" />
+          <Stack.Screen name="auth/login" />
+          <Stack.Screen name="auth/registration" />
+          <Stack.Screen name="+not-found" />
+
+          <Stack.Screen
+            name="courses"
+            options={{
+              headerShown: true,
+              header: () => <CustomHeader showBackButton={false} />,
+            }}
+          />
+
+          <Stack.Screen
+            name="courses/[id]"
+            options={{
+              headerShown: true,
+              header: () => <CustomHeader showBackButton />,
+            }}
+          />
+
           <Stack.Screen name="instractions" />
         </Stack>
       </SafeAreaProvider>

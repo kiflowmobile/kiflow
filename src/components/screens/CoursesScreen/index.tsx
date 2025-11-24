@@ -6,6 +6,7 @@ import CourseCard from './components/CourseCard';
 import { useEffect } from 'react';
 import { useSaveProgressOnExit } from '@/src/hooks/useSaveProgressOnExit';
 import { useAnalyticsStore } from '@/src/stores/analyticsStore';
+import { Colors } from '@/src/constants/Colors';
 
 const CoursesScreen = () => {
   const { courses, isLoading, error, fetchCourses, clearError } = useCourseStore();
@@ -58,7 +59,7 @@ const CoursesScreen = () => {
 export default CoursesScreen;
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff' },
+  container: { flex: 1, backgroundColor: Colors.bg },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',

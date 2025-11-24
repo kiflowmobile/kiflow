@@ -5,6 +5,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect } from 'react';
 import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useAnalyticsStore } from '@/src/stores/analyticsStore';
+import { Colors } from '@/src/constants/Colors';
 
 const DOT_SIZE = 16;
 const LINE_DEFAULT = '#D9D9D9';
@@ -114,7 +115,6 @@ export default function CourseScreen() {
         {item.description ? <Text style={styles.moduleDescription}>{item.description}</Text> : null}
         {params.id ? (
           <>
-            <Text style={styles.progressText}>{progress}%</Text>
             <View style={styles.progressBarWrapper}>
               <ProgressBar percent={progress} />
             </View>
@@ -163,7 +163,7 @@ export default function CourseScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff', padding: 16 },
+  container: { flex: 1, backgroundColor: Colors.bg, padding: 16 },
 
   moduleItem: {
     position: 'relative',
@@ -254,6 +254,7 @@ const styles = StyleSheet.create({
   },
   progressBarWrapper: {
     marginBottom: 6,
+    marginTop: 12,
   },
 
   loadingText: {
