@@ -33,7 +33,12 @@ export default function RootLayout() {
 
   useEffect(() => {
     if (loaded && !isLoading && isGuest === true && isNavigationReady) {
-      router.replace('/');
+      // Delay navigation to the next tick so the Root navigator has a chance to mount.
+      // This avoids "Attempted to navigate before mounting the Root Layout component".
+      const id = setTimeout(() => {
+        router.replace('/');
+      }, 0);
+      return () => clearTimeout(id);
     }
   }, [isGuest, isLoading, isNavigationReady, loaded, router]);
 

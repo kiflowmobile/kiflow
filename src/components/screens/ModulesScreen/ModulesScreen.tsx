@@ -8,9 +8,9 @@ import { useAnalyticsStore } from '@/src/stores/analyticsStore';
 import { Colors } from '@/src/constants/Colors';
 import { TEXT_VARIANTS } from '@/src/constants/Fonts';
 
-const DOT_SIZE = 16;
+const DOT_SIZE = 24;
 const LINE_DEFAULT = '#D9D9D9';
-const LINE_COMPLETED = '#27AE60';
+const LINE_COMPLETED = Colors.green;
 
 export default function CourseScreen() {
   const params = useLocalSearchParams<{ id?: string }>();
@@ -185,7 +185,7 @@ const styles = StyleSheet.create({
   },
   statusDotWrapper: {
     position: 'absolute',
-    left: -32,
+    left: -28,
     top: 0,
     bottom: 0,
     width: 24,
@@ -224,7 +224,7 @@ const styles = StyleSheet.create({
   },
 
   statusDotCompleted: {
-    backgroundColor: '#27AE60',
+    backgroundColor: Colors.green,
   },
   checkmark: {
     color: '#fff',
