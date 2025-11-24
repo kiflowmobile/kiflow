@@ -4,12 +4,11 @@ import { getCurrentUserProfile, updateCurrentUserProfile } from '@/src/services/
 import { useAuthStore } from '@/src/stores/authStore';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { ScrollView, StyleSheet, Switch, View, Text} from 'react-native';
+import { ScrollView, StyleSheet, Switch, View, Text } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import AvatarSection from './components/AvatarSection';
 import LoadingState from './components/LoadingState';
-import PasswordSection from './components/PasswordSection';
-import UserInfoSection from './components/UserInfoSection';
+// Removed inline profile edit sections — editing moved to separate screen
 import CompanyCode from './components/CompanyCode';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAnalyticsStore } from '@/src/stores/analyticsStore';
@@ -23,7 +22,6 @@ export default function ProfileScreen() {
   const [editMode, setEditMode] = useState(false);
   const [isDeveloper, setIsDeveloper] = useState(false);
   const analyticsStore = useAnalyticsStore.getState();
-
 
   const [formData, setFormData] = useState<UserUpdateData>({
     full_name: '',
@@ -49,7 +47,6 @@ export default function ProfileScreen() {
     };
     loadDevMode();
   }, []);
-
 
   const loadUserProfile = async () => {
     try {
@@ -125,24 +122,11 @@ export default function ProfileScreen() {
     setEditMode(false);
   };
 
-  // Хендлери для дочірніх компонентів
-  const handleFormDataChange = (field: keyof UserUpdateData, value: string) => {
-    setFormData((prev) => {
-      const next = { ...prev, [field]: value } as UserUpdateData;
-      if (field === 'first_name' || field === 'last_name') {
-        const first = field === 'first_name' ? value : prev.first_name || '';
-        const last = field === 'last_name' ? value : prev.last_name || '';
-        const full = `${first ?? ''} ${last ?? ''}`.trim();
-        next.full_name = full;
-      }
-      return next;
-    });
-  };
+  // NOTE: inline edit moved to separate screen; form state updated there.
 
   const handleEdit = () => {
     analyticsStore.trackEvent(' profile_screen__edit__click');
-
-    setEditMode(true);
+    router.push('/profile/edit');
   };
 
   const handleCourseCodePress = () => {
@@ -164,7 +148,7 @@ export default function ProfileScreen() {
   if (loading) {
     return <LoadingState />;
   }
-  
+
   const toggleDeveloperMode = async (value: boolean) => {
     try {
       setIsDeveloper(value);
@@ -178,16 +162,14 @@ export default function ProfileScreen() {
   //   analyticsStore.trackEvent('profile_screen__load');
   // }, []);
 
-
-
-
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
         <View style={styles.content}>
-        
           <AvatarSection
             fullName={formData.full_name || user?.full_name || ''}
+            email={user?.email ?? undefined}
+            startedAt={user?.created_at ?? null}
             onEditPress={handleEdit}
             onSignOutPress={handleSignOut}
             onSave={handleSave}
@@ -195,25 +177,17 @@ export default function ProfileScreen() {
             editMode={editMode}
             updating={updating}
           />
-          <View style={{ flexDirection: 'column', alignItems: 'flex-start', marginTop: 16 }}>
-            <Text style={{ flex: 1, fontSize: 16 }}>Developer Mode</Text>        
-            <Switch
-              value={isDeveloper}
-              onValueChange={toggleDeveloperMode}
-            />
-          </View>
-          <UserInfoSection
-            user={user}
-            formData={formData}
-            editMode={editMode}
-            onFormDataChange={handleFormDataChange}
-          />
-          <PasswordSection />
+
           <CompanyCode onPress={handleCourseCodePress} />
+
+          <View style={{ flexDirection: 'column', alignItems: 'flex-start', marginTop: 16 }}>
+            <Text style={{ flex: 1, fontSize: 16 }}>Developer Mode</Text>
+            <Switch value={isDeveloper} onValueChange={toggleDeveloperMode} />
+          </View>
+
+          {/* UserInfoSection and PasswordSection removed — editing available via Edit screen */}
         </View>
-        
       </ScrollView>
-      
     </SafeAreaView>
   );
 }
