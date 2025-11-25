@@ -1,8 +1,16 @@
 import { Tabs } from 'expo-router';
 import { Platform } from 'react-native';
-import { IconSymbol } from '@/src/components/ui/IconSymbol';
-import { useAnalyticsStore } from '@/src/stores/analyticsStore';
 import CustomHeader from '@/src/components/ui/CustomHeader';
+import { useAnalyticsStore } from '@/src/stores/analyticsStore';
+
+import CoursesIconActive from '@/src/assets/images/courses-active.svg';
+import CoursesIconInactive from '@/src/assets/images/courses-inactive.svg';
+
+import ProgressIconActive from '@/src/assets/images/progress-active.svg';
+import ProgressIconInactive from '@/src/assets/images/progress-inactive.svg';
+
+import ProfileIconActive from '@/src/assets/images/profile-active.svg';
+import ProfileIconInactive from '@/src/assets/images/profile-inactive.svg';
 
 export default function TabsLayout() {
   const analyticsStore = useAnalyticsStore.getState();
@@ -28,9 +36,12 @@ export default function TabsLayout() {
         name="courses"
         options={{
           title: 'Courses',
-          tabBarIcon: ({ color }: { color: string }) => (
-            <IconSymbol name="book.fill" size={24} color={color} />
-          ),
+          tabBarIcon: ({ focused }: { focused: boolean; color: string; size: number }) =>
+            focused ? (
+              <CoursesIconActive width={24} height={24} />
+            ) : (
+              <CoursesIconInactive width={24} height={24} />
+            ),
           headerShown: true,
           header: () => <CustomHeader showBackButton={false} title="Courses" />,
         }}
@@ -38,25 +49,33 @@ export default function TabsLayout() {
           focus: () => analyticsStore.trackEvent('tab_bar__courses__click'),
         }}
       />
+
       <Tabs.Screen
         name="progress"
         options={{
           title: 'Progress',
-          tabBarIcon: ({ color }: { color: string }) => (
-            <IconSymbol name="chart.bar.fill" size={24} color={color} />
-          ),
+          tabBarIcon: ({ focused }: { focused: boolean; color: string; size: number }) =>
+            focused ? (
+              <ProgressIconActive width={24} height={24} />
+            ) : (
+              <ProgressIconInactive width={24} height={24} />
+            ),
         }}
         listeners={{
           focus: () => analyticsStore.trackEvent('tab_bar__results__click'),
         }}
       />
+
       <Tabs.Screen
         name="profile"
         options={{
           title: 'Profile',
-          tabBarIcon: ({ color }: { color: string }) => (
-            <IconSymbol name="person.fill" size={24} color={color} />
-          ),
+          tabBarIcon: ({ focused }: { focused: boolean; color: string; size: number }) =>
+            focused ? (
+              <ProfileIconActive width={24} height={24} />
+            ) : (
+              <ProfileIconInactive width={24} height={24} />
+            ),
         }}
         listeners={{
           focus: () => analyticsStore.trackEvent('tab_bar__profile__click'),
@@ -65,5 +84,3 @@ export default function TabsLayout() {
     </Tabs>
   );
 }
-
-
