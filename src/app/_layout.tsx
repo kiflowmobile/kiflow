@@ -19,6 +19,7 @@ export default function RootLayout() {
 
   const [loaded] = useFonts({
     RobotoCondensed: require('../assets/fonts/RobotoCondensed.ttf'),
+    Inter: require('../assets/fonts/Inter.ttf'),
   });
 
   const checkSession = useAuthStore((state) => state.checkSession);
@@ -60,14 +61,6 @@ export default function RootLayout() {
           <Stack.Screen name="auth/login" />
           <Stack.Screen name="auth/registration" />
           <Stack.Screen name="+not-found" />
-
-          <Stack.Screen
-            name="courses"
-            options={{
-              headerShown: true,
-              header: () => <CustomHeader showBackButton={false} />,
-            }}
-          />
 
           <Stack.Screen
             name="courses/[id]"

@@ -1,7 +1,6 @@
 import { SafeAreaView } from '@/src/components/ui/safe-area-view';
-import { Text } from '@/src/components/ui/text';
 import { useCourseStore } from '@/src/stores';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { ScrollView, StyleSheet, View,Text } from 'react-native';
 import CourseCard from './components/CourseCard';
 import { useEffect } from 'react';
 import { useSaveProgressOnExit } from '@/src/hooks/useSaveProgressOnExit';

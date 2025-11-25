@@ -7,7 +7,6 @@ import Button from '@/src/components/ui/button';
 import { useRouter } from 'expo-router';
 import { useAuthStore } from '@/src/stores/authStore';
 import { updateCurrentUserProfile, getCurrentUserProfile } from '@/src/services/users';
-import { VStack } from '@/src/components/ui/vstack';
 import { Colors } from '@/src/constants/Colors';
 
 export default function EditProfileScreen() {
@@ -15,6 +14,12 @@ export default function EditProfileScreen() {
   const { user: supabaseUser } = useAuthStore();
 
   const [formData, setFormData] = useState({
+    first_name: '',
+    last_name: '',
+    email: supabaseUser?.email || '',
+  });
+
+  const [initialFormData, setInitialFormData] = useState({
     first_name: '',
     last_name: '',
     email: supabaseUser?.email || '',
@@ -31,10 +36,20 @@ export default function EditProfileScreen() {
           last_name: data.last_name || '',
           email: data.email || supabaseUser?.email || '',
         });
+        setInitialFormData({
+          first_name: data.first_name || '',
+          last_name: data.last_name || '',
+          email: data.email || supabaseUser?.email || '',
+        });
       }
     };
     load();
   }, [supabaseUser]);
+
+  const isDirty =
+    formData.first_name !== initialFormData.first_name ||
+    formData.last_name !== initialFormData.last_name ||
+    formData.email !== initialFormData.email;
 
   const handleChange = (field: 'first_name' | 'last_name', value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -73,7 +88,7 @@ export default function EditProfileScreen() {
       <CustomHeader title="Edit profile" showBackButton />
 
       <ScrollView contentContainerStyle={styles.content}>
-        <VStack space="md">
+        <View>
           <ProfileField
             label="First name"
             value={formData.first_name}
@@ -96,18 +111,21 @@ export default function EditProfileScreen() {
             <Button
               title="Change password"
               onPress={() => router.push('/profile/change-password')}
-              size="lg"
+              size="md"
+              variant="accent"
+              style={{ maxWidth: 180 }}
             />
           </View>
-        </VStack>
+        </View>
       </ScrollView>
 
       <View style={styles.footer}>
         <Button
           title={saving ? 'Saving...' : 'Save changes'}
+          size="lg"
           onPress={handleSave}
-          disabled={saving}
-          variant="accent"
+          disabled={saving || !isDirty}
+          variant="dark"
         />
       </View>
     </SafeAreaView>
@@ -121,7 +139,6 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: 16,
-    paddingBottom: 120,
   },
   footer: {
     position: 'absolute',

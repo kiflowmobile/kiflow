@@ -1,10 +1,10 @@
 import React from 'react';
 import Input from '@/src/components/ui/input';
-import { Text } from '@/src/components/ui/text';
 import { View } from '@/src/components/ui/view';
 import { Colors } from '@/src/constants/Colors';
-import { StyleSheet, TextInputProps } from 'react-native';
+import { StyleSheet, TextInputProps,Text } from 'react-native';
 import type { InputProps } from '@/src/components/ui/input';
+import { TEXT_VARIANTS } from '@/src/constants/Fonts';
 
 interface ProfileFieldProps {
   label: string;
@@ -40,7 +40,6 @@ export default function ProfileField({
         placeholder={isEditable ? placeholder : undefined}
         containerStyle={[styles.input, isDisabled && styles.inputDisabled]}
         inputStyle={[isDisabled && styles.inputFieldDisabled]}
-        // для режима "просмотра" без значения показываем "Не вказано"
         renderCustomPlaceholder={
           isDisabled && !hasValue
             ? () => (
@@ -61,11 +60,9 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   fieldLabel: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: Colors.darkGray,
+    ...TEXT_VARIANTS.label,
     marginBottom: 8,
-    letterSpacing: 0.2,
+    marginLeft: 16,
   },
   input: {
     marginTop: 0,

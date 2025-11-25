@@ -1,8 +1,7 @@
 import { SafeAreaView } from '@/src/components/ui/safe-area-view';
 import { Spinner } from '@/src/components/ui/spinner';
-import { Text } from '@/src/components/ui/text';
 import { View } from '@/src/components/ui/view';
-import { StyleSheet } from 'react-native';
+import { StyleSheet,Text } from 'react-native';
 
 interface LoadingStateProps {
   message?: string;

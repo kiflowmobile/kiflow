@@ -1,7 +1,7 @@
 import { View } from '@/src/components/ui/view';
-import { Text } from '@/src/components/ui/text';
-import { TouchableOpacity, StyleSheet } from 'react-native';
+import { TouchableOpacity, StyleSheet,Text } from 'react-native';
 import { Colors } from '@/src/constants/Colors';
+import { TEXT_VARIANTS } from '@/src/constants/Fonts';
 
 interface CompanyCodeProps {
   onPress: () => void;
@@ -31,19 +31,17 @@ const styles = StyleSheet.create({
     borderColor: '#E7E7E7',
   },
   title: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: Colors.black,
+    ...TEXT_VARIANTS.title2,
     marginBottom: 8,
   },
   description: {
-    fontSize: 14,
-    color: Colors.darkGray,
+...TEXT_VARIANTS.body2,
     marginBottom: 12,
   },
   link: {
-    fontSize: 14,
+    fontSize: 16,
+    fontFamily: 'RobotoCondensed',
     color: Colors.blue,
-    fontWeight: '600',
+    fontWeight: '500',
   },
 });
