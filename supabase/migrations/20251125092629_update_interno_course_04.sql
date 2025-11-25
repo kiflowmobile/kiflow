@@ -23,7 +23,7 @@ new_course AS (
     gen_random_uuid(),
     'Інтерно Суперсервіс',
     NULL,
-    NULL,
+    'https://i.postimg.cc/MHgqG70K/photo-2025-11-25-15-12-31.jpg',
     true,
     'interno_course',
     'info@interno.ua',
@@ -192,7 +192,7 @@ WITH modules_list AS (
 target_module AS (
     SELECT module_id
     FROM modules_list
-    WHERE mod_index = 2  -- <<< другий модуль
+    WHERE mod_index = 2 
 )
 INSERT INTO public.slides (
     module_id,
@@ -1922,7 +1922,7 @@ FROM public.slides s
 JOIN public.modules m ON s.module_id = m.id
 JOIN public.courses c ON m.course_id = c.id
 WHERE c.code = 'interno_course'
-  AND s.slide_order = 35;
+  AND s.slide_order = 34;
 
       INSERT INTO slide_ai_prompts (slide_id, prompt, question, created_at, updated_at)
 SELECT
@@ -2014,7 +2014,7 @@ FROM public.slides s
 JOIN public.modules m ON s.module_id = m.id
 JOIN public.courses c ON m.course_id = c.id
 WHERE c.code = 'interno_course'
-  AND s.slide_order = 40;
+  AND s.slide_order = 35;
 
 
 
