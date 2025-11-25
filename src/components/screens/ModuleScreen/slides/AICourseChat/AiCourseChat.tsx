@@ -38,7 +38,8 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
-  const [answered, setAnswered] = useState(false);
+  // const [answered, setAnswered] = useState(false);
+  const [isLocked, setIsLocked] = useState(false)
   const { prompt, fetchPromptBySlide } = usePromptsStore();
   const { criterias, fetchCriterias } = useCriteriaStore();
   const { user } = useAuthStore();
@@ -155,7 +156,7 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
   }, [slideId]);
 
   const handleSend = async () => {
-    console.log('answered', answered)
+    console.log('answered', isLocked)
     console.log('Messages', messages)
     console.log('userMessageCount', userMessageCount)
     analyticsStore.trackEvent("course_screen__submit__click", {
@@ -165,7 +166,7 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
     if (!input.trim()  || loading) return;
 
     if (userMessageCount >= 3) {
-      setAnswered(true);
+      setIsLocked(true);
       return;
     }
 
@@ -178,7 +179,7 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
     console.log('userMessageCount', userMessageCount)
 
     if(newCount >= 3){
-      setAnswered(true)
+      setIsLocked(true)
     }
 
     setInput('');
@@ -264,7 +265,7 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
   };
 
   const handleAudioProcessed = (transcribedText: string) => {
-    if (answered) return;
+    if (isLocked) return;
     if (transcribedText.trim()) {
       setInput(transcribedText.trim());
     }
@@ -308,7 +309,7 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
           onFocus={handleFocus}
           onBlur={handleBlur}
           loading={loading}
-          answered={answered}
+          isLocked={isLocked}
           id={courseIdStr}
           slideId={slideId}
         />
