@@ -142,14 +142,14 @@ export default function AvatarSection({
               <Button
                 title="Cancel"
                 variant="accent"
-                size="lg"
+                size="md"
                 onPress={() => setShowConfirm(false)}
                 style={styles.modalButton}
               />
               <Button
                 title="Log out"
                 variant="dark"
-                size="lg"
+                size="md"
                 onPress={() => {
                   setShowConfirm(false);
                   onSignOutPress();
@@ -261,32 +261,27 @@ const styles = StyleSheet.create({
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.6)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
+    backgroundColor: 'rgba(15, 23, 42, 0.5)',
+    paddingHorizontal: 16,
+    justifyContent: 'flex-end',
   },
   modalContainer: {
     width: '100%',
-    maxWidth: 760,
-    backgroundColor: Colors.white,
-    borderRadius: 16,
-    paddingVertical: 28,
-    paddingHorizontal: 28,
-    alignItems: 'center',
+    marginBottom: 38,
+    backgroundColor: '#ffffff',
+    borderRadius: 24,
+    paddingHorizontal: 24,
+    paddingVertical: 24,
   },
   modalTitle: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: Colors.black,
+    ...TEXT_VARIANTS.largeTitle,
+    fontSize: 20,
     textAlign: 'center',
     marginBottom: 12,
   },
   modalMessage: {
-    fontSize: 16,
-    color: Colors.darkGray,
-    textAlign: 'center',
-    marginBottom: 20,
+...TEXT_VARIANTS.body2,
+    marginBottom: 24,
   },
   modalText: {
     fontSize: 16,
