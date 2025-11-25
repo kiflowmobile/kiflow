@@ -50,6 +50,8 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
   const courseIdStr = Array.isArray(courseId) ? courseId[0] : courseId;
   const CHAT_STORAGE_KEY = `course-chat-${courseIdStr}`;
   const analyticsStore = useAnalyticsStore.getState();
+  const [userMessageCount, setUserMessageCount] = useState(0);
+
 
 
   const loadChat = async () => {
@@ -60,7 +62,7 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
       const parsed = JSON.parse(stored);
       if (parsed[slideId]) {
         setMessages(parsed[slideId]);
-        setAnswered(true);
+        // setAnswered(true);
       }
     } catch (err) {
       console.error('Error loading chat:', err);
@@ -114,7 +116,7 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
           const parsed = JSON.parse(stored);
           if (parsed[slideId]) {
             setMessages(parsed[slideId]);
-            setAnswered(true);
+            // setAnswered(true);
             return;
           }
         }
@@ -129,7 +131,7 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
         };
 
         setMessages([aiMsg]);
-        setAnswered(useSlidesStore.getState().isSlideAnswered(slideId));
+        // setAnswered(useSlidesStore.getState().isSlideAnswered(slideId));
         setInput('');
       } catch (err) {
         console.error('Error loading chat or prompt:', err);
@@ -153,18 +155,36 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
   }, [slideId]);
 
   const handleSend = async () => {
+    console.log('answered', answered)
+    console.log('Messages', messages)
+    console.log('userMessageCount', userMessageCount)
     analyticsStore.trackEvent("course_screen__submit__click", {
       courseIdStr, 
       slideId,
     });
-    if (!input.trim() || answered || loading) return;
+    if (!input.trim()  || loading) return;
+
+    if (userMessageCount >= 3) {
+      setAnswered(true);
+      return;
+    }
 
     const userMsg: Message = { id: Date.now().toString(), role: 'user', text: input.trim() };
     setMessages((prev) => [...prev, userMsg]);
+
+    //рахуємо кількість користувальских відповідей 
+    const newCount = userMessageCount + 1
+    setUserMessageCount(newCount)
+    console.log('userMessageCount', userMessageCount)
+
+    if(newCount >= 3){
+      setAnswered(true)
+    }
+
     setInput('');
     setLoading(true);
-    setAnswered(true);
     useSlidesStore.getState().markSlideAnswered(slideId);
+ 
 
     try {
       const slidePrompt = prompt[slideId]?.prompt || '';

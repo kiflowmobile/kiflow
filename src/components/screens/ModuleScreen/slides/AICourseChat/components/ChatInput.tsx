@@ -33,7 +33,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
   slideId,
 }) => {
   const analyticsStore = useAnalyticsStore.getState();
-  const hasTrackedInputRef = useRef(false); // щоб не дублювати подію при кожному символі
+  const hasTrackedInputRef = useRef(false); 
 
   const handleFocus = () => {
     onFocus?.();
@@ -63,7 +63,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
       <TextInput
         ref={inputRef}
         style={styles.input}
-        placeholder="Введіть відповідь..."
+        placeholder={answered ? "Ви вже використали 3 спроби" : "Введіть відповідь..."}
         value={input}
         onChangeText={handleChangeText}
         onFocus={handleFocus}
