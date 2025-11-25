@@ -54,6 +54,8 @@ export default function TabsLayout() {
         name="progress"
         options={{
           title: 'Progress',
+          headerShown: true,
+          header: () => <CustomHeader showBackButton={false} title="Your Progress" />,
           tabBarIcon: ({ focused }: { focused: boolean; color: string; size: number }) =>
             focused ? (
               <ProgressIconActive width={24} height={24} />
