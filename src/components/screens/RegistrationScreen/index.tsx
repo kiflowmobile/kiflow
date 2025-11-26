@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Button from '../../ui/button';
-import { Input, InputField } from '../../ui/input';
+// import { Input, InputField } from '../../ui/input';
 import Svg, { Path } from 'react-native-svg';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAnalyticsStore } from '@/src/stores/analyticsStore';
@@ -224,16 +224,16 @@ export default function RegisterScreen() {
                 <Text style={styles.formErrorText}>{errors.firstName}</Text>
               </View>
             ) : null}
-            <Input
+            {/* <Input
               variant="outline"
               size="xl"
               style={[styles.input, touched.firstName && errors.firstName && styles.inputError]}
-            >
-              <InputField
+            > */}
+              {/* <InputField
                 placeholder="First name"
                 autoCapitalize="words"
                 value={form.firstName}
-                onChangeText={(v) => setField('firstName', v)}
+                // onChangeText={(v) => setField('firstName', v)}
                 onBlur={() => {
                   markTouched('firstName');
                   setErrors((prev) => ({
@@ -242,8 +242,8 @@ export default function RegisterScreen() {
                   }));
                 }}
                 returnKeyType="next"
-              />
-            </Input>
+              /> */}
+            {/* </Input> */}
 
             {/* Last Name */}
             {touched.lastName && errors.lastName ? (
@@ -251,7 +251,7 @@ export default function RegisterScreen() {
                 <Text style={styles.formErrorText}>{errors.lastName}</Text>
               </View>
             ) : null}
-            <Input
+            {/* <Input
               variant="outline"
               size="xl"
               style={[styles.input, touched.lastName && errors.lastName && styles.inputError]}
@@ -270,7 +270,7 @@ export default function RegisterScreen() {
                 }}
                 returnKeyType="next"
               />
-            </Input>
+            </Input> */}
 
             {/* Email */}
             {touched.email && errors.email ? (
@@ -278,7 +278,7 @@ export default function RegisterScreen() {
                 <Text style={styles.formErrorText}>{errors.email}</Text>
               </View>
             ) : null}
-            <Input
+            {/* <Input
               variant="outline"
               size="xl"
               style={[styles.input, touched.email && errors.email && styles.inputError]}
@@ -296,7 +296,7 @@ export default function RegisterScreen() {
                 }}
                 returnKeyType="next"
               />
-            </Input>
+            </Input> */}
 
             {/* Password */}
             {touched.password && errors.password ? (
@@ -305,7 +305,7 @@ export default function RegisterScreen() {
               </View>
             ) : null}
             <View style={styles.passwordContainer}>
-  <Input
+  {/* <Input
     variant="outline"
     size="xl"
     style={[styles.input, touched.password && errors.password && styles.inputError]}
@@ -326,7 +326,7 @@ export default function RegisterScreen() {
       }}
       returnKeyType="next"
     />
-  </Input>
+  </Input> */}
   <TouchableOpacity
     style={styles.eyeButton}
     onPress={() => setShowPassword(!showPassword)}
@@ -355,7 +355,7 @@ export default function RegisterScreen() {
               </View>
             ) : null}
             <View style={styles.passwordContainer}>
-  <Input
+  {/* <Input
     variant="outline"
     size="xl"
     style={[styles.input, touched.confirmPassword && errors.confirmPassword && styles.inputError]}
@@ -377,7 +377,7 @@ export default function RegisterScreen() {
       returnKeyType="go"
       onSubmitEditing={handleRegister}
     />
-  </Input>
+  </Input> */}
   <TouchableOpacity
     style={styles.eyeButton}
     onPress={() => setShowConfirmPassword(!showConfirmPassword)}
@@ -400,7 +400,7 @@ export default function RegisterScreen() {
 </View>
 
 
-            <Button
+            {/* <Button
               title={submitting || isLoading ? 'Signing up…' : 'Sign Up'}
               variant="primary"
               size="lg"
@@ -408,7 +408,7 @@ export default function RegisterScreen() {
               // disabled={submitting || isLoading || !isValid}
               disabled={!isValid || isLoading }
               style={styles.button}
-            />
+            /> */}
 
             <View style={styles.registerContainer}>
               <Text style={styles.registerText}>Do you already have an account?</Text>
