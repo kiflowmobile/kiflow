@@ -1,20 +1,21 @@
 import ProgressBar from '@/src/components/ui/progress-bar';
-import { useModulesStore, useUserProgressStore } from '@/src/stores';
+import { useModulesStore, useUserProgressStore, useCourseStore } from '@/src/stores';
 import { useCourseProgress } from '@/src/hooks/useCourseProgress';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect } from 'react';
 import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useAnalyticsStore } from '@/src/stores/analyticsStore';
+import { Colors } from '@/src/constants/Colors';
+import { TEXT_VARIANTS } from '@/src/constants/Fonts';
 
-const DOT_SIZE = 16;
+const DOT_SIZE = 24;
 const LINE_DEFAULT = '#D9D9D9';
-const LINE_COMPLETED = '#27AE60';
+const LINE_COMPLETED = Colors.green;
 
 export default function CourseScreen() {
   const params = useLocalSearchParams<{ id?: string }>();
   const router = useRouter();
   const analyticsStore = useAnalyticsStore.getState();
-
 
   const {
     modules,
@@ -26,24 +27,29 @@ export default function CourseScreen() {
     setCurrentModule,
   } = useModulesStore();
 
+  const { currentCourse, fetchCourseById } = useCourseStore();
+
   const { getModuleProgress } = useUserProgressStore();
   const { modules: progressModules } = useCourseProgress((params.id as string) || '');
 
   useEffect(() => {
     if (!params.id) return;
+    fetchCourseById(params.id).catch((err) => {
+      console.error('Unexpected error fetching course:', err);
+    });
 
     fetchModulesByCourse(params.id).catch((err) => {
       console.error('Unexpected error fetching modules:', err);
     });
-  }, [params.id, fetchModulesByCourse]);
+  }, [params.id, fetchModulesByCourse, fetchCourseById]);
 
   const handleModulePress = (module: any, index: number, progress: number) => {
     setCurrentModule(module);
-        analyticsStore.trackEvent('modules_screen__module__click', {
-          id: module.id,
-          index,
-          progress,
-        });
+    analyticsStore.trackEvent('modules_screen__module__click', {
+      id: module.id,
+      index,
+      progress,
+    });
     const progressEntry = progressModules?.find((m) => m.module_id === module.id);
     const slideId = progressEntry?.last_slide_id || undefined;
     router.push({
@@ -114,7 +120,6 @@ export default function CourseScreen() {
         {item.description ? <Text style={styles.moduleDescription}>{item.description}</Text> : null}
         {params.id ? (
           <>
-            <Text style={styles.progressText}>{progress}%</Text>
             <View style={styles.progressBarWrapper}>
               <ProgressBar percent={progress} />
             </View>
@@ -124,14 +129,18 @@ export default function CourseScreen() {
     );
   };
 
-
   useEffect(() => {
     analyticsStore.trackEvent('modules_screen__load');
-  }, []);
-  
+  }, [analyticsStore]);
 
   return (
     <View style={styles.container}>
+      {/* Заголовок курсу */}
+      {currentCourse?.title ? (
+        <Text style={styles.courseTitle} numberOfLines={2} ellipsizeMode="tail">
+          Курс &quot;{currentCourse.title}&quot;
+        </Text>
+      ) : null}
       {error ? (
         <View style={styles.errorContainer}>
           <Text style={styles.errorText}>Помилка: {error}</Text>
@@ -163,7 +172,7 @@ export default function CourseScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff', padding: 16 },
+  container: { flex: 1, backgroundColor: Colors.bg, padding: 16 },
 
   moduleItem: {
     position: 'relative',
@@ -176,7 +185,7 @@ const styles = StyleSheet.create({
   },
   statusDotWrapper: {
     position: 'absolute',
-    left: -32,
+    left: -28,
     top: 0,
     bottom: 0,
     width: 24,
@@ -215,7 +224,7 @@ const styles = StyleSheet.create({
   },
 
   statusDotCompleted: {
-    backgroundColor: '#27AE60',
+    backgroundColor: Colors.green,
   },
   checkmark: {
     color: '#fff',
@@ -242,6 +251,10 @@ const styles = StyleSheet.create({
     color: '#111',
     marginBottom: 4,
   },
+  courseTitle: {
+    ...TEXT_VARIANTS.title2,
+    marginBottom: 16,
+  },
   moduleDescription: {
     fontSize: 14,
     color: '#444',
@@ -254,6 +267,7 @@ const styles = StyleSheet.create({
   },
   progressBarWrapper: {
     marginBottom: 6,
+    marginTop: 12,
   },
 
   loadingText: {
@@ -277,5 +291,3 @@ const styles = StyleSheet.create({
     textDecorationLine: 'underline',
   },
 });
-
-

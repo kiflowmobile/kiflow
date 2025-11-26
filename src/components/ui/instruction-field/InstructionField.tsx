@@ -1,6 +1,5 @@
 import React from 'react';
-
-import { Text } from '@/src/components/ui/text';
+import { Text } from 'react-native';
 import { Textarea, TextareaInput } from '@/src/components/ui/textarea';
 import { VStack } from '@/src/components/ui/vstack';
 
@@ -12,7 +11,13 @@ interface InstructionFieldProps {
   editable?: boolean;
 }
 
-const InstructionField = ({ title, value, onChangeText, placeholder, editable }: InstructionFieldProps) => {
+const InstructionField = ({
+  title,
+  value,
+  onChangeText,
+  placeholder,
+  editable,
+}: InstructionFieldProps) => {
   return (
     <VStack space="xs">
       <Text className="w-full text-left font-bold text-typography-900">{title}</Text>
@@ -25,7 +30,7 @@ const InstructionField = ({ title, value, onChangeText, placeholder, editable }:
           onChangeText={onChangeText}
           autoCapitalize="sentences"
           multiline
-          disabled={!editable} 
+          disabled={!editable}
         />
       </Textarea>
     </VStack>
