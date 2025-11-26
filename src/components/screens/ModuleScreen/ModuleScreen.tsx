@@ -130,7 +130,7 @@ export default function ModuleScreen() {
     },
   });
 
-  useSaveProgressOnExit();
+  // useSaveProgressOnExit();
 
   useEffect(() => {
     if (slides.length > 0 && !currentSlideId) {

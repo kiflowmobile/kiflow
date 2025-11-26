@@ -50,69 +50,69 @@ export const useQuizStore = create<QuizStore>((set, get) => ({
   },
 
   syncQuizToDB: async () => {
-    const { user } = getAuthStore().getState();
+    // const { user } = getAuthStore().getState();
 
-    // const { user } = useAuthStore.getState();
-    if(!user) return
+    // // const { user } = useAuthStore.getState();
+    // if(!user) return
 
-    try {
-
-
-    const allKeys = await AsyncStorage.getAllKeys();
-    const quizKeys = allKeys.filter((k) => k.startsWith('course-progress-'));
+    // try {
 
 
-    if (quizKeys.length === 0) {
-      return;
-    }
-    const keyValues = await AsyncStorage.multiGet(quizKeys);
-    const rows: any[] = [];
+    // const allKeys = await AsyncStorage.getAllKeys();
+    // const quizKeys = allKeys.filter((k) => k.startsWith('course-progress-'));
 
-    for (const [key, value] of keyValues) {
-      if (!value) continue;
 
-      let parsed;
-      try {
-        parsed = JSON.parse(value);
-      } catch (err) {
-        console.warn(`❌ Failed to parse quiz data for key ${key}`, err);
-        continue;
-      }
-      const courseId = key.replace("course-progress-", "");
-      for (const [slideId, data] of Object.entries(parsed)) {
-        const { selectedAnswer, correctAnswer } = data as any;
-        if (
-          typeof selectedAnswer !== 'number' ||
-          typeof correctAnswer !== 'number'
-        ) {
-          console.warn(`⚠️ Invalid quiz entry for slide ${slideId}`, data);
-          continue;
-        }
+    // if (quizKeys.length === 0) {
+    //   return;
+    // }
+    // const keyValues = await AsyncStorage.multiGet(quizKeys);
+    // const rows: any[] = [];
+
+    // for (const [key, value] of keyValues) {
+    //   if (!value) continue;
+
+    //   let parsed;
+    //   try {
+    //     parsed = JSON.parse(value);
+    //   } catch (err) {
+    //     console.warn(`❌ Failed to parse quiz data for key ${key}`, err);
+    //     continue;
+    //   }
+    //   const courseId = key.replace("course-progress-", "");
+    //   for (const [slideId, data] of Object.entries(parsed)) {
+    //     const { selectedAnswer, correctAnswer } = data as any;
+    //     if (
+    //       typeof selectedAnswer !== 'number' ||
+    //       typeof correctAnswer !== 'number'
+    //     ) {
+    //       console.warn(`⚠️ Invalid quiz entry for slide ${slideId}`, data);
+    //       continue;
+    //     }
 
         
 
-        rows.push({
-          user_id: user.id,
-          slide_id: slideId,
-          selected_answer: selectedAnswer,
-          correct_answer: correctAnswer,
-          course_id: courseId
-        });
-      }
-    }
+    //     rows.push({
+    //       user_id: user.id,
+    //       slide_id: slideId,
+    //       selected_answer: selectedAnswer,
+    //       correct_answer: correctAnswer,
+    //       course_id: courseId
+    //     });
+    //   }
+    // }
 
-    if (rows.length === 0) {
-        console.log('ℹ️ No valid quiz rows to sync');
-        return;
-    }
+    // if (rows.length === 0) {
+    //     console.log('ℹ️ No valid quiz rows to sync');
+    //     return;
+    // }
   
-    const { error } = await supabase.from('quiz_answers').upsert(rows, { onConflict: 'user_id,slide_id' });;
-    if (error) throw error;
-    await AsyncStorage.multiRemove(quizKeys);
+    // const { error } = await supabase.from('quiz_answers').upsert(rows, { onConflict: 'user_id,slide_id' });;
+    // if (error) throw error;
+    // await AsyncStorage.multiRemove(quizKeys);
 
-    } catch (err) {
-      console.error('❌ Failed to sync quiz progress:', err);
-    }
+    // } catch (err) {
+    //   console.error('❌ Failed to sync quiz progress:', err);
+    // }
   },
 
 

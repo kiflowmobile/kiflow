@@ -19,7 +19,7 @@ const CoursesScreen = () => {
     });
   }, [fetchCourses]);
 
-  useSaveProgressOnExit();
+  // useSaveProgressOnExit();
 
   useEffect(() => {
     analyticsStore.trackEvent('courses_screen__load');

@@ -7,6 +7,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 
 
 export const useSaveProgressOnExit = () => {
+  console.log("useSaveProgressOnExit")
   const syncProgressToDB = useUserProgressStore(state => state.syncProgressToDB);
   const syncQuizToDB = useQuizStore(state => state.syncQuizToDB);
   const syncChatFromLocalStorageToDB = useChatStore(state => state.syncChatFromLocalStorageToDB);
