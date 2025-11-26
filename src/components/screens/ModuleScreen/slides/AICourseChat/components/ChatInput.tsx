@@ -14,7 +14,7 @@ interface ChatInputProps {
   onFocus: () => void;
   onBlur: () => void;
   loading: boolean;
-  answered: boolean;
+  isLocked: boolean;
   id: string;
   slideId?: string;
 }
@@ -28,12 +28,12 @@ const ChatInput: React.FC<ChatInputProps> = ({
   onFocus,
   onBlur,
   loading,
-  answered,
+  isLocked,
   id,
   slideId,
 }) => {
   const analyticsStore = useAnalyticsStore.getState();
-  const hasTrackedInputRef = useRef(false); // щоб не дублювати подію при кожному символі
+  const hasTrackedInputRef = useRef(false); 
 
   const handleFocus = () => {
     onFocus?.();
@@ -63,26 +63,26 @@ const ChatInput: React.FC<ChatInputProps> = ({
       <TextInput
         ref={inputRef}
         style={styles.input}
-        placeholder="Введіть відповідь..."
+        placeholder={isLocked ? "Ви вже використали 3 спроби" : "Введіть відповідь..."}
         value={input}
         onChangeText={handleChangeText}
         onFocus={handleFocus}
         onBlur={onBlur}
         multiline
-        editable={!answered && !loading}
+        editable={!isLocked && !loading}
       />
       <View style={styles.buttonContainer}>
         <AudioRecorder
           onAudioProcessed={onAudioProcessed}
-          disabled={loading || answered}
+          disabled={loading || isLocked}
           id={id}
           slideId={slideId}
         />
-        <TouchableOpacity onPress={onSend} disabled={loading || answered}>
+        <TouchableOpacity onPress={onSend} disabled={loading || isLocked}>
           <Icon
             as={Send}
             size={24}
-            color={loading || answered ? '#94a3b8' : '#0f172a'}
+            color={loading || isLocked ? '#94a3b8' : '#0f172a'}
           />
         </TouchableOpacity>
       </View>
