@@ -53,7 +53,7 @@ const styles = StyleSheet.create({
   fieldLabel: {
     fontSize: 14,
     fontWeight: '600',
-    color: Colors.gray[700],
+    color: Colors.darkGray,
     marginBottom: 8,
     letterSpacing: 0.5,
     textTransform: 'uppercase',
@@ -62,10 +62,10 @@ const styles = StyleSheet.create({
     marginTop: 0,
   },
   inputDisabled: {
-    backgroundColor: Colors.gray[50],
-    borderColor: Colors.gray[200],
+    backgroundColor: Colors.darkGray,
+    borderColor: Colors.darkGray,
   },
   inputFieldDisabled: {
-    color: Colors.gray[600],
+    color: Colors.darkGray,
   },
 });

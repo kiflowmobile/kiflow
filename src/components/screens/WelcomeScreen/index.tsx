@@ -1,29 +1,27 @@
+import React, { useEffect } from 'react';
+import { Image, Text as RNText, StyleSheet, View, ImageBackground } from 'react-native';
 import { useRootNavigationState, useRouter } from 'expo-router';
-import { Image, Text as RNText, StyleSheet, View } from 'react-native';
 import Button from '../../ui/button';
-import { useEffect } from 'react';
 import { useAuthStore } from '@/src/stores';
 import { useAnalyticsStore } from '@/src/stores/analyticsStore';
+import { TEXT_VARIANTS } from '@/src/constants/Fonts';
 
 export default function WelcomeScreen() {
   const router = useRouter();
-  const user = useAuthStore()
+  const user = useAuthStore();
+  const { justSignedUp } = useAuthStore();
   const rootNavigationState = useRootNavigationState();
-  const { justSignedUp} = useAuthStore();
   const analyticsStore = useAnalyticsStore.getState();
-
-
 
   useEffect(() => {
     if (!rootNavigationState?.key) return;
-  
+
     if (!user.isGuest && !justSignedUp) {
       setTimeout(() => {
         router.replace('/courses');
       }, 0);
     }
   }, [user, justSignedUp, rootNavigationState]);
-
 
   const handleSignIn = () => {
     analyticsStore.trackEvent('start_screen__sign_in__click');
@@ -45,55 +43,66 @@ export default function WelcomeScreen() {
     }
   };
 
-
   useEffect(() => {
     analyticsStore.trackEvent('start_screen__load');
   }, []);
 
-
-
   return (
-    <View style={styles.container}>
-      <View style={styles.contentContainer}>
-        <View style={styles.logoSection}>
-          <Image
-            source={require("@/src/assets/images/kiflow-logo.jpeg")}
-            style={styles.logo}
-            resizeMode="contain"
-          />
-          <RNText style={styles.welcomeText}>
-            Welcome to Kiflow
-          </RNText>
-          <RNText style={styles.subtitleText}>
-            Your gateway to online education
-          </RNText>
-        </View>
-        <View style={styles.buttonSection}>
-          <Button 
-            title="Sign In" 
-            variant="primary" 
-            size="lg"
-            onPress={handleSignIn}
-            style={styles.navButton}
-          />
+    <ImageBackground
+      source={require('@/src/assets/images/welcome-screen.png')}
+      style={styles.background}
+      resizeMode="cover"
+    >
+      <View style={styles.overlay}>
+        <View style={styles.contentContainer}>
+          <View style={styles.logoSection}>
+            <Image
+              source={require('@/src/assets/images/kiflow-logo.jpeg')}
+              style={styles.logo}
+              resizeMode="contain"
+            />
+            <RNText style={styles.welcomeText}>
+              Welcome to Kiflow! <br />
+              Your gateway to online education
+            </RNText>
+          </View>
 
-          <Button 
-            title="Sign Up" 
-            variant="secondary" 
-            size="lg"
-            onPress={handleSignUp}
-            style={styles.navButton}
-          />
+          <View style={styles.buttonSection}>
+            <Button
+              title="Create Account"
+              size="lg"
+              onPress={handleSignIn}
+              variant="light"
+              style={styles.navButton}
+            />
+
+            <Button
+              title="Log In"
+              size="lg"
+              variant="outline"
+              onPress={handleSignUp}
+              style={styles.navButton}
+            />
+          </View>
         </View>
       </View>
-    </View>
+    </ImageBackground>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  background: {
     flex: 1,
-    backgroundColor: '#ffffff',
+    width: '100%',
+    height: '100%',
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
+  overlay: {
+    flex: 1,
   },
   contentContainer: {
     flex: 1,
@@ -103,33 +112,25 @@ const styles = StyleSheet.create({
   },
   logoSection: {
     alignItems: 'center',
-    marginBottom: 40,
+    marginTop: 380,
   },
   logo: {
-    width: 300,
-    height: 120,
-    marginBottom: 8,
+    width: 200,
+    height: 50,
   },
   welcomeText: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: '#475569',
+    ...TEXT_VARIANTS.title1,
+    marginTop: 16,
+    color: '#ffffff',
     textAlign: 'center',
-    marginBottom: 8,
-  },
-  subtitleText: {
-    fontSize: 16,
-    color: '#64748b',
-    textAlign: 'center',
-    fontWeight: '400',
   },
   buttonSection: {
+    marginTop: 24,
     width: '100%',
     alignItems: 'center',
-    gap: 24,
-    marginTop: 128,
+    gap: 12,
   },
   navButton: {
-    width: '80%',
+    width: 343,
   },
 });

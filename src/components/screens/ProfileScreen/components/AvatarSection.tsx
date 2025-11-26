@@ -34,11 +34,11 @@ export default function AvatarSection({
         {editMode ? (
           <>
             <TouchableOpacity onPress={onCancel} disabled={updating}>
-              <CloseIcon size={32} color={updating ? Colors.gray[400] : '#000000'} />
+              <CloseIcon size={32} color={updating ? Colors.darkGray : '#000000'} />
             </TouchableOpacity>
             
             <TouchableOpacity onPress={onSave} disabled={updating}>
-              <CheckIcon size={32} color={updating ? Colors.gray[400] : '#000000'} />
+              <CheckIcon size={32} color={updating ? Colors.darkGray : '#000000'} />
             </TouchableOpacity>
           </>
         ) : (
@@ -93,7 +93,7 @@ const styles = StyleSheet.create({
     borderRadius: 24,
     backgroundColor: Colors.white,
     borderWidth: 2,
-    borderColor: Colors.gray[200],
+    borderColor: Colors.darkGray,
     justifyContent: 'center',
     alignItems: 'center',
     boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
