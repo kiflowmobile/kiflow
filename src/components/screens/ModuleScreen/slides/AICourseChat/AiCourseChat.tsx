@@ -38,7 +38,6 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
-  // const [answered, setAnswered] = useState(false);
   const [isLocked, setIsLocked] = useState(false)
   const { prompt, fetchPromptBySlide } = usePromptsStore();
   const { criterias, fetchCriterias } = useCriteriaStore();
