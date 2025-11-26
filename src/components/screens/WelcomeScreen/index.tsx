@@ -61,10 +61,10 @@ export default function WelcomeScreen() {
               style={styles.logo}
               resizeMode="contain"
             />
-            <RNText style={styles.welcomeText}>
+            {/* <RNText style={styles.welcomeText}>
               Welcome to Kiflow! <br />
               Your gateway to online education
-            </RNText>
+            </RNText> */}
           </View>
 
           <View style={styles.buttonSection}>

@@ -81,6 +81,7 @@ const CourseCard: React.FC<CourseCardProps> = ({ course }) => {
 
 
 const handleResetProgress = async (e?: any) => {
+  console.log('handleResetProgress')
   if (e && e.stopPropagation) {
     e.stopPropagation();
   }
@@ -90,7 +91,7 @@ const handleResetProgress = async (e?: any) => {
     resetCourseProgress(course.id)
 
     const storageQuizeKey = `course-progress-${course.id}`;
-    await AsyncStorage.removeItem(storageQuizeKey);
+    // await AsyncStorage.removeItem(storageQuizeKey);
     const storageChatKey = `course-chat-${course.id}`;
     await AsyncStorage.removeItem(storageChatKey);
     
