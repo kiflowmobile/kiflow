@@ -1,16 +1,17 @@
 import { SafeAreaView } from '@/src/components/ui/safe-area-view';
-import { Text } from '@/src/components/ui/text';
 import { useCourseStore } from '@/src/stores';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { ScrollView, StyleSheet, View, Text, Image, TouchableOpacity } from 'react-native';
+import { useRouter } from 'expo-router';
 import CourseCard from './components/CourseCard';
 import { useEffect } from 'react';
 import { useSaveProgressOnExit } from '@/src/hooks/useSaveProgressOnExit';
 import { useAnalyticsStore } from '@/src/stores/analyticsStore';
+import { Colors } from '@/src/constants/Colors';
 
 const CoursesScreen = () => {
   const { courses, isLoading, error, fetchCourses, clearError } = useCourseStore();
   const analyticsStore = useAnalyticsStore.getState();
-
+  const router = useRouter();
 
   useEffect(() => {
     fetchCourses().catch((err) => {
@@ -18,13 +19,11 @@ const CoursesScreen = () => {
     });
   }, [fetchCourses]);
 
-  useSaveProgressOnExit()
-
+  useSaveProgressOnExit();
 
   useEffect(() => {
     analyticsStore.trackEvent('courses_screen__load');
-  }, []);
-
+  }, [analyticsStore]);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -45,7 +44,26 @@ const CoursesScreen = () => {
         ) : isLoading ? (
           <Text style={styles.loadingText}>Завантаження курсів...</Text>
         ) : courses.length === 0 ? (
-          <Text style={styles.loadingText}>Курси не знайдено</Text>
+          <View style={styles.emptyContainer}>
+            <Image
+              source={require('@/src/assets/images/welcome-screen.png')}
+              style={styles.emptyImage}
+              resizeMode="contain"
+            />
+            <Text style={styles.emptyMainText}>
+              Your course list is empty. If you skipped entering your company code, you can try
+              again now.
+            </Text>
+            <TouchableOpacity
+              activeOpacity={0.7}
+              onPress={() => {
+                analyticsStore.trackEvent?.('courses_screen__enter_code__click');
+                router.push('/course-code');
+              }}
+            >
+              <Text style={styles.emptyLinkText}>Enter code</Text>
+            </TouchableOpacity>
+          </View>
         ) : (
           <View style={styles.cardsContainer}>
             {courses.map((course) => (
@@ -61,7 +79,7 @@ const CoursesScreen = () => {
 export default CoursesScreen;
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff' },
+  container: { flex: 1, backgroundColor: Colors.bg },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -89,5 +107,28 @@ const styles = StyleSheet.create({
     color: '#007AFF',
     textAlign: 'center',
     textDecorationLine: 'underline',
+  },
+  emptyContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 60,
+  },
+  emptyImage: {
+    width: 160,
+    height: 160,
+    marginBottom: 24,
+  },
+  emptyMainText: {
+    textAlign: 'center',
+    color: '#666',
+    fontSize: 16,
+    marginBottom: 12,
+    paddingHorizontal: 36,
+  },
+  emptyLinkText: {
+    color: Colors.blue,
+    fontSize: 16,
+    fontWeight: '600',
   },
 });

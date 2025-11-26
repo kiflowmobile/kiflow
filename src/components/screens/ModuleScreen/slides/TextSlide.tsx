@@ -30,7 +30,7 @@ const TextSlide: React.FC<TextSlideProps> = ({ title, data }) => {
 export default TextSlide;
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: '#ffffff', paddingInline: 16, justifyContent: 'center' },
+  screen: { flex: 1, backgroundColor: '#f0f0f0', paddingInline: 16, justifyContent: 'center' },
   card: {
     alignSelf: 'center',
     width: '100%',

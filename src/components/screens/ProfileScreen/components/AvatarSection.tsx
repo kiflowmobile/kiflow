@@ -1,11 +1,12 @@
-import { Text } from '@/src/components/ui/text';
+import React, { useState } from 'react';
 import { View } from '@/src/components/ui/view';
-import { TouchableOpacity, StyleSheet } from 'react-native';
+import { Image } from '@/src/components/ui/image';
+import { TouchableOpacity, StyleSheet, ImageBackground, Modal, Pressable,Text } from 'react-native';
 import LogOutIcon from '@/src/components/ui/LogOutIcon';
-import EditIcon from '@/src/components/ui/EditIcon';
-import CheckIcon from '@/src/components/ui/CheckIcon';
 import CloseIcon from '@/src/components/ui/CloseIcon';
+import Button from '@/src/components/ui/button';
 import { Colors } from '@/src/constants/Colors';
+import { TEXT_VARIANTS } from '@/src/constants/Fonts';
 
 interface AvatarSectionProps {
   fullName?: string;
@@ -15,88 +16,313 @@ interface AvatarSectionProps {
   onCancel?: () => void;
   editMode: boolean;
   updating?: boolean;
+  email?: string;
+  startedAt?: string | null;
+  avatarUrl?: string;
+  avatarSource?: any;
+  onAvatarSecretTap?: () => void;
 }
 
-export default function AvatarSection({ 
-  fullName, 
-  onEditPress, 
-  onSignOutPress, 
-  onSave, 
-  onCancel, 
+export default function AvatarSection({
+  fullName,
+  onEditPress,
+  onSignOutPress,
+  onSave,
+  onCancel,
   editMode,
-  updating = false
+  updating = false,
+  email,
+  startedAt,
+  avatarUrl,
+  avatarSource,
+  onAvatarSecretTap,
 }: AvatarSectionProps) {
+  const [showConfirm, setShowConfirm] = useState(false);
   const initial = (fullName || '').trim().charAt(0).toUpperCase() || '?';
 
+  const formatLongDate = (dateString?: string | null) => {
+    if (!dateString) return null;
+    try {
+      const d = new Date(dateString);
+      return d.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+    } catch {
+      return null;
+    }
+  };
+
+  const started = formatLongDate(startedAt || undefined);
+
   return (
-    <View style={styles.largeAvatarSection}>
-      <View style={styles.iconsContainer}>
+    <View style={styles.container}>
+      {/* Верхний баннер */}
+      <ImageBackground
+        source={require('@/src/assets/images/profile-bg.png')}
+        style={styles.banner}
+        imageStyle={styles.bannerImage}
+      >
+        {/* Иконка выхода в левом углу баннера */}
+        <TouchableOpacity style={styles.logoutButton} onPress={() => setShowConfirm(true)}>
+          <LogOutIcon size={20} color={Colors.white} />
+        </TouchableOpacity>
+      </ImageBackground>
+
+      {/* Аватар, перекрывающий баннер */}
+      <Pressable style={styles.avatarWrapper} onPress={onAvatarSecretTap}>
+        <View style={styles.largeAvatar}>
+          {avatarSource ? (
+            <Image source={avatarSource} style={styles.avatarImage} />
+          ) : avatarUrl ? (
+            <Image source={{ uri: avatarUrl }} style={styles.avatarImage} />
+          ) : (
+            <Text style={styles.initialText}>{initial}</Text>
+          )}
+        </View>
+      </Pressable>
+
+      {/* Имя */}
+      <View style={styles.infoRow}>
+        <Text style={styles.fullName}>{fullName || ''}</Text>
+      </View>
+
+      {/* Почта */}
+      {email ? <Text style={styles.email}>{email}</Text> : null}
+
+      {/* Бейдж с датой */}
+      {started ? (
+        <View style={styles.badge}>
+          <Text style={styles.badgeText}>🎉 Started on {started}</Text>
+        </View>
+      ) : null}
+
+      {/* Кнопки редактирования / сохранения */}
+      <View style={styles.actionsRow}>
         {editMode ? (
           <>
-            <TouchableOpacity onPress={onCancel} disabled={updating}>
-              <CloseIcon size={32} color={updating ? Colors.darkGray : '#000000'} />
+            <TouchableOpacity onPress={onCancel} disabled={updating} style={styles.iconAction}>
+              <CloseIcon size={24} color={updating ? Colors.darkGray : Colors.black} />
             </TouchableOpacity>
-            
-            <TouchableOpacity onPress={onSave} disabled={updating}>
-              <CheckIcon size={32} color={updating ? Colors.darkGray : '#000000'} />
+            <TouchableOpacity
+              onPress={onSave}
+              disabled={updating}
+              style={[styles.editButton, styles.saveButton]}
+            >
+              <Text style={styles.editButtonText}>Save</Text>
             </TouchableOpacity>
           </>
         ) : (
-          <>
-            <TouchableOpacity onPress={onSignOutPress}>
-              <LogOutIcon size={32} />
-            </TouchableOpacity>
-            
-            <TouchableOpacity onPress={onEditPress}>
-              <EditIcon size={32} />
-            </TouchableOpacity>
-          </>
+          <TouchableOpacity onPress={onEditPress} style={styles.editButton}>
+            <Button
+              title="Edit"
+              onPress={onEditPress}
+              variant="accent"
+              size="sm"
+              style={styles.editButton}
+            />
+          </TouchableOpacity>
         )}
       </View>
-      
-      {/* Аватар */}
-      <View style={styles.largeAvatar}>
-        <Text style={styles.initialText}>{initial}</Text>
-      </View>
+
+      {/* Logout confirmation modal (pattern like existing skip modal) */}
+      <Modal
+        visible={showConfirm}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowConfirm(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <Pressable style={StyleSheet.absoluteFill} onPress={() => setShowConfirm(false)} />
+
+          <View style={styles.modalContainer}>
+            <Text style={styles.modalTitle}>Are you sure you want to logout?</Text>
+            <Text style={styles.modalText}>
+              You’ll need to log in again to continue learning the course.
+            </Text>
+
+            <View style={styles.modalButtonsRow}>
+              <Button
+                title="Cancel"
+                variant="accent"
+                size="md"
+                onPress={() => setShowConfirm(false)}
+                style={styles.modalButton}
+              />
+              <Button
+                title="Log out"
+                variant="dark"
+                size="md"
+                onPress={() => {
+                  setShowConfirm(false);
+                  onSignOutPress();
+                }}
+                style={styles.modalButton}
+              />
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  largeAvatarSection: {
+  container: {
     alignItems: 'center',
+    marginTop: 8,
   },
-  iconsContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+  banner: {
     width: '100%',
+    height: 120,
+    borderRadius: 12,
+    position: 'relative',
+    backgroundColor: Colors.blue,
+    overflow: 'hidden',
+  },
+  logoutButton: {
+    position: 'absolute',
+    left: 16,
+    top: 24,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.12)',
+  },
+  avatarWrapper: {
+    marginTop: -60,
+    alignItems: 'center',
   },
   largeAvatar: {
-    width: 150,
-    height: 150,
-    borderRadius: 75,
-    backgroundColor: '#000000',
+    width: 110,
+    height: 110,
+    borderRadius: 55,
+    backgroundColor: Colors.white,
     justifyContent: 'center',
     alignItems: 'center',
+    borderWidth: 2,
+    borderColor: Colors.bg,
   },
   initialText: {
-    fontSize: 64,
-    color: '#FFFFFF',
+    fontSize: 40,
+    color: Colors.black,
     fontWeight: '700',
-    textAlign: 'center',
-    textAlignVertical: 'center',
   },
-  iconButton: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: Colors.white,
-    borderWidth: 2,
-    borderColor: Colors.darkGray,
+  infoRow: {
+    marginTop: 12,
+    alignItems: 'center',
+  },
+  fullName: {
+    ...TEXT_VARIANTS.title1,
+  },
+  email: {
+    ...TEXT_VARIANTS.body2,
+    marginTop: 6,
+  },
+  badge: {
+    marginTop: 12,
+    backgroundColor: Colors.pink,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 20,
+  },
+  badgeText: {
+    ...TEXT_VARIANTS.body2,
+  },
+  actionsRow: {
+    marginTop: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  editButton: {
+    paddingHorizontal: 48,
+    paddingVertical: 12,
     justifyContent: 'center',
     alignItems: 'center',
-    boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
   },
-  
+  saveButton: {
+    marginLeft: 12,
+  },
+  editButtonText: {},
+  iconAction: {
+    marginRight: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  avatarImage: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 55,
+  },
+  bannerImage: {
+    resizeMode: 'cover',
+    width: '100%',
+    height: '100%',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(15, 23, 42, 0.5)',
+    paddingHorizontal: 16,
+    justifyContent: 'flex-end',
+  },
+  modalContainer: {
+    width: '100%',
+    marginBottom: 38,
+    backgroundColor: '#ffffff',
+    borderRadius: 24,
+    paddingHorizontal: 24,
+    paddingVertical: 24,
+  },
+  modalTitle: {
+    ...TEXT_VARIANTS.largeTitle,
+    fontSize: 20,
+    textAlign: 'center',
+    marginBottom: 12,
+  },
+  modalMessage: {
+...TEXT_VARIANTS.body2,
+    marginBottom: 24,
+  },
+  modalText: {
+    fontSize: 16,
+    color: Colors.darkGray,
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  modalButtonsRow: {
+    flexDirection: 'row',
+    width: '100%',
+    justifyContent: 'space-between',
+  },
+  cancelButton: {
+    flex: 1,
+    backgroundColor: Colors.buttonBlue,
+    paddingVertical: 18,
+    borderRadius: 12,
+    marginRight: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  cancelButtonText: {
+    color: Colors.black,
+    fontWeight: '700',
+    fontSize: 20,
+  },
+  logoutConfirmButton: {
+    flex: 1,
+    backgroundColor: Colors.black,
+    paddingVertical: 18,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  logoutConfirmText: {
+    color: Colors.white,
+    fontWeight: '700',
+    fontSize: 20,
+  },
+  modalButton: {
+    flex: 1,
+    marginHorizontal: 6,
+  },
 });

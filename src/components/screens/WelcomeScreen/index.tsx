@@ -27,7 +27,7 @@ export default function WelcomeScreen() {
     analyticsStore.trackEvent('start_screen__sign_in__click');
 
     try {
-      router.push('/auth/login');
+      router.push('/auth/registration');
     } catch (error) {
       console.error('❌ WelcomeScreen: Error navigating to login:', error);
     }
@@ -37,7 +37,7 @@ export default function WelcomeScreen() {
     analyticsStore.trackEvent('start_screen__sign_up__click');
 
     try {
-      router.push('/auth/registration');
+      router.push('/auth/login');
     } catch (error) {
       console.error('❌ WelcomeScreen: Error navigating to registration:', error);
     }
