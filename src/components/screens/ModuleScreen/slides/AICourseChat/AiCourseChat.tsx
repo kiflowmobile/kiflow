@@ -116,7 +116,13 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
           const parsed = JSON.parse(stored);
           if (parsed[slideId]) {
             setMessages(parsed[slideId]);
-            // setAnswered(true);
+            setUserMessageCount(parsed[slideId].length)
+
+            if (parsed[slideId].length >= 3) {
+              setIsLocked(true);
+              return;
+            }
+
             return;
           }
         }
@@ -130,7 +136,7 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
           text: slidePrompt,
         };
 
-        setMessages([aiMsg]);
+        setMessages([aiMsg])
         // setAnswered(useSlidesStore.getState().isSlideAnswered(slideId));
         setInput('');
       } catch (err) {
@@ -215,8 +221,6 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
         model: aiResponse?.model || 'gemini',
         tokens: aiResponse?.usage?.totalTokens || 0,
       });
-
-      console.log('aiResponse',aiResponse)
 
       if (user && aiResponse.rating?.criteriaScores && moduleId) {
         const criteriaScores = aiResponse.rating.criteriaScores;

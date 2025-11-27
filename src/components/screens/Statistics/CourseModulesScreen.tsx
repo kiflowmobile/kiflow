@@ -129,7 +129,6 @@ const CourseModulesScreen: React.FC = () => {
           </View>
         </View>
 
-        {/* 📚 Модулі */}
         {loading.modules ? (
           <Text style={styles.chartPlaceholderText}>Завантаження модулів...</Text>
         ) : (

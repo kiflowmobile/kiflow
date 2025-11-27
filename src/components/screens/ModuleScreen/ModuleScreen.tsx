@@ -17,9 +17,9 @@ import {
 } from 'react-native';
 import Animated, { useAnimatedScrollHandler, runOnJS } from 'react-native-reanimated';
 import ModuleSlide from './ModuleSlide';
-import { useSaveProgressOnExit } from '@/src/hooks/useSaveProgressOnExit';
 import PaginationDots from './components/PaginationDot';
 import { useAnalyticsStore } from '@/src/stores/analyticsStore';
+import { useSaveProgressOnLeave } from '@/src/hooks/useSaveProgressOnExit';
 const analyticsStore = useAnalyticsStore.getState();
 
 
@@ -130,7 +130,7 @@ export default function ModuleScreen() {
     },
   });
 
-  // useSaveProgressOnExit();
+  useSaveProgressOnLeave();
 
   useEffect(() => {
     if (slides.length > 0 && !currentSlideId) {

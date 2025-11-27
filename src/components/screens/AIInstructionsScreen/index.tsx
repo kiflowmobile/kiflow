@@ -55,8 +55,6 @@ const MockAIInstructionsScreen = () => {
     (async () => {
       try {
         setSaving(true);
-        console.log('Saving company. selectedCompany:', selectedCompany);
-        console.log('Saving company. payload:', payload);
 
         // Проверяем, доступна ли компания для чтения перед обновлением
         try {
