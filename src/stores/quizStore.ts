@@ -51,13 +51,8 @@ export const useQuizStore = create<QuizStore>((set, get) => ({
 
   syncQuizToDB: async () => {
     const { user } = getAuthStore().getState();
-
-    // const { user } = useAuthStore.getState();
     if(!user) return
-
     try {
-
-
     const allKeys = await AsyncStorage.getAllKeys();
     const quizKeys = allKeys.filter((k) => k.startsWith('course-progress-'));
 
@@ -88,9 +83,6 @@ export const useQuizStore = create<QuizStore>((set, get) => ({
           console.warn(`⚠️ Invalid quiz entry for slide ${slideId}`, data);
           continue;
         }
-
-        
-
         rows.push({
           user_id: user.id,
           slide_id: slideId,
@@ -108,7 +100,7 @@ export const useQuizStore = create<QuizStore>((set, get) => ({
   
     const { error } = await supabase.from('quiz_answers').upsert(rows, { onConflict: 'user_id,slide_id' });;
     if (error) throw error;
-    await AsyncStorage.multiRemove(quizKeys);
+    // await AsyncStorage.multiRemove(quizKeys);
 
     } catch (err) {
       console.error('❌ Failed to sync quiz progress:', err);
@@ -119,8 +111,6 @@ export const useQuizStore = create<QuizStore>((set, get) => ({
   syncQuizFromDBToLocalStorage: async () => {
     try {
       const { user } = getAuthStore().getState();
-
-      // const { user } = useAuthStore.getState();
       if (!user) return;
   
       // 1️⃣ Отримуємо відповіді користувача з БД

@@ -4,7 +4,6 @@ import { useCourseStore } from '@/src/stores';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import CourseCard from './components/CourseCard';
 import { useEffect } from 'react';
-import { useSaveProgressOnExit } from '@/src/hooks/useSaveProgressOnExit';
 import { useAnalyticsStore } from '@/src/stores/analyticsStore';
 
 const CoursesScreen = () => {
@@ -18,7 +17,6 @@ const CoursesScreen = () => {
     });
   }, [fetchCourses]);
 
-  useSaveProgressOnExit()
 
 
   useEffect(() => {

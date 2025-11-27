@@ -38,7 +38,7 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
-  const [answered, setAnswered] = useState(false);
+  const [isLocked, setIsLocked] = useState(false)
   const { prompt, fetchPromptBySlide } = usePromptsStore();
   const { criterias, fetchCriterias } = useCriteriaStore();
   const { user } = useAuthStore();
@@ -50,23 +50,30 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
   const courseIdStr = Array.isArray(courseId) ? courseId[0] : courseId;
   const CHAT_STORAGE_KEY = `course-chat-${courseIdStr}`;
   const analyticsStore = useAnalyticsStore.getState();
-
+  const [userMessageCount, setUserMessageCount] = useState(0);
 
   const loadChat = async () => {
     try {
       const stored = await AsyncStorage.getItem(CHAT_STORAGE_KEY);
       if (!stored) return;
-
-      const parsed = JSON.parse(stored);
+  
+      const parsed: Record<string, Message[]> = JSON.parse(stored);
+  
       if (parsed[slideId]) {
+        const userCount = parsed[slideId].filter((item: Message) => item.role === 'user').length;
+  
+        console.log("User messages:", userCount);
+  
+        setUserMessageCount(userCount);
+        setIsLocked(userCount >= 3);
+  
         setMessages(parsed[slideId]);
-        setAnswered(true);
       }
     } catch (err) {
       console.error('Error loading chat:', err);
     }
   };
-
+  
   const lockPageScroll = () => {
     if (Platform.OS !== 'web' || pageScrollLockedRef.current) return;
     const y = window.scrollY || 0;
@@ -114,7 +121,13 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
           const parsed = JSON.parse(stored);
           if (parsed[slideId]) {
             setMessages(parsed[slideId]);
-            setAnswered(true);
+            setUserMessageCount(parsed[slideId].length)
+            // console.log('parsed[slideId]',parsed[slideId])
+            // if (parsed[slideId].length >= 3) {
+            //   setIsLocked(true);
+            //   return;
+            // }
+
             return;
           }
         }
@@ -128,8 +141,8 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
           text: slidePrompt,
         };
 
-        setMessages([aiMsg]);
-        setAnswered(useSlidesStore.getState().isSlideAnswered(slideId));
+        setMessages([aiMsg])
+        // setAnswered(useSlidesStore.getState().isSlideAnswered(slideId));
         setInput('');
       } catch (err) {
         console.error('Error loading chat or prompt:', err);
@@ -157,14 +170,25 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
       courseIdStr, 
       slideId,
     });
-    if (!input.trim() || answered || loading) return;
+    if (!input.trim()  || loading) return;
+
 
     const userMsg: Message = { id: Date.now().toString(), role: 'user', text: input.trim() };
     setMessages((prev) => [...prev, userMsg]);
+
+    //рахуємо кількість користувальских відповідей 
+    console.log('userMessageCount', userMessageCount)
+    const newCount = userMessageCount + 1
+    setUserMessageCount(newCount)
+
+    if(newCount >= 3){
+      setIsLocked(true)
+    }
+
     setInput('');
     setLoading(true);
-    setAnswered(true);
     useSlidesStore.getState().markSlideAnswered(slideId);
+ 
 
     try {
       const slidePrompt = prompt[slideId]?.prompt || '';
@@ -244,7 +268,7 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
   };
 
   const handleAudioProcessed = (transcribedText: string) => {
-    if (answered) return;
+    if (isLocked) return;
     if (transcribedText.trim()) {
       setInput(transcribedText.trim());
     }
@@ -288,7 +312,7 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
           onFocus={handleFocus}
           onBlur={handleBlur}
           loading={loading}
-          answered={answered}
+          isLocked={isLocked}
           id={courseIdStr}
           slideId={slideId}
         />

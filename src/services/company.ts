@@ -222,7 +222,7 @@ export const getCompanyById = async (
       .eq('id', companyId)
       .maybeSingle();
 
-    console.log('getCompanyById supabase response:', { data, error });
+    // console.log('getCompanyById supabase response:', { data, error });
 
     return { data, error };
   } catch (err) {
