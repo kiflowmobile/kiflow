@@ -13,7 +13,3 @@ export const loadProgressLocal = async (userId: string): Promise<UserCourseSumma
   return data ? JSON.parse(data) : [];
 };
 
-export const clearProgressLocal = async (userId: string) => {
-  await AsyncStorage.removeItem(STORAGE_KEY(userId));
-};
-

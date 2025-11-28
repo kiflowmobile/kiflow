@@ -25,7 +25,6 @@ export const useChatStore = create<ChatStore>(() => ({
       const allKeys = await AsyncStorage.getAllKeys();
       const chatKeys = allKeys.filter((key) => key.startsWith('course-chat-'));
       if (chatKeys.length === 0) {
-        console.log('ℹ️ No local chat data to sync');
         return;
       }
 
@@ -80,8 +79,6 @@ export const useChatStore = create<ChatStore>(() => ({
   syncChatFromDBToLocalStorage: async () => {
     try{
       const { user } = getAuthStore().getState();
-
-        // const { user } = useAuthStore.getState();
         if (!user) return;
 
         const { data, error } = await supabase
@@ -90,10 +87,7 @@ export const useChatStore = create<ChatStore>(() => ({
         .eq('user_id', user.id);
 
         if (error) throw error;
-        if (!data || data.length === 0) {
-            console.log('ℹ️ No quiz data in DB for this user');
-            return;
-        }
+        if (!data || data.length === 0) return;
 
         const groupedByCourse: Record<string, Record<string, any[]>> = {};
 

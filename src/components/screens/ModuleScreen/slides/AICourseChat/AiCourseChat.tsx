@@ -60,10 +60,7 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
       const parsed: Record<string, Message[]> = JSON.parse(stored);
   
       if (parsed[slideId]) {
-        const userCount = parsed[slideId].filter((item: Message) => item.role === 'user').length;
-  
-        console.log("User messages:", userCount);
-  
+        const userCount = parsed[slideId].filter((item: Message) => item.role === 'user').length;  
         setUserMessageCount(userCount);
         setIsLocked(userCount >= 3);
   
@@ -122,12 +119,6 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
           if (parsed[slideId]) {
             setMessages(parsed[slideId]);
             setUserMessageCount(parsed[slideId].length)
-            // console.log('parsed[slideId]',parsed[slideId])
-            // if (parsed[slideId].length >= 3) {
-            //   setIsLocked(true);
-            //   return;
-            // }
-
             return;
           }
         }
@@ -142,7 +133,6 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
         };
 
         setMessages([aiMsg])
-        // setAnswered(useSlidesStore.getState().isSlideAnswered(slideId));
         setInput('');
       } catch (err) {
         console.error('Error loading chat or prompt:', err);
@@ -176,8 +166,6 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
     const userMsg: Message = { id: Date.now().toString(), role: 'user', text: input.trim() };
     setMessages((prev) => [...prev, userMsg]);
 
-    //рахуємо кількість користувальских відповідей 
-    console.log('userMessageCount', userMessageCount)
     const newCount = userMessageCount + 1
     setUserMessageCount(newCount)
 

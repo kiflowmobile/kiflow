@@ -69,6 +69,7 @@ export const useAuthStore = create<AuthState>()(
 
         await useQuizStore.getState().syncQuizFromDBToLocalStorage();
         await useChatStore.getState().syncChatFromDBToLocalStorage();
+        await useUserProgressStore.getState().syncProgressFromDBToLocalStorage();
 
       } catch (error: any) {
         set({

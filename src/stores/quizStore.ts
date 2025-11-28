@@ -100,7 +100,6 @@ export const useQuizStore = create<QuizStore>((set, get) => ({
   
     const { error } = await supabase.from('quiz_answers').upsert(rows, { onConflict: 'user_id,slide_id' });;
     if (error) throw error;
-    // await AsyncStorage.multiRemove(quizKeys);
 
     } catch (err) {
       console.error('❌ Failed to sync quiz progress:', err);
@@ -112,18 +111,13 @@ export const useQuizStore = create<QuizStore>((set, get) => ({
     try {
       const { user } = getAuthStore().getState();
       if (!user) return;
-  
-      // 1️⃣ Отримуємо відповіді користувача з БД
-      const { data, error } = await supabase
+        const { data, error } = await supabase
         .from('quiz_answers')
         .select('slide_id, selected_answer, correct_answer, course_id')
         .eq('user_id', user.id);
   
       if (error) throw error;
-      if (!data || data.length === 0) {
-        console.log('ℹ️ No quiz data in DB for this user');
-        return;
-      }
+      if (!data || data.length === 0) return;
   
       const groupedByCourse: Record<
         string,

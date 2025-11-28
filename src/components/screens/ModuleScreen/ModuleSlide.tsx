@@ -42,10 +42,6 @@ const { moduleIdStr, courseIdStr } = useMemo(() => {
   };
 }, [rawParams.moduleId, rawParams.courseId]);
 
-  const analyticsStore = useAnalyticsStore.getState(); 
-
-
-  // console.log('ModuleSlide')
 
   if (isLoading) {
     return (

@@ -29,11 +29,11 @@ const CourseCard: React.FC<CourseCardProps> = ({ course }) => {
 
 
 
-  useEffect(() => {
-    if (user) {
-      fetchUserProgress(user.id);
-    }
-  }, [user]);
+  // useEffect(() => {
+  //   if (user) {
+  //     fetchUserProgress(user.id);
+  //   }
+  // }, [user]);
 
   const handleStartCourse = () => {
 
