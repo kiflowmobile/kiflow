@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { Spinner, SPINNER_SIZES } from '../../ui/spinner';
 import { Text, View } from 'react-native';
 import TextSlide from './slides/TextSlide';
-import QuizSlide from './slides/QuizeSlide';
+import QuizSlide from './slides/Quiz/QuizeSlide';
 import AICourseChat from './slides/AICourseChat/AiCourseChat';
 import ContentWithExample from './slides/ContentWithExample';
 import DashboardSlide from './slides/DashboardSlide';
@@ -17,6 +17,7 @@ interface CourseSlideProps {
   onComplete: () => void;
   currentIndex: number;
   totalSlides: number;
+  setScrollEnabled?: (enabled: boolean) => void;
 }
 
 const ModuleSlide: React.FC<CourseSlideProps> = ({
@@ -25,6 +26,7 @@ const ModuleSlide: React.FC<CourseSlideProps> = ({
   onComplete,
   currentIndex,
   totalSlides,
+  setScrollEnabled,
 }) => {
   const { slides, isLoading, error } = useSlidesStore();
   const { modules } = useModulesStore();
@@ -87,6 +89,8 @@ const ModuleSlide: React.FC<CourseSlideProps> = ({
           courseId={courseIdStr}
           title={slideData.slide_title}
           quiz={slideData.slide_data}
+          isActive={isActive}
+          setScrollEnabled={setScrollEnabled}
         />
       );
     case 'ai':

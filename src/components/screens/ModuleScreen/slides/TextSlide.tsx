@@ -101,6 +101,7 @@ const styles = StyleSheet.create({
   title: {
     color: Colors.white,
     ...TEXT_VARIANTS.largeTitle,
+    textAlign: 'center',
   },
   bottomArea: { position: 'absolute', bottom: 16, left: 0, right: 0, alignItems: 'center' },
   swipeButton: {
