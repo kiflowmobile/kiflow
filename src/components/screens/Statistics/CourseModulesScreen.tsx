@@ -1,22 +1,25 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
-import Svg, { Path } from 'react-native-svg';
-import { ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar } from 'recharts';
+import { ScrollView, Text, View, StyleSheet } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
-import { useAuthStore, useMainRatingStore } from '@/src/stores';
+import {
+  useAuthStore,
+  useMainRatingStore,
+  useUserProgressStore,
+  useCourseStore,
+} from '@/src/stores';
 import { modulesService } from '@/src/services/modules';
 import { useQuizStore } from '@/src/stores/quizStore';
 import type { Module } from '@/src/constants/types/modules';
+// local styles are defined below
+import StatsHeader from './StatsHeader';
+import ModuleCard from './ModuleCard';
 import { useAnalyticsStore } from '@/src/stores/analyticsStore';
-
-interface Skill {
-  criterion_id: string;
-  criterion_name: string;
-  average_score: number;
-}
+import { Colors } from '@/src/constants/Colors';
+import { Skill } from '@/src/constants/types/skill';
 
 const CourseModulesScreen: React.FC = () => {
   const { id } = useLocalSearchParams<{ id: string }>();
+  const { currentCourse, fetchCourseById } = useCourseStore();
   const { user } = useAuthStore();
   const { fetchSkills } = useMainRatingStore();
   const quizStore = useQuizStore.getState();
@@ -26,9 +29,6 @@ const CourseModulesScreen: React.FC = () => {
   const [quizAverage, setQuizAverage] = useState<number | null>(null);
   const [loading, setLoading] = useState({ modules: true, skills: true, quiz: true });
   const analyticsStore = useAnalyticsStore.getState();
-
-
-  const courseTitle = 'JavaScript для початківців';
 
   // 📘 Завантажуємо модулі курсу
   useEffect(() => {
@@ -63,8 +63,9 @@ const CourseModulesScreen: React.FC = () => {
       setLoading((p) => ({ ...p, skills: false }));
     };
     loadSkills();
-  }, [user?.id, modules]);
+  }, [user?.id, modules, fetchSkills]);
 
+  // 📙 Завантажуємо середній бал квіза по курсу
   useEffect(() => {
     if (!id) return;
     const loadQuiz = async () => {
@@ -78,20 +79,16 @@ const CourseModulesScreen: React.FC = () => {
       }
     };
     loadQuiz();
-  }, [id]);
+  }, [id, quizStore]);
 
-  // 📊 Обчислення середнього балу курсу (AI)
+  // 📊 Середній бал курсу за скілами (case study / AI)
   const courseAverage = useMemo(() => {
     const allSkills = Object.values(skillsMap).flat();
-    if (!allSkills.length) return 0;
-    const total = allSkills.reduce((sum, s) => sum + s.average_score, 0);
+    if (!allSkills.length) return null;
+
+    const total = allSkills.reduce((sum, s) => sum + (s.average_score ?? 0), 0);
     return parseFloat((total / allSkills.length).toFixed(1));
   }, [skillsMap]);
-
-  const combinedAverage = useMemo(() => {
-    if (quizAverage == null || !courseAverage) return null;
-    return parseFloat(((quizAverage + courseAverage) / 2).toFixed(1));
-  }, [quizAverage, courseAverage]);
 
   const isLoading = loading.modules || loading.skills || loading.quiz;
 
@@ -99,119 +96,62 @@ const CourseModulesScreen: React.FC = () => {
     if (id) {
       analyticsStore.trackEvent('progress_course_screen__load', { id });
     }
-  }, [id]);
+  }, [id, analyticsStore]);
+
+  useEffect(() => {
+    if (!id) return;
+    // ensure we have course details for the header title
+    fetchCourseById(id as string).catch(() => {});
+  }, [id, fetchCourseById]);
 
   return (
-    <ScrollView style={styles.screen} contentContainerStyle={{ paddingBottom: 40 }}>
-      <View style={styles.card}>
-        <View style={styles.iconWrapper}>
-          <Svg width={40} height={40} viewBox="0 0 24 24" fill="none" stroke="#7c3aed" strokeWidth={1.5}>
-            <Path d="M10 3.2a9 9 0 1 0 10.8 10.8a1 1 0 0 0 -1 -1h-3.8a4.1 4.1 0 1 1 -5 -5v-4a.9 .9 0 0 0 -1 -.8" />
-            <Path d="M15 3.5a9 9 0 0 1 5.5 5.5h-4.5a9 9 0 0 0 -1 -1v-4.5" />
-          </Svg>
-        </View>
+    <ScrollView style={localStyles.screen} contentContainerStyle={{ paddingBottom: 40 }}>
+      <View style={localStyles.card}>
+        <StatsHeader
+          isLoading={isLoading}
+          courseAverage={courseAverage}
+          quizAverage={quizAverage}
+          courseTitle={currentCourse?.title ?? null}
+        />
 
-        <Text style={styles.title}>{courseTitle}</Text>
-        <Text style={styles.subtitle}>Інформація про курс та модулі</Text>
-
-        {/* 📈 Статистика */}
-        <View style={styles.statsCard}>
-          <Text style={styles.statsTitle}>Статистика курсу</Text>
-          <View style={styles.statsRow}>
-            <StatBox label="Оцінка AI" color="#15803d" bg="#dcfce7" value={isLoading ? '...' : `${courseAverage}/5`} />
-            <StatBox label="Quiz" color="#2563eb" bg="#dbeafe" value={isLoading ? '...' : `${quizAverage ?? 0}/5`} />
-            <StatBox
-              label="Середнє"
-              color="#7c3aed"
-              bg="#f3e8ff"
-              value={isLoading || combinedAverage == null ? '...' : `${combinedAverage}/5`}
-            />
-          </View>
-        </View>
-
-        {/* 📚 Модулі */}
         {loading.modules ? (
-          <Text style={styles.chartPlaceholderText}>Завантаження модулів...</Text>
+          <Text style={localStyles.chartPlaceholderText}>Завантаження модулів...</Text>
         ) : (
-          modules.map((module) => (
-            <View key={module.id} style={styles.moduleCard}>
-              <Text style={styles.moduleTitle}>{module.title}</Text>
-              {Platform.OS === 'web' ? (
-                loading.skills ? (
-                  <Text style={styles.chartPlaceholderText}>Завантаження навичок...</Text>
-                ) : skillsMap[module.id]?.length ? (
-                  <ResponsiveContainer width="100%" height={300}>
-                    <RadarChart data={skillsMap[module.id]}>
-                      <PolarGrid />
-                      <PolarAngleAxis dataKey="criterion_name" />
-                      <PolarRadiusAxis angle={30} domain={[0, 5]} />
-                      <Radar name="Оцінка" dataKey="average_score" stroke="#7c3aed" fill="#7c3aed" fillOpacity={0.6} />
-                    </RadarChart>
-                  </ResponsiveContainer>
-                ) : (
-                  <Text style={styles.chartPlaceholderText}>Немає даних</Text>
-                )
-              ) : (
-                <Text style={styles.chartPlaceholderText}>📊 Графік доступний лише у веб-версії</Text>
-              )}
-            </View>
-          ))
+          modules.map((module) => {
+            // progress модуля з локального стора
+            const courseProgressEntry = useUserProgressStore
+              .getState()
+              .courses.find((c) => c.course_id === id);
+            const moduleEntry = courseProgressEntry?.modules?.find(
+              (m: any) => m.module_id === module.id,
+            );
+            const percent = moduleEntry?.progress ?? 0;
+            const totalSlides = (moduleEntry as any)?.total_slides ?? 0;
+            const completedSlides = totalSlides ? Math.round((percent / 100) * totalSlides) : 0;
+
+            return (
+              <ModuleCard
+                key={module.id}
+                module={module}
+                skills={skillsMap[module.id] ?? []}
+                loadingSkills={loading.skills}
+                percent={percent}
+                completedSlides={completedSlides}
+                totalSlides={totalSlides}
+              />
+            );
+          })
         )}
       </View>
     </ScrollView>
   );
 };
 
-// 🧩 Маленький підкомпонент для статистичних блоків
-const StatBox = ({
-  label,
-  value,
-  color,
-  bg,
-}: {
-  label: string;
-  value: string;
-  color: string;
-  bg: string;
-}) => (
-  <View style={[styles.statBox, { backgroundColor: bg }]}>
-    <Text style={styles.statLabel}>{label}</Text>
-    <Text style={[styles.statValue, { color }]}>{value}</Text>
-  </View>
-);
-
 export default CourseModulesScreen;
 
-// 🎨 Стилі
-const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: '#ffffff', padding: 16 },
-  card: { backgroundColor: '#fff', borderRadius: 20 },
-  iconWrapper: {
-    alignSelf: 'center',
-    backgroundColor: '#f3e8ff',
-    padding: 12,
-    borderRadius: 50,
-    marginBottom: 12,
-  },
-  title: { fontSize: 22, fontWeight: '800', textAlign: 'center', marginBottom: 4 },
-  subtitle: { fontSize: 16, textAlign: 'center', color: '#475569', marginBottom: 16 },
-  statsCard: {
-    backgroundColor: 'rgba(0, 0, 0, 0.02)',
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 16,
-  },
-  statsTitle: { fontSize: 18, fontWeight: '600', color: '#0f172a', marginBottom: 12 },
-  statsRow: { flexDirection: 'row', justifyContent: 'space-between', gap: 8 },
-  statBox: { flex: 1, borderRadius: 12, padding: 12, alignItems: 'center' },
-  statLabel: { fontSize: 13, color: '#475569', marginBottom: 4 },
-  statValue: { fontSize: 18, fontWeight: '700' },
-  moduleCard: {
-    backgroundColor: 'rgba(0, 0, 0, 0.02)',
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 16,
-  },
-  moduleTitle: { fontSize: 16, fontWeight: '700', marginBottom: 8 },
+const localStyles = StyleSheet.create({
+  screen: { flex: 1, backgroundColor: Colors.bg, padding: 16 },
+  // keep wrapper transparent so inner cards (StatsHeader, ModuleCard) are visually separated
+  card: { backgroundColor: 'transparent' },
   chartPlaceholderText: { color: '#64748b', textAlign: 'center', marginTop: 16 },
 });

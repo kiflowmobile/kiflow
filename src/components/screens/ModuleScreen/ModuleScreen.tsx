@@ -22,7 +22,6 @@ import PaginationDots from './components/PaginationDot';
 import { useAnalyticsStore } from '@/src/stores/analyticsStore';
 const analyticsStore = useAnalyticsStore.getState();
 
-
 export default function ModuleScreen() {
   const { moduleId, courseId, slideId } = useLocalSearchParams<{
     moduleId?: string;
@@ -180,10 +179,10 @@ export default function ModuleScreen() {
 
   useEffect(() => {
     if (!moduleId || slides.length === 0) return;
-  
+
     const index = slides.findIndex((s) => s.id === slideId);
     const currentIndex = index >= 0 ? index : 0;
-  
+
     analyticsStore.trackEvent('course_screen__load', {
       id: moduleId,
       index: currentIndex,
@@ -221,9 +220,6 @@ export default function ModuleScreen() {
       </View>
     );
 
-
-
-
   return (
     <View style={{ flex: 1 }}>
       <Animated.ScrollView
@@ -249,6 +245,7 @@ export default function ModuleScreen() {
               onComplete={goToNextSlide}
               currentIndex={i}
               totalSlides={slides.length}
+              setScrollEnabled={setScrollEnabled}
             />
           </View>
         ))}
