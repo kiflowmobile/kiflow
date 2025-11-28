@@ -1,12 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import {
-  Image,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
+import { Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useCourseStore } from '@/src/stores/courseStore';
 import { useCriteriaStore } from '@/src/stores/criterias';
 import { useMainRatingStore } from '@/src/stores/mainRatingStore';
@@ -18,9 +11,9 @@ import { useAnalyticsStore } from '@/src/stores/analyticsStore';
 import { Colors } from '@/src/constants/Colors';
 import ProgressBar from '@/src/components/ui/progress-bar';
 import { TEXT_VARIANTS } from '@/src/constants/Fonts';
+import { formatBubbleScore } from '@/src/utils/scoreUtils';
 
 export default function StatisticsScreen() {
-
   const { courses, fetchCourses, isLoading: coursesLoading } = useCourseStore();
   const { criterias, fetchAllCriterias } = useCriteriaStore();
   const { fetchUserRatings, ratings } = useMainRatingStore();
@@ -139,7 +132,6 @@ export default function StatisticsScreen() {
     return completed;
   };
 
-
   useEffect(() => {
     useAnalyticsStore.getState().trackEvent('progress_screen__load');
   }, []);
@@ -149,7 +141,7 @@ export default function StatisticsScreen() {
       {coursesLoading && <Text>Завантаження курсів...</Text>}
 
       <ScrollView
-        contentContainerStyle={[styles.scrollContent,  styles.scrollContentLarge]}
+        contentContainerStyle={[styles.scrollContent, styles.scrollContentLarge]}
         showsVerticalScrollIndicator={false}
       >
         {!coursesLoading &&
@@ -161,17 +153,11 @@ export default function StatisticsScreen() {
               return parseFloat((total / courseSkills.length).toFixed(1));
             })();
             const quizAvg = quizScores[course.id];
-            const combinedAvg =
-              quizAvg == null || !courseAvgNum
-                ? null
-                : parseFloat(((quizAvg + courseAvgNum) / 2).toFixed(1));
 
             return (
               <Pressable
                 key={course.id}
-                style={[
-                  styles.card,
-                ]}
+                style={[styles.card]}
                 onPress={() => {
                   analyticsStore.trackEvent('progress_screen__course__click', { id: course.id });
                   router.push({
@@ -197,15 +183,11 @@ export default function StatisticsScreen() {
                           />
                           <View style={styles.scoreOverlay} pointerEvents="none">
                             <Text style={styles.scoreText}>
-                              {loading.skills || loading.quiz
-                                ? '...'
-                                : combinedAvg != null
-                                ? `${combinedAvg}`
-                                : courseAvgNum
-                                ? courseAvgNum.toFixed(1)
-                                : quizAvg != null
-                                ? `${quizAvg}`
-                                : '0.0'}
+                              {formatBubbleScore(
+                                loading.skills || loading.quiz,
+                                courseAvgNum,
+                                quizAvg,
+                              )}
                             </Text>
                           </View>
                         </View>

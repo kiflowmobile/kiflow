@@ -13,9 +13,9 @@ import type { Module } from '@/src/constants/types/modules';
 // local styles are defined below
 import StatsHeader from './StatsHeader';
 import ModuleCard from './ModuleCard';
-import type { Skill } from './CourseModules.types';
 import { useAnalyticsStore } from '@/src/stores/analyticsStore';
 import { Colors } from '@/src/constants/Colors';
+import { Skill } from '@/src/constants/types/skill';
 
 const CourseModulesScreen: React.FC = () => {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -150,7 +150,8 @@ const CourseModulesScreen: React.FC = () => {
 export default CourseModulesScreen;
 
 const localStyles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: Colors.bg, padding: 16,  },
-  card: { backgroundColor: '#fff', borderRadius: 20 },
+  screen: { flex: 1, backgroundColor: Colors.bg, padding: 16 },
+  // keep wrapper transparent so inner cards (StatsHeader, ModuleCard) are visually separated
+  card: { backgroundColor: 'transparent' },
   chartPlaceholderText: { color: '#64748b', textAlign: 'center', marginTop: 16 },
 });

@@ -1,13 +1,18 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import type { Skill } from './CourseModules.types';
 import { TEXT_VARIANTS } from '@/src/constants/Fonts';
+import { Skill } from '@/src/constants/types/skill';
 
 interface Props {
   skill: Skill;
 }
 
+const SEGMENT_WIDTH = 25;
+const SEGMENT_HEIGHT = 8;
+
 const SkillRow: React.FC<Props> = ({ skill }) => {
+  const score = Math.max(0, Math.min(5, skill.average_score));
+
   return (
     <View style={styles.skillRow}>
       <Text style={styles.skillName} numberOfLines={2} ellipsizeMode="tail">
@@ -15,13 +20,15 @@ const SkillRow: React.FC<Props> = ({ skill }) => {
       </Text>
 
       <View style={styles.progressAndScore}>
-        <Text style={styles.skillScore}>{`${skill.average_score}/5`}</Text>
+        <Text style={styles.skillScore}>{`${score}/5`}</Text>
 
         <View style={styles.segmentsRow}>
           {Array.from({ length: 5 }).map((_, i) => {
-            const filled = i < Math.round(skill.average_score);
             const isFirst = i === 0;
             const isLast = i === 4;
+
+            const rawFill = score - i;
+            const fill = Math.max(0, Math.min(1, rawFill));
 
             return (
               <View
@@ -30,9 +37,19 @@ const SkillRow: React.FC<Props> = ({ skill }) => {
                   styles.segment,
                   isFirst && styles.segmentFirst,
                   isLast && styles.segmentLast,
-                  filled ? styles.segmentFilled : styles.segmentEmpty,
                 ]}
-              />
+              >
+                {fill > 0 && (
+                  <View
+                    style={[
+                      styles.segmentFill,
+                      isFirst && styles.segmentFillFirst,
+                      isLast && fill === 1 && styles.segmentFillLast,
+                      { width: SEGMENT_WIDTH * fill },
+                    ]}
+                  />
+                )}
+              </View>
             );
           })}
         </View>
@@ -42,9 +59,6 @@ const SkillRow: React.FC<Props> = ({ skill }) => {
 };
 
 export default SkillRow;
-
-const SEGMENT_WIDTH = 34;
-const SEGMENT_HEIGHT = 14;
 
 const styles = StyleSheet.create({
   skillRow: {
@@ -72,26 +86,32 @@ const styles = StyleSheet.create({
   segment: {
     width: SEGMENT_WIDTH,
     height: SEGMENT_HEIGHT,
-    borderRadius: 0,
     marginRight: 8,
+    backgroundColor: '#EBE9E9',
+    borderRadius: 0,
+    overflow: 'hidden', 
   },
-
   segmentFirst: {
     borderTopLeftRadius: SEGMENT_HEIGHT / 2,
     borderBottomLeftRadius: SEGMENT_HEIGHT / 2,
   },
-
   segmentLast: {
     borderTopRightRadius: SEGMENT_HEIGHT / 2,
     borderBottomRightRadius: SEGMENT_HEIGHT / 2,
     marginRight: 0,
   },
 
-  segmentFilled: {
+  segmentFill: {
+    height: '100%',
     backgroundColor: '#5774CD',
   },
-  segmentEmpty: {
-    backgroundColor: '#EBE9E9',
+  segmentFillFirst: {
+    borderTopLeftRadius: SEGMENT_HEIGHT / 2,
+    borderBottomLeftRadius: SEGMENT_HEIGHT / 2,
+  },
+  segmentFillLast: {
+    borderTopRightRadius: SEGMENT_HEIGHT / 2,
+    borderBottomRightRadius: SEGMENT_HEIGHT / 2,
   },
 
   skillScore: {

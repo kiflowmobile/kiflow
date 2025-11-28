@@ -1,7 +1,8 @@
 import { Colors } from '@/src/constants/Colors';
 import { TEXT_VARIANTS } from '@/src/constants/Fonts';
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, Image } from 'react-native';
+import { computeCourseAvgNum, formatBubbleScore } from '@/src/utils/scoreUtils';
 
 interface Props {
   isLoading: boolean;
@@ -11,18 +12,24 @@ interface Props {
 }
 
 const StatsHeader: React.FC<Props> = ({ isLoading, courseAverage, quizAverage, courseTitle }) => {
+  const courseAvgNum = computeCourseAvgNum(courseAverage);
+  const bubbleText = formatBubbleScore(isLoading, courseAvgNum, quizAverage);
   return (
-    <View style={styles.headerCard}>
+    <View style={[styles.headerCard]}>
       {(isLoading || courseTitle) && (
-        <Text style={styles.courseTitle}> Курс &quot;{ courseTitle}&quot;</Text>
+        <Text style={styles.courseTitle}> Курс &quot;{courseTitle}&quot;</Text>
       )}
 
       <View style={styles.contentRow}>
         <View style={styles.headerLeft}>
-          <View style={styles.averageBlob}>
-            <Text style={styles.averageBlobValue}>
-              {isLoading || courseAverage === null ? '...' : courseAverage.toFixed(1)}
-            </Text>
+          <View style={styles.scoreImageWrapper}>
+            <Image
+              source={require('@/src/assets/images/score-bubble-shape.png')}
+              style={styles.scoreBubbleImage}
+            />
+            <View style={styles.scoreOverlay} pointerEvents="none">
+              <Text style={styles.scoreText}>{bubbleText}</Text>
+            </View>
           </View>
           <Text style={styles.averageLabel}>Average score</Text>
         </View>
@@ -66,24 +73,36 @@ const styles = StyleSheet.create({
   },
   contentRow: { flexDirection: 'row', alignItems: 'center', width: '100%' },
   headerLeft: { alignItems: 'center', width: 92 },
-  averageBlob: {
+  scoreImageWrapper: {
     width: 64,
     height: 64,
-    borderRadius: 20,
-    backgroundColor: '#eef2ff',
     justifyContent: 'center',
     alignItems: 'center',
   },
-  averageBlobValue: { color: '#4c1d95', fontSize: 20, fontWeight: '800' },
-  averageLabel: { marginTop: 8, ...TEXT_VARIANTS.body2 },
+  scoreBubbleImage: {
+    width: 64,
+    height: 64,
+    resizeMode: 'contain',
+  },
+  scoreOverlay: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: 0,
+    bottom: 0,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  scoreText: { color: '#000', ...TEXT_VARIANTS.title1 },
+  averageLabel: { marginTop: 8, ...TEXT_VARIANTS.body2, textAlign: 'center' },
   headerDivider: {
     width: 1,
-    height: 68,
+    height: 75,
     backgroundColor: 'rgba(15,23,42,0.06)',
-    marginHorizontal: 12,
+    marginHorizontal: 26,
   },
   headerRight: { flex: 1 },
   scoreRow: { flexDirection: 'row', justifyContent: 'space-between' },
   scoreLabel: { ...TEXT_VARIANTS.body2 },
-  scoreValue: { ...TEXT_VARIANTS.title1, fontWeight: '500'},
+  scoreValue: { ...TEXT_VARIANTS.title1, fontWeight: '500' },
 });
