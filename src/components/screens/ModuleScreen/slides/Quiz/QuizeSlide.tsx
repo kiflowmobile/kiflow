@@ -23,6 +23,7 @@ interface QuizProps {
   quiz: QuizData;
   setScrollEnabled?: (enabled: boolean) => void;
   isActive?: boolean;
+  onComplete?: () => void;
 }
 
 const QuizSlide: React.FC<QuizProps> = ({
@@ -33,6 +34,7 @@ const QuizSlide: React.FC<QuizProps> = ({
   courseId,
   setScrollEnabled,
   isActive,
+  onComplete,
 }) => {
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
   const [checked, setChecked] = useState(false);
@@ -102,7 +104,19 @@ const QuizSlide: React.FC<QuizProps> = ({
     }
   };
 
-  const handleNext = () => {};
+  const handleNext = () => {
+    analyticsStore.trackEvent('course_screen__vote__next', {
+      id,
+      selected: selectedAnswer,
+      correct: quiz.correctAnswer,
+      correctResult: selectedAnswer === quiz.correctAnswer,
+    });
+
+    // make sure scrolling is enabled before moving on
+    if (setScrollEnabled) setScrollEnabled(true);
+
+    if (typeof onComplete === 'function') onComplete();
+  };
 
   const isAnswerCorrect = checked && selectedAnswer === quiz.correctAnswer;
 

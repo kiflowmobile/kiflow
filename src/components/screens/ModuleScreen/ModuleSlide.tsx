@@ -89,6 +89,7 @@ const ModuleSlide: React.FC<CourseSlideProps> = ({
           courseId={courseIdStr}
           title={slideData.slide_title}
           quiz={slideData.slide_data}
+          onComplete={onComplete}
           isActive={isActive}
           setScrollEnabled={setScrollEnabled}
         />
