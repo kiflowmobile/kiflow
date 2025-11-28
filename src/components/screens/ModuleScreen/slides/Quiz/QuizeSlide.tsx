@@ -4,11 +4,10 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { useEffect, useState } from 'react';
 import { ScrollView, View as RNView, StyleSheet } from 'react-native';
 import { Colors } from '@/src/constants/Colors';
-import QuizBadge from './QuizBadge';
-import QuizQuestion from './QuizQuestion';
-import QuizOptions from './QuizOptions';
-import QuizControls from './QuizControls';
-// main layout styles are colocated here
+import QuizBadge from './components/QuizBadge';
+import QuizQuestion from './components/QuizQuestion';
+import QuizOptions from './components/QuizOptions';
+import QuizControls from './components/QuizControls';
 
 type QuizData = {
   question: string;
