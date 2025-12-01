@@ -70,6 +70,14 @@ export default function RootLayout() {
             }}
           />
 
+          <Stack.Screen
+            name="statistics/[id]"
+            options={{
+              headerShown: true,
+              header: () => <CustomHeader showBackButton title="Course progress" />,
+            }}
+          />
+
           <Stack.Screen name="instractions" />
         </Stack>
       </SafeAreaProvider>
