@@ -1,6 +1,8 @@
 import {
   useAuthStore,
+  useCourseStore,
   useMainRatingStore,
+  useModulesStore,
   useSlidesStore,
   useUserProgressStore,
 } from '@/src/stores';
@@ -17,11 +19,14 @@ import {
 } from 'react-native';
 import Animated, { useAnimatedScrollHandler, runOnJS } from 'react-native-reanimated';
 import ModuleSlide from './ModuleSlide';
-import {  useSaveProgressOnLeave } from '@/src/hooks/useSaveProgressOnExit';
+import { useSaveProgressOnLeave } from '@/src/hooks/useSaveProgressOnExit';
 import PaginationDots from './components/PaginationDot';
 import { useAnalyticsStore } from '@/src/stores/analyticsStore';
+import { sendLastSlideEmail } from '@/src/services/emailService';
 const analyticsStore = useAnalyticsStore.getState();
 
+// 👇 импорт функции + типа (если EmailData экспортируется из этого же файла)
+// import type { EmailData } from '@/src/services/email'; // если тип экспортируется отдельно
 
 export default function ModuleScreen() {
   const { moduleId, courseId, slideId } = useLocalSearchParams<{
@@ -38,6 +43,9 @@ export default function ModuleScreen() {
 
   const stablePageHeightRef = useRef<number>(getInitialPageHeight());
   const [pageH, setPageH] = useState<number>(stablePageHeightRef.current);
+
+  // 👇 чтобы письмо не отправлялось несколько раз
+  const emailSentRef = useRef(false);
 
   function getInitialPageHeight() {
     if (Platform.OS === 'web') {
@@ -120,15 +128,27 @@ export default function ModuleScreen() {
     [moduleId, courseId, user?.id, slides],
   );
 
-  const onScroll = useAnimatedScrollHandler({
-    onScroll: (event) => {
-      const index = Math.round(event.contentOffset.y / pageH);
-      if (index !== lastScrollIndexRef.current) {
-        lastScrollIndexRef.current = index;
-        runOnJS(handleSlideChange)(index);
-      }
-    },
-  });
+  const { average, skills, fetchAverage, fetchSkills } = useMainRatingStore();
+
+  useEffect(() => {
+    if (!user?.id || !moduleId) return;
+
+    fetchAverage(user.id, moduleId);
+    fetchSkills(user.id, moduleId);
+  }, [user, moduleId]);
+
+  useEffect(() => {
+    if (!moduleId || slides.length === 0) return;
+
+    const index = slides.findIndex((s) => s.id === slideId);
+    const currentIndex = index >= 0 ? index : 0;
+
+    analyticsStore.trackEvent('course_screen__load', {
+      id: moduleId,
+      index: currentIndex,
+      pages: slides.length,
+    });
+  }, [moduleId, slides.length, slideId]);
 
   useSaveProgressOnLeave();
 
@@ -141,13 +161,92 @@ export default function ModuleScreen() {
     }
   }, [slides, currentSlideId]);
 
-  const goToNextSlide = () => {
+  // 👇 отдельная функция: триггер при достижении последнего слайда
+  const triggerLastSlideEmail = useCallback(
+    async (index: number) => {
+      const isLastSlide = index === slides.length - 1;
+      const currentSlide = slides[index];
+
+      if (!isLastSlide || emailSentRef.current || !user?.email || !currentSlide) {
+        return;
+      }
+
+      emailSentRef.current = true;
+
+      try {
+        const modulesState = useModulesStore.getState();
+        const coursesState = useCourseStore.getState();
+
+        const resolvedModuleTitle =
+          (modulesState.currentModule &&
+            modulesState.currentModule.id === moduleId &&
+            modulesState.currentModule.title) ||
+          (moduleId ? modulesState.getModule(moduleId)?.title : undefined) ||
+          currentSlide.slide_title ||
+          'Модуль без назви';
+
+        const resolvedCourseTitle =
+          (coursesState.currentCourse &&
+            coursesState.currentCourse.id === courseId &&
+            coursesState.currentCourse.title) ||
+          (courseId
+            ? coursesState.courses.find((course) => course.id === courseId)?.title
+            : undefined);
+
+        console.log('[ModuleScreen] sendLastSlideEmail payload will be:', {
+          userId: user.id,
+          userEmail: user.email,
+          courseId,
+          moduleId,
+          averageScore: average,
+          skills,
+          moduleTitle: resolvedModuleTitle,
+          courseTitle: resolvedCourseTitle,
+          slideId: currentSlide.id,
+        });
+
+        const emailData = {
+          userId: user.id,
+          userEmail: user.email,
+          moduleId,
+          moduleTitle: resolvedModuleTitle,
+          courseTitle: resolvedCourseTitle,
+          slide: currentSlide,
+        };
+
+        const result = await sendLastSlideEmail(emailData);
+        if (!result.success) {
+          console.error('Failed to send last slide email:', result.error);
+        }
+      } catch (e) {
+        console.error('Error sending last slide email', e);
+      }
+    },
+    [average, courseId, moduleId, skills, slides, user?.email, user?.id],
+  );
+
+  const onScroll = useAnimatedScrollHandler({
+    onScroll: (event) => {
+      const index = Math.round(event.contentOffset.y / pageH);
+      if (index !== lastScrollIndexRef.current) {
+        lastScrollIndexRef.current = index;
+        runOnJS(handleSlideChange)(index);
+        runOnJS(triggerLastSlideEmail)(index);
+      }
+    },
+  });
+
+  // 👇 goToNextSlide теперь только листает слайды
+  const goToNextSlide = async () => {
+    console.log('[ModuleScreen] goToNextSlide called, currentSlideId=', currentSlideId);
     const currentIndex = slides.findIndex((s) => s.id === currentSlideId);
-    if (currentIndex >= 0 && currentIndex < slides.length - 1) {
-      const nextIndex = currentIndex + 1;
-      scrollViewRef.current?.scrollTo({ y: nextIndex * pageH, animated: true });
-      handleSlideChange(nextIndex);
-    }
+    if (currentIndex < 0) return;
+
+    const nextIndex = currentIndex + 1;
+    if (nextIndex >= slides.length) return;
+
+    scrollViewRef.current?.scrollTo({ y: nextIndex * pageH, animated: true });
+    await handleSlideChange(nextIndex);
   };
 
   useEffect(() => {
@@ -168,28 +267,6 @@ export default function ModuleScreen() {
       }
     }
   }, [slides, pageH, slideId]);
-
-  const { average, skills, fetchAverage, fetchSkills } = useMainRatingStore();
-
-  useEffect(() => {
-    if (!user?.id || !moduleId) return;
-
-    fetchAverage(user.id, moduleId);
-    fetchSkills(user.id, moduleId);
-  }, [user, moduleId]);
-
-  useEffect(() => {
-    if (!moduleId || slides.length === 0) return;
-  
-    const index = slides.findIndex((s) => s.id === slideId);
-    const currentIndex = index >= 0 ? index : 0;
-  
-    analyticsStore.trackEvent('course_screen__load', {
-      id: moduleId,
-      index: currentIndex,
-      pages: slides.length,
-    });
-  }, [moduleId, slides.length, slideId]);
 
   if (error)
     return (
