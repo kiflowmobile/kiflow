@@ -5,7 +5,7 @@ export const clearUserLocalData = async () => {
       const allKeys = await AsyncStorage.getAllKeys();
   
       const keysToRemove = allKeys.filter((key) =>
-        key.startsWith('course-progress-') ||
+        key.startsWith('quiz-progress-') ||
         key.startsWith('course-chat-') ||
         key.startsWith('user-progress-') ||
         key.startsWith('quizProgress') ||

@@ -25,7 +25,7 @@ const QuizSlide: React.FC<QuizProps> = ({id, title, subtitle, quiz, courseId }) 
   const analyticsStore = useAnalyticsStore.getState();
 
 
-  const STORAGE_KEY = `course-progress-${courseId}`;
+  const STORAGE_KEY = `quiz-progress-${courseId}`;
 
   useEffect(() => {
     const loadProgress = async () => {

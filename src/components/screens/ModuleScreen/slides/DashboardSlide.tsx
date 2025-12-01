@@ -38,7 +38,7 @@ const DashboardSlide: React.FC<DashboardSlideProps> = ({ courseId, title }) => {
   useEffect(() => {
     const loadQuizRatings = async () => {
       try {
-        const stored = await AsyncStorage.getItem(`course-progress-${courseId}`);
+        const stored = await AsyncStorage.getItem(`quiz-progress-${courseId}`);
         if (!stored) return;
         const parsed = JSON.parse(stored);
 
