@@ -132,32 +132,6 @@ export default function StatisticsScreen() {
     return completed;
   };
 
-<<<<<<< HEAD
-  const getCourseAverageFromRatings = (courseId: string) => {
-    const { criterias: storeCriterias } = useCriteriaStore.getState();
-    const { ratings: storeRatings } = useMainRatingStore.getState();
-
-    const courseCriterias = storeCriterias.filter((c) => c.course_id === courseId);
-
-    if (!courseCriterias.length) {
-      return '0.0';
-    }
-
-    const courseRatings = storeRatings
-      .filter((r) => courseCriterias.some((c) => c.key === r.criteria_key) && r.rating != null)
-      .map((r) => ({ ...r, rating: Number(r.rating) }))
-      .filter((r) => Number.isFinite(r.rating));
-
-    if (!courseRatings.length) {
-      return '0.0';
-    }
-
-    const avg = courseRatings.reduce((sum, r) => sum + (r.rating || 0), 0) / courseRatings.length;
-    return avg.toFixed(1);
-  };
-
-=======
->>>>>>> f8b4015a81a1270a9533f15d23109d75c4b7397d
   useEffect(() => {
     useAnalyticsStore.getState().trackEvent('progress_screen__load');
   }, []);
