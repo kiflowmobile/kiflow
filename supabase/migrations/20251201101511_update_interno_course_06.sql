@@ -15,33 +15,41 @@ BEGIN
     WHERE company_id = existing_company_id
     LIMIT 1;
 
-    -- 3. Видаляємо модулі + уроки (якщо є)
     IF existing_course_id IS NOT NULL THEN
-      DELETE FROM public.lessons
-      WHERE module_id IN (
-        SELECT id FROM public.modules WHERE course_id = existing_course_id
-      );
+      -- 3. Видаляємо уроки, якщо таблиця lessons існує
+      IF EXISTS (
+        SELECT FROM information_schema.tables 
+        WHERE table_schema='public' AND table_name='lessons'
+      ) THEN
+        DELETE FROM public.lessons
+        WHERE module_id IN (
+          SELECT id FROM public.modules WHERE course_id = existing_course_id
+        );
+      END IF;
 
-      DELETE FROM public.modules
-      WHERE course_id = existing_course_id;
+      -- 4. Видаляємо модулі, якщо таблиця modules існує
+      IF EXISTS (
+        SELECT FROM information_schema.tables 
+        WHERE table_schema='public' AND table_name='modules'
+      ) THEN
+        DELETE FROM public.modules
+        WHERE course_id = existing_course_id;
+      END IF;
 
-      -- 4. Видаляємо прив’язку курс–компанія
+      -- 5. Видаляємо прив’язку курс–компанія
       DELETE FROM public.company_courses
       WHERE company_id = existing_company_id;
 
-      -- 5. Видаляємо курс
+      -- 6. Видаляємо курс
       DELETE FROM public.courses
       WHERE id = existing_course_id;
     END IF;
 
-    -- 6. Видаляємо компанію
+    -- 7. Видаляємо компанію
     DELETE FROM public.companies
     WHERE id = existing_company_id;
   END IF;
 END $$;
-
-
-
 
 
 -- 1. Створюємо компанію, курс, привʼязуємо курс до компанії та створюємо модуль

@@ -54,7 +54,7 @@ export const useQuizStore = create<QuizStore>((set, get) => ({
     if(!user) return
     try {
     const allKeys = await AsyncStorage.getAllKeys();
-    const quizKeys = allKeys.filter((k) => k.startsWith('course-progress-'));
+    const quizKeys = allKeys.filter((k) => k.startsWith('quiz-progress-'));
 
 
     if (quizKeys.length === 0) {
@@ -73,7 +73,7 @@ export const useQuizStore = create<QuizStore>((set, get) => ({
         console.warn(`❌ Failed to parse quiz data for key ${key}`, err);
         continue;
       }
-      const courseId = key.replace("course-progress-", "");
+      const courseId = key.replace("quiz-progress-", "");
       for (const [slideId, data] of Object.entries(parsed)) {
         const { selectedAnswer, correctAnswer } = data as any;
         if (
@@ -125,7 +125,7 @@ export const useQuizStore = create<QuizStore>((set, get) => ({
       > = {};
   
       for (const item of data) {
-        const key = `course-progress-${item.course_id}`;
+        const key = `quiz-progress-${item.course_id}`;
         if (!groupedByCourse[key]) groupedByCourse[key] = {};
         groupedByCourse[key][item.slide_id] = {
           selectedAnswer: item.selected_answer,
@@ -167,7 +167,7 @@ export const useQuizStore = create<QuizStore>((set, get) => ({
   },
 
   getModuleScore: async (courseId: string, moduleId: string) => {
-    const key = `course-progress-${courseId}`;
+    const key = `quiz-progress-${courseId}`;
     const value = await AsyncStorage.getItem(key);
     if (!value) return 0;
   
@@ -182,7 +182,7 @@ export const useQuizStore = create<QuizStore>((set, get) => ({
   },
 
   getCourseScore: async (courseId) => {
-    const key = `course-progress-${courseId}`;
+    const key = `quiz-progress-${courseId}`;
     const value = await AsyncStorage.getItem(key);
     if (!value) return 0;
 
@@ -195,7 +195,7 @@ export const useQuizStore = create<QuizStore>((set, get) => ({
 
   getTotalScore: async () => {
     const allKeys = await AsyncStorage.getAllKeys();
-    const quizKeys = allKeys.filter((k) => k.startsWith('course-progress-'));
+    const quizKeys = allKeys.filter((k) => k.startsWith('quiz-progress-'));
 
     if (quizKeys.length === 0) return 0;
 

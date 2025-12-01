@@ -91,6 +91,8 @@ export const useChatStore = create<ChatStore>(() => ({
 
         const groupedByCourse: Record<string, Record<string, any[]>> = {};
 
+        console.log('data', data)
+
         for (const row of data) {
           const { course_id, slide_id, messages } = row;
     

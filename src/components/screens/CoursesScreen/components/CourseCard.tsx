@@ -74,7 +74,7 @@ const handleResetProgress = async (e?: any) => {
   try {
     resetCourseProgress(course.id)
 
-    const storageQuizeKey = `course-progress-${course.id}`;
+    const storageQuizeKey = `quiz-progress-${course.id}`;
     await AsyncStorage.removeItem(storageQuizeKey);
     const storageChatKey = `course-chat-${course.id}`;
     await AsyncStorage.removeItem(storageChatKey);
