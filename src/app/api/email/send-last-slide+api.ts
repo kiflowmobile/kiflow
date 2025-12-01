@@ -1,7 +1,13 @@
 import nodemailer from 'nodemailer';
-import { supabase } from '@/src/config/supabaseClient';
 import { formatSlideContent } from '@/src/services/emailService';
-import { getAverageUserRating, getUserSkillsSummary } from '@/src/services/main_rating';
+
+interface ClientSkill {
+  criterion_id?: string;
+  criterion_key?: string;
+  criterion_name?: string;
+  average_score?: number;
+  score?: number;
+}
 
 interface EmailRequest {
   userEmail: string;
@@ -11,6 +17,42 @@ interface EmailRequest {
   userId?: string;
   moduleId?: string;
   extraRecipients?: string[] | string;
+  debug?: boolean;
+
+  // данные только с клиента
+  averageScore?: number;
+  skills?: ClientSkill[];
+}
+
+// 🔹 утилита для удаления дубликатов критериев
+function dedupeSkills(
+  skills: {
+    name: string;
+    key?: string;
+    score: number;
+    individualScores?: (number | string)[];
+  }[],
+) {
+  const seen = new Set<string>();
+  const result: typeof skills = [];
+
+  for (const skill of skills) {
+    const id = (skill.key || skill.name || '').toString().trim().toLowerCase();
+
+    if (!id) {
+      result.push(skill);
+      continue;
+    }
+
+    if (seen.has(id)) {
+      continue; // дубликат — пропускаем
+    }
+
+    seen.add(id);
+    result.push(skill);
+  }
+
+  return result;
 }
 
 export async function POST(request: Request) {
@@ -23,70 +65,121 @@ export async function POST(request: Request) {
       userId,
       moduleId,
       extraRecipients,
+      debug,
+      averageScore,
+      skills,
     }: EmailRequest = await request.json();
 
+    console.log('[module-completion] Incoming request body (client-only stats):', {
+      userEmail,
+      moduleTitle,
+      courseTitle,
+      userId,
+      moduleId,
+      extraRecipients,
+      debug,
+      hasSlide: !!slide,
+      averageScore,
+      skillsFromClientCount: Array.isArray(skills) ? skills.length : 0,
+    });
+
     if (!userEmail || !moduleTitle || !slide) {
+      console.warn('[module-completion] Missing required fields', {
+        userEmail,
+        moduleTitle,
+        hasSlide: !!slide,
+      });
+
       return new Response(
         JSON.stringify({ error: 'Missing required fields: userEmail, moduleTitle, slide' }),
         { status: 400, headers: { 'Content-Type': 'application/json' } },
       );
     }
 
-    let userStats = {
-      totalLearningTime: 12,
-      averageScore: 4.2,
-      completedCourses: 5,
-      skills: [
-        { name: 'Фокус на допомозі клієнту', score: 4.5 },
-        { name: 'Мова', score: 4.2 },
-        { name: 'Мислення експерта', score: 3.8 },
-        { name: 'Крок', score: 4.0 },
-      ],
-    };
+    // Статистика пользователя — ТОЛЬКО из клиента
+    let userStats: {
+      averageScore?: number;
+      skills?: {
+        name: string;
+        key?: string;
+        score: number;
+        individualScores?: (number | string)[];
+      }[];
+    } = {};
 
-    if (userId && moduleId) {
-      try {
-        const { data: ratingData } = await getAverageUserRating(userId, moduleId);
-        if (ratingData?.rating) {
-          userStats.averageScore = Math.round(ratingData.rating * 10) / 10;
-        }
-
-        const { data: skillsData } = await getUserSkillsSummary(userId, moduleId);
-        if (skillsData && skillsData.length > 0) {
-          userStats.skills = skillsData.map((skill) => ({
-            name: skill.criterion_name,
-            score: Math.round(skill.average_score * 10) / 10,
-          }));
-        }
-
-        const { data: courseSummaries } = await supabase
-          .from('user_course_summaries')
-          .select('progress')
-          .eq('user_id', userId);
-
-        if (courseSummaries) {
-          const completedCourses = courseSummaries.filter((cs) => cs.progress >= 100).length;
-          userStats.completedCourses = completedCourses;
-
-          // Примерная оценка времени обучения
-          const totalProgress = courseSummaries.reduce((sum, cs) => sum + cs.progress, 0);
-          const avgProgress = totalProgress / courseSummaries.length;
-          userStats.totalLearningTime = Math.round((avgProgress / 20) * 10) / 10; // примерная формула
-        }
-      } catch (error) {
-        console.warn('Failed to fetch user statistics, using defaults:', error);
-      }
+    // 1) Средний балл из клиента
+    if (typeof averageScore === 'number' && Number.isFinite(averageScore)) {
+      userStats.averageScore = Math.round(averageScore * 10) / 10;
+      console.log('[module-completion] Using averageScore from client:', userStats.averageScore);
     }
+
+    // 2) Навыки из клиента
+    if (Array.isArray(skills) && skills.length > 0) {
+      userStats.skills = skills.map((skill) => {
+        const key = skill.criterion_key ?? skill.criterion_id ?? undefined;
+        const name =
+          skill.criterion_name ?? skill.criterion_id ?? skill.criterion_key ?? 'Без названия';
+
+        let s = 0;
+        if (typeof skill.average_score === 'number') s = skill.average_score;
+        else if (typeof skill.score === 'number') s = skill.score;
+
+        const normalizedScore = Math.round(s * 10) / 10;
+
+        return {
+          name,
+          key,
+          score: normalizedScore,
+          individualScores: undefined, // только если когда-то решим их прислать
+        };
+      });
+
+      console.log('[module-completion] Using skills from client. Count:', userStats.skills.length);
+    }
+
+    // 3) Если среднего балла нет, но есть навыки — считаем среднее по ним
+    if (
+      (userStats.averageScore === undefined || Number.isNaN(userStats.averageScore)) &&
+      userStats.skills &&
+      userStats.skills.length > 0
+    ) {
+      const sum = userStats.skills.reduce((acc, s) => acc + (s.score ?? 0), 0);
+      const avg = sum / userStats.skills.length;
+      userStats.averageScore = Math.round(avg * 10) / 10;
+      console.log(
+        '[module-completion] Computed averageScore from client skills:',
+        userStats.averageScore,
+      );
+    }
+
+    // 🔹 удаляем дубликаты критериев, если они есть
+    if (userStats.skills && userStats.skills.length > 0) {
+      const before = userStats.skills.length;
+      userStats.skills = dedupeSkills(userStats.skills);
+      const after = userStats.skills.length;
+      console.log('[module-completion] Dedupe skills: before =', before, 'after =', after);
+    }
+
+    console.log('[module-completion] Final userStats before email (client-only):', userStats);
 
     // Форматируем контент слайда (пока используем только в логах)
     const slideContent = formatSlideContent(slide);
+    console.log('[module-completion] Slide content (formatted, for debug only):', slideContent);
 
-    // Отправка email через SMTP (требует настройки переменных окружения)
+    // Отправка email через SMTP
     const SMTP_HOST = process.env.SMTP_HOST;
     const SMTP_PORT = process.env.SMTP_PORT;
     const SMTP_USER = process.env.SMTP_USER;
     const SMTP_PASS = process.env.SMTP_PASS;
     const FROM_EMAIL = process.env.FROM_EMAIL || 'natamrshn@gmail.com';
+
+    console.log('[module-completion] SMTP env summary:', {
+      hasHost: !!SMTP_HOST,
+      port: SMTP_PORT,
+      hasUser: !!SMTP_USER,
+      hasPass: !!SMTP_PASS,
+      fromEmail: FROM_EMAIL,
+    });
 
     // Статичный e-mail, куда ВСЕГДА дублируем письмо (ты)
     const STATIC_COMPLETION_EMAIL = 'natamrshn@gmail.com';
@@ -104,31 +197,55 @@ export async function POST(request: Request) {
       ? [extraRecipients]
       : [];
 
-    const emailText = `🎉 Вітаємо з завершенням модуля "${moduleTitle}"${
-      courseTitle ? ` (курс "${courseTitle}")` : ''
-    }!
+    console.log('[module-completion] Extra emails summary:', {
+      EXTRA_COMPLETION_EMAILS,
+      payloadExtraEmails,
+    });
 
-Твоя статистика:
-• Час навчання: ${userStats.totalLearningTime} год
-• Середній бал: ${userStats.averageScore}/5
-• Курси: ${userStats.completedCourses}
+    // Формируем письмо — средний балл + разбивка по характеристикам
+    const emailText = `Здравствуйте!
 
-Порівняння навичок:
-${userStats.skills.map((skill) => `• ${skill.name}: ${skill.score}/5`).join('\n')}
+Поздравляем с завершением модуля "${moduleTitle}"${courseTitle ? ` (курс "${courseTitle}")` : ''}.
 
-Продовжуйте навчання в додатку Kiflow для досягнення нових висот!`;
+1) Средний балл:
+${
+  userStats.averageScore != null
+    ? `• ${userStats.averageScore}/5`
+    : '• Средний балл ещё не рассчитан'
+}
+
+2) Разбивка по характеристикам:
+${
+  userStats.skills && userStats.skills.length > 0
+    ? userStats.skills
+        .map((skill: any) => {
+          const base = `• ${skill.name}: ${skill.score}/5`;
+          if (skill.individualScores && skill.individualScores.length > 0) {
+            return base + ` (Оценки: ${skill.individualScores.join(', ')})`;
+          }
+          return base;
+        })
+        .join('\n')
+    : 'Данные по характеристикам отсутствуют.'
+}
+
+Спасибо, команда Kiflow.`;
+
+    console.log('[module-completion] Final emailText preview:', emailText);
 
     if (SMTP_HOST && SMTP_PORT && SMTP_USER && SMTP_PASS) {
       try {
         const transporter = nodemailer.createTransport({
           host: SMTP_HOST,
           port: parseInt(SMTP_PORT),
-          secure: SMTP_PORT === '465', 
+          secure: SMTP_PORT === '465',
           auth: {
             user: SMTP_USER,
             pass: SMTP_PASS,
           },
         });
+
+        console.log('[module-completion] Transporter created, sending user email to:', userEmail);
 
         // 1) Письмо пользователю
         await transporter.sendMail({
@@ -139,7 +256,7 @@ ${userStats.skills.map((skill) => `• ${skill.name}: ${skill.score}/5`).join('\
         });
         console.log('Email sent successfully to user:', userEmail);
 
-        // 2) Отдельное письмо тебе + доп. адресам
+        // 2) Админская копия
         const adminRecipientsList = [
           STATIC_COMPLETION_EMAIL,
           ...EXTRA_COMPLETION_EMAILS,
@@ -149,27 +266,28 @@ ${userStats.skills.map((skill) => `• ${skill.name}: ${skill.score}/5`).join('\
           .filter(Boolean);
 
         const uniqueAdminRecipients = Array.from(new Set(adminRecipientsList));
+        console.log('[module-completion] Admin recipients (unique):', uniqueAdminRecipients);
 
         if (uniqueAdminRecipients.length > 0) {
           const adminRecipientsString = uniqueAdminRecipients.join(', ');
 
+          console.log('[module-completion] Sending admin copy to:', adminRecipientsString);
+
           await transporter.sendMail({
             from: FROM_EMAIL,
             to: adminRecipientsString,
-            subject: `📋 Копія статистики користувача - Модуль ${moduleTitle}`,
-            text:
-              emailText +
-              `
+            subject: `Копия — статистика пользователя: ${moduleTitle}`,
+            text: `${emailText}
 
 ---
-Це службова копія для адміністратора.
-userEmail: ${userEmail}
+Административная копия. userEmail: ${userEmail}
 userId: ${userId ?? 'n/a'}
-moduleId: ${moduleId ?? 'n/a'}
-`,
+moduleId: ${moduleId ?? 'n/a'}`,
           });
 
           console.log('Admin copy email sent to:', uniqueAdminRecipients);
+        } else {
+          console.log('[module-completion] No admin recipients after deduplication.');
         }
       } catch (smtpError) {
         console.error('SMTP Error:', smtpError);
@@ -185,7 +303,8 @@ moduleId: ${moduleId ?? 'n/a'}
       }
     } else {
       // Если SMTP не настроен, просто логируем
-      console.log('SMTP not configured. Email would be sent to user:', userEmail);
+      console.log('[module-completion] SMTP not configured, skipping real send. Debug info:');
+      console.log('Email would be sent to user:', userEmail);
       console.log('Admin copy would be sent to:', [
         STATIC_COMPLETION_EMAIL,
         ...EXTRA_COMPLETION_EMAILS,
@@ -195,12 +314,21 @@ moduleId: ${moduleId ?? 'n/a'}
       console.log('Content:', slideContent);
     }
 
-    return new Response(JSON.stringify({ success: true, message: 'Email sent successfully' }), {
+    const baseResponse: any = { success: true, message: 'Email sent successfully' };
+    if (debug) {
+      baseResponse.userId = userId ?? null;
+      baseResponse.moduleId = moduleId ?? null;
+      baseResponse.userStats = userStats;
+
+      console.log('[module-completion] Debug response payload (client-only):', baseResponse);
+    }
+
+    return new Response(JSON.stringify(baseResponse), {
       status: 200,
       headers: { 'Content-Type': 'application/json' },
     });
   } catch (error) {
-    console.error('Error sending email:', error);
+    console.error('Error sending email (outer catch):', error);
     return new Response(
       JSON.stringify({
         error: 'Failed to send email',

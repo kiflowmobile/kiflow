@@ -23,10 +23,35 @@ import { useSaveProgressOnLeave } from '@/src/hooks/useSaveProgressOnExit';
 import PaginationDots from './components/PaginationDot';
 import { useAnalyticsStore } from '@/src/stores/analyticsStore';
 import { sendLastSlideEmail } from '@/src/services/emailService';
+
 const analyticsStore = useAnalyticsStore.getState();
 
-// 👇 импорт функции + типа (если EmailData экспортируется из этого же файла)
-// import type { EmailData } from '@/src/services/email'; // если тип экспортируется отдельно
+// убираем дубликаты критериев по ключу / названию
+function dedupeClientSkills(rawSkills: any[] | undefined) {
+  if (!Array.isArray(rawSkills)) return [];
+
+  const seen = new Set<string>();
+  const result: any[] = [];
+
+  for (const skill of rawSkills) {
+    const id = (skill.criterion_key || skill.criterion_id || skill.key || skill.name || '')
+      .toString()
+      .trim()
+      .toLowerCase();
+
+    if (!id) {
+      result.push(skill);
+      continue;
+    }
+
+    if (seen.has(id)) continue;
+
+    seen.add(id);
+    result.push(skill);
+  }
+
+  return result;
+}
 
 export default function ModuleScreen() {
   const { moduleId, courseId, slideId } = useLocalSearchParams<{
@@ -44,7 +69,7 @@ export default function ModuleScreen() {
   const stablePageHeightRef = useRef<number>(getInitialPageHeight());
   const [pageH, setPageH] = useState<number>(stablePageHeightRef.current);
 
-  // 👇 чтобы письмо не отправлялось несколько раз
+  // чтобы письмо не отправлялось несколько раз
   const emailSentRef = useRef(false);
 
   function getInitialPageHeight() {
@@ -161,7 +186,7 @@ export default function ModuleScreen() {
     }
   }, [slides, currentSlideId]);
 
-  // 👇 отдельная функция: триггер при достижении последнего слайда
+  // триггер при достижении последнего слайда
   const triggerLastSlideEmail = useCallback(
     async (index: number) => {
       const isLastSlide = index === slides.length - 1;
@@ -193,13 +218,16 @@ export default function ModuleScreen() {
             ? coursesState.courses.find((course) => course.id === courseId)?.title
             : undefined);
 
+        const uniqueSkills = dedupeClientSkills(skills);
+
         console.log('[ModuleScreen] sendLastSlideEmail payload will be:', {
           userId: user.id,
           userEmail: user.email,
           courseId,
           moduleId,
           averageScore: average,
-          skills,
+          skillsCountRaw: Array.isArray(skills) ? skills.length : 0,
+          skillsCountUnique: uniqueSkills.length,
           moduleTitle: resolvedModuleTitle,
           courseTitle: resolvedCourseTitle,
           slideId: currentSlide.id,
@@ -212,6 +240,8 @@ export default function ModuleScreen() {
           moduleTitle: resolvedModuleTitle,
           courseTitle: resolvedCourseTitle,
           slide: currentSlide,
+          averageScore: average ?? undefined,
+          skills: uniqueSkills,
         };
 
         const result = await sendLastSlideEmail(emailData);
@@ -236,7 +266,7 @@ export default function ModuleScreen() {
     },
   });
 
-  // 👇 goToNextSlide теперь только листает слайды
+  // goToNextSlide только листает слайды
   const goToNextSlide = async () => {
     console.log('[ModuleScreen] goToNextSlide called, currentSlideId=', currentSlideId);
     const currentIndex = slides.findIndex((s) => s.id === currentSlideId);

@@ -1,6 +1,14 @@
 import { Platform } from 'react-native';
 import { Slide } from '../constants/types/slides';
 
+interface SkillFromClient {
+  criterion_id?: string;
+  criterion_key?: string;
+  criterion_name?: string;
+  average_score?: number;
+  score?: number;
+}
+
 interface EmailData {
   userEmail: string;
   moduleTitle: string;
@@ -8,6 +16,10 @@ interface EmailData {
   courseTitle?: string;
   userId?: string;
   moduleId?: string;
+
+  // новые поля со статистикой из стора
+  averageScore?: number;
+  skills?: SkillFromClient[];
 }
 
 export const sendLastSlideEmail = async (
@@ -41,7 +53,10 @@ export const sendLastSlideEmail = async (
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(emailData),
+      body: JSON.stringify({
+        ...emailData,
+        debug: true, // <- чтобы API возвращал resolvedUserId, userStats и т.п.
+      }),
     });
 
     // логируем статус ответа и тело для отладки
