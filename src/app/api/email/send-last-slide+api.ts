@@ -1,5 +1,6 @@
 import nodemailer from 'nodemailer';
 import { formatSlideContent } from '@/src/services/emailService';
+import { fetchCriteriasByKeys } from '@/src/services/main_rating';
 
 interface ClientSkill {
   criterion_id?: string;
@@ -24,7 +25,7 @@ interface EmailRequest {
   skills?: ClientSkill[];
 }
 
-// 🔹 утилита для удаления дубликатов критериев
+// 🔹 утилита для удаления/слияния дубликатов критериев
 function dedupeSkills(
   skills: {
     name: string;
@@ -33,26 +34,71 @@ function dedupeSkills(
     individualScores?: (number | string)[];
   }[],
 ) {
-  const seen = new Set<string>();
-  const result: typeof skills = [];
+  // Нормализуем строку: убираем диакритику, лишние пробелы и небуквенные символы
+  function normalizeId(s?: string) {
+    if (!s) return '';
+    try {
+      // NFD/NFKD + удаление комбинирующих символов (диакритики)
+      // затем оставляем буквы/цифры и пробелы, сжимаем пробелы
+      const normalized = s
+        .toString()
+        .normalize('NFKD')
+        .replace(/\p{M}/gu, '')
+        .replace(/[^\p{L}\p{N}]+/gu, ' ')
+        .trim()
+        .toLowerCase();
+      return normalized;
+    } catch {
+      // fallback для старых сред, если \p{} не поддерживается
+      return s.toString().trim().toLowerCase();
+    }
+  }
+
+  const map = new Map<
+    string,
+    { name: string; key?: string; score: number; individualScores?: (number | string)[] }
+  >();
+  const unkeyed: typeof skills = [];
 
   for (const skill of skills) {
-    const id = (skill.key || skill.name || '').toString().trim().toLowerCase();
+    const rawId = skill.key ?? skill.name ?? '';
+    const id = normalizeId(rawId as string);
 
     if (!id) {
-      result.push(skill);
+      // если нет ключа/имени — оставляем как есть (не можем дублировать по id)
+      unkeyed.push(skill);
       continue;
     }
 
-    if (seen.has(id)) {
-      continue; // дубликат — пропускаем
-    }
+    const existing = map.get(id);
+    if (!existing) {
+      // клонируем минимально, чтобы не мутировать вход
+      map.set(id, {
+        name: skill.name,
+        key: skill.key,
+        score: skill.score,
+        individualScores: skill.individualScores ? [...skill.individualScores] : undefined,
+      });
+    } else {
+      // При слиянии: берем более "детальную" или более длинную метку имени
+      if (skill.name && skill.name.length > (existing.name ?? '').length)
+        existing.name = skill.name;
+      if (!existing.key && skill.key) existing.key = skill.key;
 
-    seen.add(id);
-    result.push(skill);
+      // Согласуем баллы: усредняем и округляем до 1 знака, чтобы не терять данные
+      const avg = Math.round((((existing.score ?? 0) + (skill.score ?? 0)) / 2) * 10) / 10;
+      existing.score = avg;
+
+      // Сливаем индивидуальные оценки, убираем дубликаты
+      if (skill.individualScores && skill.individualScores.length > 0) {
+        existing.individualScores = Array.from(
+          new Set([...(existing.individualScores ?? []), ...skill.individualScores]),
+        );
+      }
+    }
   }
 
-  return result;
+  return [...map.values(), ...unkeyed];
 }
 
 export async function POST(request: Request) {
@@ -160,6 +206,35 @@ export async function POST(request: Request) {
       console.log('[module-completion] Dedupe skills: before =', before, 'after =', after);
     }
 
+    // Если есть ключи критериев — попробуем подставить «официальное» название по ключу из БД
+    if (userStats.skills && userStats.skills.length > 0) {
+      try {
+        const keys = Array.from(new Set(userStats.skills.map((s) => s.key).filter(Boolean)));
+        if (keys.length > 0) {
+          const { data: criterias, error: criteriasError } = await fetchCriteriasByKeys(
+            keys as string[],
+          );
+          if (!criteriasError && criterias && Array.isArray(criterias) && criterias.length > 0) {
+            const nameByKey = new Map<string, string>();
+            (criterias as any[]).forEach((c) => {
+              if (c?.key) nameByKey.set(c.key, c.name ?? c.key);
+            });
+
+            userStats.skills = userStats.skills.map((s) => {
+              if (s.key && nameByKey.has(s.key)) {
+                return { ...s, name: nameByKey.get(s.key) ?? s.name };
+              }
+              return s;
+            });
+          } else {
+            console.log('[module-completion] No criterias found for keys or error', criteriasError);
+          }
+        }
+      } catch (err) {
+        console.warn('[module-completion] Error fetching criterias by keys:', err);
+      }
+    }
+
     console.log('[module-completion] Final userStats before email (client-only):', userStats);
 
     // Форматируем контент слайда (пока используем только в логах)
@@ -202,36 +277,94 @@ export async function POST(request: Request) {
       payloadExtraEmails,
     });
 
-    // Формируем письмо — средний балл + разбивка по характеристикам
-    const emailText = `Здравствуйте!
+    // Формируем письмо в HTML и текстовом варианте (на українській)
+    function escapeHtml(str: any) {
+      if (str == null) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
 
-Поздравляем с завершением модуля "${moduleTitle}"${courseTitle ? ` (курс "${courseTitle}")` : ''}.
+    const userPlainText: string[] = [];
+    userPlainText.push(`Вітаємо!`);
+    userPlainText.push(
+      `Ви завершили модуль: ${moduleTitle}${courseTitle ? ` (курс: ${courseTitle})` : ''}`,
+    );
+    userPlainText.push('');
+    userPlainText.push('1) Середній бал:');
+    userPlainText.push(
+      userStats.averageScore != null
+        ? `• ${userStats.averageScore}/5`
+        : '• Середній бал ще не розрахований',
+    );
+    userPlainText.push('');
+    userPlainText.push('2) Розподіл за навичками:');
 
-1) Средний балл:
-${
-  userStats.averageScore != null
-    ? `• ${userStats.averageScore}/5`
-    : '• Средний балл ещё не рассчитан'
-}
+    if (userStats.skills && userStats.skills.length > 0) {
+      for (const skill of userStats.skills) {
+        const base = `• ${skill.name}: ${skill.score}/5`;
+        if (skill.individualScores && skill.individualScores.length > 0) {
+          userPlainText.push(base + ` (Оцінки: ${skill.individualScores.join(', ')})`);
+        } else {
+          userPlainText.push(base);
+        }
+      }
+    } else {
+      userPlainText.push('Дані про навички відсутні.');
+    }
 
-2) Разбивка по характеристикам:
-${
-  userStats.skills && userStats.skills.length > 0
-    ? userStats.skills
-        .map((skill: any) => {
-          const base = `• ${skill.name}: ${skill.score}/5`;
-          if (skill.individualScores && skill.individualScores.length > 0) {
-            return base + ` (Оценки: ${skill.individualScores.join(', ')})`;
-          }
-          return base;
-        })
-        .join('\n')
-    : 'Данные по характеристикам отсутствуют.'
-}
+    userPlainText.push('');
+    userPlainText.push('Дякуємо, команда Kiflow');
 
-Спасибо, команда Kiflow.`;
+    // HTML-версія з простим стилем
+    const skillsHtml =
+      userStats.skills && userStats.skills.length > 0
+        ? `<ul>${userStats.skills
+            .map((skill: any) => {
+              const scores =
+                skill.individualScores && skill.individualScores.length > 0
+                  ? ` <small>(оцінки: ${skill.individualScores
+                      .map((s: any) => escapeHtml(s))
+                      .join(', ')})</small>`
+                  : '';
+              return `<li><strong>${escapeHtml(skill.name)}</strong>: ${escapeHtml(
+                skill.score,
+              )}/5${scores}</li>`;
+            })
+            .join('')}</ul>`
+        : `<p>Дані про навички відсутні.</p>`;
 
-    console.log('[module-completion] Final emailText preview:', emailText);
+    const slideTitle = escapeHtml(
+      slide?.title ?? slide?.name ?? slide?.heading ?? 'Останній слайд',
+    );
+
+    const userHtml = `
+      <div style="font-family: -apple-system, Roboto, 'Segoe UI', Arial, sans-serif; color: #111; line-height:1.4;">
+        <h2 style="color:#1f6feb;">Вітаємо!</h2>
+        <p>Ви завершили модуль <strong>${escapeHtml(moduleTitle)}</strong>${
+      courseTitle ? ` в курсі <strong>${escapeHtml(courseTitle)}</strong>` : ''
+    }.</p>
+
+        <h3 style="margin-top:18px;">1) Середній бал</h3>
+        <p style="font-size:16px;">${
+          userStats.averageScore != null
+            ? `<strong>${escapeHtml(userStats.averageScore)}/5</strong>`
+            : 'Середній бал ще не розрахований'
+        }</p>
+
+        <h3 style="margin-top:12px;">2) Розподіл за навичками</h3>
+        ${skillsHtml}
+
+
+        <hr style="border:none; border-top:1px solid #eee; margin:18px 0;" />
+        <p style="font-size:13px; color:#666;">Це автоматичне повідомлення від команди Kiflow.</p>
+      </div>
+    `;
+
+    console.log('[module-completion] Final email preview (text):', userPlainText.join('\n'));
 
     if (SMTP_HOST && SMTP_PORT && SMTP_USER && SMTP_PASS) {
       try {
@@ -251,8 +384,9 @@ ${
         await transporter.sendMail({
           from: FROM_EMAIL,
           to: userEmail,
-          subject: `🎉 Ваша статистика - Завершення модуля ${moduleTitle}`,
-          text: emailText,
+          subject: `🎉 Ви завершили модуль: ${moduleTitle}`,
+          text: userPlainText.join('\n'),
+          html: userHtml,
         });
         console.log('Email sent successfully to user:', userEmail);
 
@@ -276,13 +410,26 @@ ${
           await transporter.sendMail({
             from: FROM_EMAIL,
             to: adminRecipientsString,
-            subject: `Копия — статистика пользователя: ${moduleTitle}`,
-            text: `${emailText}
+            subject: `Копія — Статистика користувача: ${moduleTitle}`,
+            text: `${userPlainText.join('\n')}
 
 ---
-Административная копия. userEmail: ${userEmail}
+Адміністраторська копія. userEmail: ${userEmail}
 userId: ${userId ?? 'n/a'}
 moduleId: ${moduleId ?? 'n/a'}`,
+            html: `
+              <div style="font-family: -apple-system, Roboto, 'Segoe UI', Arial, sans-serif; color:#111;">
+                <h3>Копія — Статистика користувача</h3>
+                <p><strong>Модуль:</strong> ${escapeHtml(moduleTitle)}</p>
+                ${userHtml}
+                <hr />
+                <p style="font-size:12px; color:#666;">Адміністраторська копія. userEmail: ${escapeHtml(
+                  userEmail,
+                )}<br/>userId: ${escapeHtml(userId ?? 'n/a')}<br/>moduleId: ${escapeHtml(
+              moduleId ?? 'n/a',
+            )}</p>
+              </div>
+            `,
           });
 
           console.log('Admin copy email sent to:', uniqueAdminRecipients);
