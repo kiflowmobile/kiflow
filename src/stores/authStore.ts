@@ -67,6 +67,7 @@ export const useAuthStore = create<AuthState>()(
           analyticsStore.trackEvent('start_screen__sign_in__click');
         }
 
+
         await useQuizStore.getState().syncQuizFromDBToLocalStorage();
         await useChatStore.getState().syncChatFromDBToLocalStorage();
         await useUserProgressStore.getState().syncProgressFromDBToLocalStorage();
