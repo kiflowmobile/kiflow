@@ -1,5 +1,4 @@
 import { View } from '@/src/components/ui/view';
-import { useAnalyticsStore } from '@/src/stores/analyticsStore';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { useEffect, useState } from 'react';
 import { ScrollView, View as RNView, StyleSheet } from 'react-native';
@@ -8,6 +7,7 @@ import QuizBadge from './components/QuizBadge';
 import QuizQuestion from './components/QuizQuestion';
 import QuizOptions from './components/QuizOptions';
 import QuizControls from './components/QuizControls';
+import { useAnalyticsStore } from '@/src/stores/analyticsStore';
 
 type QuizData = {
   question: string;
