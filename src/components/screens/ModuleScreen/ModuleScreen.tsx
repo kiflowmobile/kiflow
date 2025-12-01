@@ -17,7 +17,7 @@ import {
 } from 'react-native';
 import Animated, { useAnimatedScrollHandler, runOnJS } from 'react-native-reanimated';
 import ModuleSlide from './ModuleSlide';
-import { useSaveProgressOnExit } from '@/src/hooks/useSaveProgressOnExit';
+import {  useSaveProgressOnLeave } from '@/src/hooks/useSaveProgressOnExit';
 import PaginationDots from './components/PaginationDot';
 import { useAnalyticsStore } from '@/src/stores/analyticsStore';
 const analyticsStore = useAnalyticsStore.getState();
@@ -130,7 +130,7 @@ export default function ModuleScreen() {
     },
   });
 
-  useSaveProgressOnExit();
+  useSaveProgressOnLeave();
 
   useEffect(() => {
     if (slides.length > 0 && !currentSlideId) {
@@ -221,9 +221,6 @@ export default function ModuleScreen() {
       </View>
     );
 
-
-
-
   return (
     <View style={{ flex: 1 }}>
       <Animated.ScrollView
@@ -235,7 +232,6 @@ export default function ModuleScreen() {
         snapToInterval={pageH}
         snapToAlignment="start"
         pagingEnabled
-        // quality-of-life для инпутов
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode="on-drag"
         scrollEnabled={scrollEnabled}

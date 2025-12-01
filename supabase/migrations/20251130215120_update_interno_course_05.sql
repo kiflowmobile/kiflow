@@ -1,3 +1,49 @@
+DO $$
+DECLARE
+  existing_company_id UUID;
+  existing_course_id UUID;
+BEGIN
+  -- 1. Перевірка чи є компанія INTERNO
+  SELECT id INTO existing_company_id
+  FROM public.companies
+  WHERE code = 'INTERNO';
+
+  IF existing_company_id IS NOT NULL THEN
+    -- 2. Знаходимо курс, прив’язаний до компанії
+    SELECT course_id INTO existing_course_id
+    FROM public.company_courses
+    WHERE company_id = existing_company_id
+    LIMIT 1;
+
+    -- 3. Видаляємо модулі + уроки (якщо є)
+    IF existing_course_id IS NOT NULL THEN
+      DELETE FROM public.lessons
+      WHERE module_id IN (
+        SELECT id FROM public.modules WHERE course_id = existing_course_id
+      );
+
+      DELETE FROM public.modules
+      WHERE course_id = existing_course_id;
+
+      -- 4. Видаляємо прив’язку курс–компанія
+      DELETE FROM public.company_courses
+      WHERE company_id = existing_company_id;
+
+      -- 5. Видаляємо курс
+      DELETE FROM public.courses
+      WHERE id = existing_course_id;
+    END IF;
+
+    -- 6. Видаляємо компанію
+    DELETE FROM public.companies
+    WHERE id = existing_company_id;
+  END IF;
+END $$;
+
+
+
+
+
 -- 1. Створюємо компанію, курс, привʼязуємо курс до компанії та створюємо модуль
 WITH new_company AS (
   INSERT INTO public.companies (id, name, code, created_at)
@@ -24,7 +70,7 @@ new_course AS (
     'Інтерно Суперсервіс',
     NULL,
     'https://i.postimg.cc/MHgqG70K/photo-2025-11-25-15-12-31.jpg',
-    true,
+    false,
     'interno_course',
     'info@interno.ua',
     NOW()

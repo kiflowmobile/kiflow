@@ -30,10 +30,17 @@ const ModuleSlide: React.FC<CourseSlideProps> = ({
   const { slides, isLoading, error } = useSlidesStore();
 
   const slideData = useMemo(() => slides.find((s) => s.id === slideId), [slides, slideId]);
-  const { moduleId, courseId } = useLocalSearchParams();
-  const moduleIdStr = Array.isArray(moduleId) ? moduleId[0] : moduleId;
-  const courseIdStr = Array.isArray(courseId) ? courseId[0] : courseId;
-  const analyticsStore = useAnalyticsStore.getState(); 
+  const rawParams = useLocalSearchParams();
+
+const { moduleIdStr, courseIdStr } = useMemo(() => {
+  const moduleValue = rawParams.moduleId;
+  const courseValue = rawParams.courseId;
+
+  return {
+    moduleIdStr: Array.isArray(moduleValue) ? moduleValue[0] : moduleValue,
+    courseIdStr: Array.isArray(courseValue) ? courseValue[0] : courseValue,
+  };
+}, [rawParams.moduleId, rawParams.courseId]);
 
 
   if (isLoading) {
@@ -89,9 +96,6 @@ const ModuleSlide: React.FC<CourseSlideProps> = ({
         <MediaPlaceholder message={`Слайд типу "${slideData.slide_type}" ще не підтримується`} />
       );
   }
-
-
-
 };
 
 export default ModuleSlide;

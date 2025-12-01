@@ -1,7 +1,6 @@
 import { View } from '@/src/components/ui/view';
 import { useAnalyticsStore } from '@/src/stores/analyticsStore';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useFocusEffect } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text } from 'react-native';
 
@@ -27,43 +26,36 @@ const QuizSlide: React.FC<QuizProps> = ({id, title, subtitle, quiz, courseId }) 
 
   const STORAGE_KEY = `course-progress-${courseId}`;
 
-  // useEffect(() => {
-  //   const loadProgress = async () => {
-  //     try {
-  //       const data = await AsyncStorage.getItem(STORAGE_KEY);
-  //       if (data) {
-  //         const parsed = JSON.parse(data);
-  //         if (parsed[id]?.selectedAnswer !== undefined) {
-  //           setSelectedAnswer(parsed[id].selectedAnswer);
-  //         }
-  //       }
-  //     } catch (err) {
-  //       console.error('Error loading quiz progress:', err);
-  //     }
-  //   };
-  
-  //   loadProgress();
-  
-  //   const handleVisibilityChange = () => {
-  //     if (!document.hidden) loadProgress(); // коли вкладка повертається
-  //   };
-  
-  //   document.addEventListener('visibilitychange', handleVisibilityChange);
-  //   return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
-  // }, []);
-  
-
-
-
+  useEffect(() => {
+    const loadProgress = async () => {
+      try {
+        const data = await AsyncStorage.getItem(STORAGE_KEY);
+        if (data) {
+          const parsed = JSON.parse(data);
+          if (parsed[id]?.selectedAnswer !== undefined) {
+            setSelectedAnswer(parsed[id].selectedAnswer);
+          }
+        }
+      } catch (err) {
+        console.error('Error loading quiz progress:', err);
+      }
+    };
+    loadProgress();
+  }, []);
 
   const handleSelect = async (index: number) => {
-    console.log('handleSelect')
     setSelectedAnswer(index);
-    analyticsStore.trackEvent('course_screen__vote__click', {id,index});
+
+
+    analyticsStore.trackEvent('course_screen__vote__click', {
+      id,
+      index,
+    });
 
     try {
       const existing = await AsyncStorage.getItem(STORAGE_KEY);
       const parsed = existing ? JSON.parse(existing) : {};
+
       parsed[id] = {
         selectedAnswer: index,
         correctAnswer: quiz.correctAnswer,

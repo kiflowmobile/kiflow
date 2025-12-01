@@ -87,8 +87,6 @@ export default function StatisticsScreen() {
     }
 
     const avg = courseRatings.reduce((sum, r) => sum + (r.rating || 0), 0) / courseRatings.length;
-    console.log('Average course rating:', avg);
-
     return avg.toFixed(1);
   };
 
