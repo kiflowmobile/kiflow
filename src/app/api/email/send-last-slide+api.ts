@@ -19,6 +19,8 @@ interface EmailRequest {
   moduleId?: string;
   extraRecipients?: string[] | string;
   debug?: boolean;
+  userName?: string;
+  quizScore?: number;
 
   // данные только с клиента
   averageScore?: number;
@@ -105,6 +107,7 @@ export async function POST(request: Request) {
   try {
     const {
       userEmail,
+      userName,
       moduleTitle,
       slide,
       courseTitle,
@@ -114,10 +117,12 @@ export async function POST(request: Request) {
       debug,
       averageScore,
       skills,
+      quizScore,
     }: EmailRequest = await request.json();
 
     console.log('[module-completion] Incoming request body (client-only stats):', {
       userEmail,
+      userName,
       moduleTitle,
       courseTitle,
       userId,
@@ -126,6 +131,7 @@ export async function POST(request: Request) {
       debug,
       hasSlide: !!slide,
       averageScore,
+      quizScore,
       skillsFromClientCount: Array.isArray(skills) ? skills.length : 0,
     });
 
@@ -289,9 +295,14 @@ export async function POST(request: Request) {
     }
 
     const userPlainText: string[] = [];
-    userPlainText.push(`Вітаємо!`);
+
+    // Персонализированное приветствие, если есть имя
+    if (typeof userName === 'string' && userName.trim().length > 0) {
+      userPlainText.push(`Вітаємо, ${userName}!`);
+    }
+
     userPlainText.push(
-      `Ви завершили модуль: ${moduleTitle}${courseTitle ? ` (курс: ${courseTitle})` : ''}`,
+      `Ви завершили модуль: в курсі ${courseTitle}`,
     );
     userPlainText.push('');
     userPlainText.push('1) Середній бал:');
@@ -316,6 +327,11 @@ export async function POST(request: Request) {
       userPlainText.push('Дані про навички відсутні.');
     }
 
+    // 3) Quiz score
+    userPlainText.push('');
+    userPlainText.push('3) Оцінка за квіз:');
+    userPlainText.push(quizScore != null ? `• ${quizScore}/5` : '• Немає даних про квіз');
+
     userPlainText.push('');
     userPlainText.push('Дякуємо, команда Kiflow');
 
@@ -337,16 +353,11 @@ export async function POST(request: Request) {
             .join('')}</ul>`
         : `<p>Дані про навички відсутні.</p>`;
 
-    const slideTitle = escapeHtml(
-      slide?.title ?? slide?.name ?? slide?.heading ?? 'Останній слайд',
-    );
-
     const userHtml = `
       <div style="font-family: -apple-system, Roboto, 'Segoe UI', Arial, sans-serif; color: #111; line-height:1.4;">
-        <h2 style="color:#1f6feb;">Вітаємо!</h2>
-        <p>Ви завершили модуль <strong>${escapeHtml(moduleTitle)}</strong>${
-      courseTitle ? ` в курсі <strong>${escapeHtml(courseTitle)}</strong>` : ''
-    }.</p>
+        <h2 style="color:#1f6feb;">${escapeHtml(
+          userName ? `Вітаємо, ${userName}!` : 'Вітаємо!',
+        )}</h2>
 
         <h3 style="margin-top:18px;">1) Середній бал</h3>
         <p style="font-size:16px;">${
@@ -358,6 +369,10 @@ export async function POST(request: Request) {
         <h3 style="margin-top:12px;">2) Розподіл за навичками</h3>
         ${skillsHtml}
 
+        <h3 style="margin-top:12px;">3) Оцінка за квіз</h3>
+        <p style="font-size:16px;">${
+          quizScore != null ? `<strong>${escapeHtml(quizScore)}/5</strong>` : 'Немає даних про квіз'
+        }</p>
 
         <hr style="border:none; border-top:1px solid #eee; margin:18px 0;" />
         <p style="font-size:13px; color:#666;">Це автоматичне повідомлення від команди Kiflow.</p>
@@ -384,7 +399,7 @@ export async function POST(request: Request) {
         await transporter.sendMail({
           from: FROM_EMAIL,
           to: userEmail,
-          subject: `🎉 Ви завершили модуль: ${moduleTitle}`,
+          subject: `🎉 Ви завершили модуль`,
           text: userPlainText.join('\n'),
           html: userHtml,
         });
@@ -410,7 +425,7 @@ export async function POST(request: Request) {
           await transporter.sendMail({
             from: FROM_EMAIL,
             to: adminRecipientsString,
-            subject: `Копія — Статистика користувача: ${moduleTitle}`,
+            subject: `Копія — Статистика користувача`,
             text: `${userPlainText.join('\n')}
 
 ---
@@ -420,7 +435,6 @@ moduleId: ${moduleId ?? 'n/a'}`,
             html: `
               <div style="font-family: -apple-system, Roboto, 'Segoe UI', Arial, sans-serif; color:#111;">
                 <h3>Копія — Статистика користувача</h3>
-                <p><strong>Модуль:</strong> ${escapeHtml(moduleTitle)}</p>
                 ${userHtml}
                 <hr />
                 <p style="font-size:12px; color:#666;">Адміністраторська копія. userEmail: ${escapeHtml(
@@ -466,6 +480,8 @@ moduleId: ${moduleId ?? 'n/a'}`,
       baseResponse.userId = userId ?? null;
       baseResponse.moduleId = moduleId ?? null;
       baseResponse.userStats = userStats;
+      baseResponse.userName = userName ?? null;
+      baseResponse.quizScore = quizScore ?? null;
 
       console.log('[module-completion] Debug response payload (client-only):', baseResponse);
     }

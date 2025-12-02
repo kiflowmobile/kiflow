@@ -23,6 +23,7 @@ import { useSaveProgressOnLeave } from '@/src/hooks/useSaveProgressOnExit';
 import PaginationDots from './components/PaginationDot';
 import { useAnalyticsStore } from '@/src/stores/analyticsStore';
 import { sendLastSlideEmail } from '@/src/services/emailService';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const analyticsStore = useAnalyticsStore.getState();
 
@@ -235,6 +236,13 @@ export default function ModuleScreen() {
 
         const emailData = {
           userId: user.id,
+          userName:
+            // try common metadata fields from Supabase user
+            (user?.user_metadata &&
+              (user.user_metadata.full_name || user.user_metadata.first_name)) ||
+            // fallback to email
+            user.email ||
+            undefined,
           userEmail: user.email,
           moduleId,
           moduleTitle: resolvedModuleTitle,
@@ -242,7 +250,33 @@ export default function ModuleScreen() {
           slide: currentSlide,
           averageScore: average ?? undefined,
           skills: uniqueSkills,
+          // quizScore will be attached below if available
         };
+
+        // Попытка достать локальную оценку квизов для курса (если есть)
+        try {
+          if (courseId) {
+            const key = `quiz-progress-${courseId}`;
+            const stored = await AsyncStorage.getItem(key);
+            if (stored) {
+              const parsed = JSON.parse(stored);
+              // рассчитываем рейтинг аналогично DashboardSlide.calculateQuizRating
+              const entries = Object.values(parsed || {});
+              if (Array.isArray(entries)) {
+                const total = entries.length;
+                if (total > 0) {
+                  const correct = entries.filter(
+                    (q: any) => q.selectedAnswer === q.correctAnswer,
+                  ).length;
+                  const rating = (correct / total) * 5;
+                  (emailData as any).quizScore = Math.round(rating * 10) / 10;
+                }
+              }
+            }
+          }
+        } catch (e) {
+          console.warn('[ModuleScreen] Failed to read quiz progress for email payload', e);
+        }
 
         const result = await sendLastSlideEmail(emailData);
         if (!result.success) {

@@ -17,7 +17,10 @@ interface EmailData {
   userId?: string;
   moduleId?: string;
 
-  // новые поля со статистикой из стора
+  // optional metadata
+  userName?: string;
+  quizScore?: number;
+
   averageScore?: number;
   skills?: SkillFromClient[];
 }
