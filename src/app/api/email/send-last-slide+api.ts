@@ -1,5 +1,4 @@
 import nodemailer from 'nodemailer';
-import { formatSlideContent } from '@/src/services/emailService';
 import { fetchCriteriasByKeys } from '@/src/services/main_rating';
 
 interface ClientSkill {
@@ -36,12 +35,9 @@ function dedupeSkills(
     individualScores?: (number | string)[];
   }[],
 ) {
-  // Нормализуем строку: убираем диакритику, лишние пробелы и небуквенные символы
   function normalizeId(s?: string) {
     if (!s) return '';
     try {
-      // NFD/NFKD + удаление комбинирующих символов (диакритики)
-      // затем оставляем буквы/цифры и пробелы, сжимаем пробелы
       const normalized = s
         .toString()
         .normalize('NFKD')
@@ -51,7 +47,6 @@ function dedupeSkills(
         .toLowerCase();
       return normalized;
     } catch {
-      // fallback для старых сред, если \p{} не поддерживается
       return s.toString().trim().toLowerCase();
     }
   }
@@ -67,14 +62,12 @@ function dedupeSkills(
     const id = normalizeId(rawId as string);
 
     if (!id) {
-      // если нет ключа/имени — оставляем как есть (не можем дублировать по id)
       unkeyed.push(skill);
       continue;
     }
 
     const existing = map.get(id);
     if (!existing) {
-      // клонируем минимально, чтобы не мутировать вход
       map.set(id, {
         name: skill.name,
         key: skill.key,
@@ -82,16 +75,13 @@ function dedupeSkills(
         individualScores: skill.individualScores ? [...skill.individualScores] : undefined,
       });
     } else {
-      // При слиянии: берем более "детальную" или более длинную метку имени
       if (skill.name && skill.name.length > (existing.name ?? '').length)
         existing.name = skill.name;
       if (!existing.key && skill.key) existing.key = skill.key;
 
-      // Согласуем баллы: усредняем и округляем до 1 знака, чтобы не терять данные
       const avg = Math.round((((existing.score ?? 0) + (skill.score ?? 0)) / 2) * 10) / 10;
       existing.score = avg;
 
-      // Сливаем индивидуальные оценки, убираем дубликаты
       if (skill.individualScores && skill.individualScores.length > 0) {
         existing.individualScores = Array.from(
           new Set([...(existing.individualScores ?? []), ...skill.individualScores]),
@@ -120,35 +110,13 @@ export async function POST(request: Request) {
       quizScore,
     }: EmailRequest = await request.json();
 
-    console.log('[module-completion] Incoming request body (client-only stats):', {
-      userEmail,
-      userName,
-      moduleTitle,
-      courseTitle,
-      userId,
-      moduleId,
-      extraRecipients,
-      debug,
-      hasSlide: !!slide,
-      averageScore,
-      quizScore,
-      skillsFromClientCount: Array.isArray(skills) ? skills.length : 0,
-    });
-
     if (!userEmail || !moduleTitle || !slide) {
-      console.warn('[module-completion] Missing required fields', {
-        userEmail,
-        moduleTitle,
-        hasSlide: !!slide,
-      });
-
       return new Response(
         JSON.stringify({ error: 'Missing required fields: userEmail, moduleTitle, slide' }),
         { status: 400, headers: { 'Content-Type': 'application/json' } },
       );
     }
 
-    // Статистика пользователя — ТОЛЬКО из клиента
     let userStats: {
       averageScore?: number;
       skills?: {
@@ -159,13 +127,10 @@ export async function POST(request: Request) {
       }[];
     } = {};
 
-    // 1) Средний балл из клиента
     if (typeof averageScore === 'number' && Number.isFinite(averageScore)) {
       userStats.averageScore = Math.round(averageScore * 10) / 10;
-      console.log('[module-completion] Using averageScore from client:', userStats.averageScore);
     }
 
-    // 2) Навыки из клиента
     if (Array.isArray(skills) && skills.length > 0) {
       userStats.skills = skills.map((skill) => {
         const key = skill.criterion_key ?? skill.criterion_id ?? undefined;
@@ -182,14 +147,11 @@ export async function POST(request: Request) {
           name,
           key,
           score: normalizedScore,
-          individualScores: undefined, // только если когда-то решим их прислать
+          individualScores: undefined,
         };
       });
-
-      console.log('[module-completion] Using skills from client. Count:', userStats.skills.length);
     }
 
-    // 3) Если среднего балла нет, но есть навыки — считаем среднее по ним
     if (
       (userStats.averageScore === undefined || Number.isNaN(userStats.averageScore)) &&
       userStats.skills &&
@@ -198,21 +160,12 @@ export async function POST(request: Request) {
       const sum = userStats.skills.reduce((acc, s) => acc + (s.score ?? 0), 0);
       const avg = sum / userStats.skills.length;
       userStats.averageScore = Math.round(avg * 10) / 10;
-      console.log(
-        '[module-completion] Computed averageScore from client skills:',
-        userStats.averageScore,
-      );
     }
 
-    // 🔹 удаляем дубликаты критериев, если они есть
     if (userStats.skills && userStats.skills.length > 0) {
-      const before = userStats.skills.length;
       userStats.skills = dedupeSkills(userStats.skills);
-      const after = userStats.skills.length;
-      console.log('[module-completion] Dedupe skills: before =', before, 'after =', after);
     }
 
-    // Если есть ключи критериев — попробуем подставить «официальное» название по ключу из БД
     if (userStats.skills && userStats.skills.length > 0) {
       try {
         const keys = Array.from(new Set(userStats.skills.map((s) => s.key).filter(Boolean)));
@@ -232,20 +185,11 @@ export async function POST(request: Request) {
               }
               return s;
             });
-          } else {
-            console.log('[module-completion] No criterias found for keys or error', criteriasError);
           }
         }
-      } catch (err) {
-        console.warn('[module-completion] Error fetching criterias by keys:', err);
+      } catch {
       }
     }
-
-    console.log('[module-completion] Final userStats before email (client-only):', userStats);
-
-    // Форматируем контент слайда (пока используем только в логах)
-    const slideContent = formatSlideContent(slide);
-    console.log('[module-completion] Slide content (formatted, for debug only):', slideContent);
 
     // Отправка email через SMTP
     const SMTP_HOST = process.env.SMTP_HOST;
@@ -254,36 +198,20 @@ export async function POST(request: Request) {
     const SMTP_PASS = process.env.SMTP_PASS;
     const FROM_EMAIL = process.env.FROM_EMAIL || 'natamrshn@gmail.com';
 
-    console.log('[module-completion] SMTP env summary:', {
-      hasHost: !!SMTP_HOST,
-      port: SMTP_PORT,
-      hasUser: !!SMTP_USER,
-      hasPass: !!SMTP_PASS,
-      fromEmail: FROM_EMAIL,
-    });
-
     // Статичный e-mail, куда ВСЕГДА дублируем письмо (ты)
     const STATIC_COMPLETION_EMAIL = 'natamrshn@gmail.com';
 
-    // Дополнительные емейлы из env (через запятую)
     const EXTRA_COMPLETION_EMAILS = (process.env.MODULE_COMPLETION_EXTRA_EMAILS || '')
       .split(',')
       .map((email) => email.trim())
       .filter(Boolean);
 
-    // Дополнительные емейлы из payload
     const payloadExtraEmails = Array.isArray(extraRecipients)
       ? extraRecipients
       : extraRecipients
       ? [extraRecipients]
       : [];
 
-    console.log('[module-completion] Extra emails summary:', {
-      EXTRA_COMPLETION_EMAILS,
-      payloadExtraEmails,
-    });
-
-    // Формируем письмо в HTML и текстовом варианте (на українській)
     function escapeHtml(str: any) {
       if (str == null) return '';
       return String(str)
@@ -296,14 +224,11 @@ export async function POST(request: Request) {
 
     const userPlainText: string[] = [];
 
-    // Персонализированное приветствие, если есть имя
     if (typeof userName === 'string' && userName.trim().length > 0) {
       userPlainText.push(`Вітаємо, ${userName}!`);
     }
 
-    userPlainText.push(
-      `Ви завершили модуль: в курсі ${courseTitle}`,
-    );
+    userPlainText.push(`Ви завершили модуль: в курсі ${courseTitle}`);
     userPlainText.push('');
     userPlainText.push('1) Середній бал:');
     userPlainText.push(
@@ -327,15 +252,12 @@ export async function POST(request: Request) {
       userPlainText.push('Дані про навички відсутні.');
     }
 
-    // 3) Quiz score
     userPlainText.push('');
     userPlainText.push('3) Оцінка за квіз:');
     userPlainText.push(quizScore != null ? `• ${quizScore}/5` : '• Немає даних про квіз');
-
     userPlainText.push('');
     userPlainText.push('Дякуємо, команда Kiflow');
 
-    // HTML-версія з простим стилем
     const skillsHtml =
       userStats.skills && userStats.skills.length > 0
         ? `<ul>${userStats.skills
@@ -379,8 +301,6 @@ export async function POST(request: Request) {
       </div>
     `;
 
-    console.log('[module-completion] Final email preview (text):', userPlainText.join('\n'));
-
     if (SMTP_HOST && SMTP_PORT && SMTP_USER && SMTP_PASS) {
       try {
         const transporter = nodemailer.createTransport({
@@ -393,8 +313,6 @@ export async function POST(request: Request) {
           },
         });
 
-        console.log('[module-completion] Transporter created, sending user email to:', userEmail);
-
         // 1) Письмо пользователю
         await transporter.sendMail({
           from: FROM_EMAIL,
@@ -403,7 +321,6 @@ export async function POST(request: Request) {
           text: userPlainText.join('\n'),
           html: userHtml,
         });
-        console.log('Email sent successfully to user:', userEmail);
 
         // 2) Админская копия
         const adminRecipientsList = [
@@ -415,12 +332,9 @@ export async function POST(request: Request) {
           .filter(Boolean);
 
         const uniqueAdminRecipients = Array.from(new Set(adminRecipientsList));
-        console.log('[module-completion] Admin recipients (unique):', uniqueAdminRecipients);
 
         if (uniqueAdminRecipients.length > 0) {
           const adminRecipientsString = uniqueAdminRecipients.join(', ');
-
-          console.log('[module-completion] Sending admin copy to:', adminRecipientsString);
 
           await transporter.sendMail({
             from: FROM_EMAIL,
@@ -445,34 +359,9 @@ moduleId: ${moduleId ?? 'n/a'}`,
               </div>
             `,
           });
-
-          console.log('Admin copy email sent to:', uniqueAdminRecipients);
-        } else {
-          console.log('[module-completion] No admin recipients after deduplication.');
         }
-      } catch (smtpError) {
-        console.error('SMTP Error:', smtpError);
-        // Fallback: логируем email если SMTP не работает
-        console.log('Email would be sent to user:', userEmail);
-        console.log('Admin copy would be sent to:', [
-          STATIC_COMPLETION_EMAIL,
-          ...EXTRA_COMPLETION_EMAILS,
-          ...payloadExtraEmails,
-        ]);
-        console.log('Subject: Останній слайд модуля - ' + moduleTitle);
-        console.log('Content:', slideContent);
+      } catch {
       }
-    } else {
-      // Если SMTP не настроен, просто логируем
-      console.log('[module-completion] SMTP not configured, skipping real send. Debug info:');
-      console.log('Email would be sent to user:', userEmail);
-      console.log('Admin copy would be sent to:', [
-        STATIC_COMPLETION_EMAIL,
-        ...EXTRA_COMPLETION_EMAILS,
-        ...payloadExtraEmails,
-      ]);
-      console.log('Subject: Останній слайд модуля - ' + moduleTitle);
-      console.log('Content:', slideContent);
     }
 
     const baseResponse: any = { success: true, message: 'Email sent successfully' };
@@ -482,8 +371,6 @@ moduleId: ${moduleId ?? 'n/a'}`,
       baseResponse.userStats = userStats;
       baseResponse.userName = userName ?? null;
       baseResponse.quizScore = quizScore ?? null;
-
-      console.log('[module-completion] Debug response payload (client-only):', baseResponse);
     }
 
     return new Response(JSON.stringify(baseResponse), {
@@ -491,7 +378,6 @@ moduleId: ${moduleId ?? 'n/a'}`,
       headers: { 'Content-Type': 'application/json' },
     });
   } catch (error) {
-    console.error('Error sending email (outer catch):', error);
     return new Response(
       JSON.stringify({
         error: 'Failed to send email',

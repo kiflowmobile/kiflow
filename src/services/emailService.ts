@@ -17,7 +17,6 @@ interface EmailData {
   userId?: string;
   moduleId?: string;
 
-  // optional metadata
   userName?: string;
   quizScore?: number;
 
@@ -29,8 +28,6 @@ export const sendLastSlideEmail = async (
   emailData: EmailData,
 ): Promise<{ success: boolean; error?: string }> => {
   try {
-    console.log('[emailService] sendLastSlideEmail payload:', emailData);
-
     const envBaseUrl =
       process.env.EXPO_PUBLIC_API_BASE_URL ||
       process.env.API_BASE_URL ||
@@ -49,20 +46,12 @@ export const sendLastSlideEmail = async (
         ? '/api/email/send-last-slide'
         : `${apiBase.replace(/\/+$/g, '')}/api/email/send-last-slide`;
 
-    console.log('[emailService] sending POST to URL:', url);
-
     const response = await fetch(url, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        ...emailData,
-        debug: true, // <- чтобы API возвращал resolvedUserId, userStats и т.п.
-      }),
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ...emailData, debug: true }),
     });
 
-    // логируем статус ответа и тело для отладки
     if (!response.ok) {
       let errorText = 'Failed to send email';
       try {
@@ -71,24 +60,13 @@ export const sendLastSlideEmail = async (
       } catch {
         try {
           errorText = await response.text();
-        } catch {
-          /* ignore */
-        }
+        } catch {}
       }
-      console.error('[emailService] API error status=', response.status, 'body=', errorText);
       return { success: false, error: errorText };
-    }
-
-    try {
-      const successBody = await response.json().catch(() => null);
-      console.log('[emailService] API success status=', response.status, 'body=', successBody);
-    } catch {
-      console.log('[emailService] Email send response ok, but failed to parse body');
     }
 
     return { success: true };
   } catch (error) {
-    console.error('Error sending email:', error);
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Unknown error',
@@ -106,7 +84,7 @@ export const formatSlideContent = (slide: Slide): string => {
 
     case 'content':
       content += `## Основна ідея\n${slide.slide_data.mainPoint}\n\n`;
-      if (slide.slide_data.tips && slide.slide_data.tips.length > 0) {
+      if (slide.slide_data.tips?.length) {
         content += `## Поради\n${slide.slide_data.tips.map((tip) => `- ${tip}`).join('\n')}\n\n`;
       }
       if (slide.slide_data.example) {
@@ -128,7 +106,7 @@ export const formatSlideContent = (slide: Slide): string => {
     case 'completion':
       content += `## ${slide.slide_data.subtitle}\n\n`;
       content += slide.slide_data.message;
-      if (slide.slide_data.stats && slide.slide_data.stats.length > 0) {
+      if (slide.slide_data.stats?.length) {
         content += `\n\n## Статистика\n`;
         slide.slide_data.stats.forEach((stat) => {
           content += `- **${stat.label}**: ${stat.value}\n`;

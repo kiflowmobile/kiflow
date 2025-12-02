@@ -70,7 +70,6 @@ export default function ModuleScreen() {
   const stablePageHeightRef = useRef<number>(getInitialPageHeight());
   const [pageH, setPageH] = useState<number>(stablePageHeightRef.current);
 
-  // чтобы письмо не отправлялось несколько раз
   const emailSentRef = useRef(false);
 
   function getInitialPageHeight() {
@@ -237,7 +236,6 @@ export default function ModuleScreen() {
         const emailData = {
           userId: user.id,
           userName:
-            // try common metadata fields from Supabase user
             (user?.user_metadata &&
               (user.user_metadata.full_name || user.user_metadata.first_name)) ||
             // fallback to email
@@ -250,17 +248,14 @@ export default function ModuleScreen() {
           slide: currentSlide,
           averageScore: average ?? undefined,
           skills: uniqueSkills,
-          // quizScore will be attached below if available
         };
 
-        // Попытка достать локальную оценку квизов для курса (если есть)
         try {
           if (courseId) {
             const key = `quiz-progress-${courseId}`;
             const stored = await AsyncStorage.getItem(key);
             if (stored) {
               const parsed = JSON.parse(stored);
-              // рассчитываем рейтинг аналогично DashboardSlide.calculateQuizRating
               const entries = Object.values(parsed || {});
               if (Array.isArray(entries)) {
                 const total = entries.length;
@@ -300,7 +295,6 @@ export default function ModuleScreen() {
     },
   });
 
-  // goToNextSlide только листает слайды
   const goToNextSlide = async () => {
     console.log('[ModuleScreen] goToNextSlide called, currentSlideId=', currentSlideId);
     const currentIndex = slides.findIndex((s) => s.id === currentSlideId);
