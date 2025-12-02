@@ -62,7 +62,7 @@ export async function askGemini(
       console.warn('Warning: failed to fetch company by id', err);
     }
   }
-
+console.log('buildPrompt')
   const body = {
     contents: [
       {
