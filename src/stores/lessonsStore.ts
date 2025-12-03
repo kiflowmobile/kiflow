@@ -1,5 +1,4 @@
 import { create } from "zustand";
-import { Legend } from "recharts";
 import { Lessons } from "../constants/types/lesson";
 import { fetchLessonsByModule } from "../services/lessons";
 
@@ -9,7 +8,6 @@ interface SlidesState {
   errorModule: string | null;
   fetchLessonByModule: (moduleId: string) => Promise<void>;
 }
-
 
 export const useLessonsStore = create<SlidesState>()((set, get) => ({
   lessons: [],

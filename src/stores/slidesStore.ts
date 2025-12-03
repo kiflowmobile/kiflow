@@ -1,9 +1,6 @@
 import { supabase } from '@/src/config/supabaseClient';
 import { Slide } from '@/src/constants/types/slides';
-import { v4 as uuidv4 } from 'uuid';
 import { create } from 'zustand';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Platform } from 'react-native';
 import { Lessons } from '../constants/types/lesson';
 
 interface SlidesState {
@@ -12,10 +9,8 @@ interface SlidesState {
   currentModuleId: string | null;
   isLoading: boolean;
   error: string | null;
-  // Track which slides have been answered (one answer per AI slide)
   answeredBySlideId: Record<string, boolean>;
 
-  // fetchSlidesByModule: (moduleId: string) => Promise<void>;
   setCurrentSlideIndex: (index: number) => void;
   nextSlide: () => void;
   previousSlide: () => void;

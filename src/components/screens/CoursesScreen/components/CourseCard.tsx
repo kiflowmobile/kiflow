@@ -10,7 +10,6 @@ import Button from '../../../ui/button';
 import CourseProgressSection from '../../../ui/course-progress';
 import { shadow } from '../../../ui/styles/shadow';
 import { useAuthStore, useUserProgressStore } from '@/src/stores';
-import { MaterialIcons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Svg, { Path } from 'react-native-svg';
 import { useAnalyticsStore } from '@/src/stores/analyticsStore';
@@ -27,15 +26,8 @@ const CourseCard: React.FC<CourseCardProps> = ({ course }) => {
   const [isDeveloper, setIsDeveloper] = React.useState(false);
   const analyticsStore = useAnalyticsStore.getState();
 
-
-
-  // useEffect(() => {
-  //   if (user) {
-  //     fetchUserProgress(user.id);
-  //   }
-  // }, [user]);
-
   const handleStartCourse = () => {
+    console.log('handleStartCourse')
 
     if (!courseProgress || courseProgress === 0) {
       analyticsStore.trackEvent('course__start', { id: course.id });
@@ -95,7 +87,6 @@ return (
         resizeMode="contain"
       />
       
-      {/* Кнопка скидання прогресу */}
       {isDeveloper && courseProgress > 0 && (
         <TouchableOpacity style={styles.resetButton} onPress={handleResetProgress}>
         <Svg

@@ -22,5 +22,12 @@ export const modulesService = {
         .in('course_id', courseIds)  
         .order('module_order', { ascending: true });
     },
+    getModuleIdByLessonId: async (lessonId: string) => {
+      return await supabase
+        .from('lessons')
+        .select('module_id')
+        .eq('id', lessonId)
+        .single();
+    },
 };
 
