@@ -221,9 +221,6 @@ export const getCompanyById = async (
       .select('id, name, code, service_standards, created_at')
       .eq('id', companyId)
       .maybeSingle();
-
-    // console.log('getCompanyById supabase response:', { data, error });
-
     return { data, error };
   } catch (err) {
     console.error('Error fetching company by id:', err);
@@ -248,7 +245,6 @@ export const updateCompanyServiceStandards = async (
     const { data, error } = resp as { data: any; error: any };
 
     // Debug: логируем ответ от Supabase для упрощения дебага
-    console.log('updateCompanyServiceStandards supabase response:', { data, error });
 
     if (error) {
       return { data: null, error };

@@ -38,8 +38,6 @@ const CourseCard: React.FC<CourseCardProps> = ({ course }) => {
   const handleStartCourse = () => {
 
     if (!courseProgress || courseProgress === 0) {
-      console.log(courseProgress)
-
       analyticsStore.trackEvent('course__start', { id: course.id });
     }
   
@@ -70,7 +68,6 @@ const handleResetProgress = async (e?: any) => {
     e.stopPropagation();
   }
   if (!user) return;
-  console.log('reset progress')
   try {
     resetCourseProgress(course.id)
 

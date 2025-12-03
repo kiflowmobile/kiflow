@@ -19,7 +19,7 @@ export const modulesService = {
       return await supabase
         .from('modules')
         .select('*')
-        .in('course_id', courseIds)  // ✅ всі id за раз
+        .in('course_id', courseIds)  
         .order('module_order', { ascending: true });
     },
 };

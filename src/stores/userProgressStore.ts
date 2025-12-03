@@ -79,7 +79,6 @@ export const useUserProgressStore = create<UserProgressStore>((set, get) => ({
   },
 
   fetchUserProgress: async (userId: string) => {
-    console.log('fetchUserProgress')
     set({ isLoading: true, error: null });
     try {
       const localData = await loadProgressLocal(userId);
@@ -249,7 +248,7 @@ export const useUserProgressStore = create<UserProgressStore>((set, get) => ({
       });
 
       if (error) {
-        console.log("ERROR UPSERT:", error);
+        // console.log("ERROR UPSERT:", error);
       }
     }
   },
@@ -281,7 +280,7 @@ export const useUserProgressStore = create<UserProgressStore>((set, get) => ({
       await AsyncStorage.setItem(`progress_${user.id}`, JSON.stringify(formatted));
 
     }catch(err){
-      console.log('❌ Failed to sync progress data from DB:',err)
+      // console.log('❌ Failed to sync progress data from DB:',err)
     }
   },
 
