@@ -16,7 +16,7 @@ export const clearUserLocalData = async () => {
       if (keysToRemove.length > 0) {
         await AsyncStorage.multiRemove(keysToRemove);
       } else {
-        console.log('ℹ️ No user-related local data found to clear');
+        // console.log('ℹ️ No user-related local data found to clear');
       }
     } catch (err) {
       console.error('❌ Failed to clear local user data:', err);

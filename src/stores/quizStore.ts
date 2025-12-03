@@ -94,7 +94,7 @@ export const useQuizStore = create<QuizStore>((set, get) => ({
     }
 
     if (rows.length === 0) {
-        console.log('ℹ️ No valid quiz rows to sync');
+        // console.log('ℹ️ No valid quiz rows to sync');
         return;
     }
   

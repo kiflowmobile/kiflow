@@ -24,7 +24,15 @@ import PaginationDots from './components/PaginationDot';
 import { useAnalyticsStore } from '@/src/stores/analyticsStore';
 import { sendLastSlideEmail } from '@/src/services/emailService';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useLessonsStore } from '@/src/stores/lessonsStore';
 
+// <<<<<<< HEAD
+// import { sendLastSlideEmail } from '@/src/services/emailService';
+// import AsyncStorage from '@react-native-async-storage/async-storage';
+
+// =======
+// import { useLessonsStore } from '@/src/stores/lessonsStore';
+// >>>>>>> 68b55f45adf0936059d0a33fe4f3edd9a8f09a77
 const analyticsStore = useAnalyticsStore.getState();
 
 // убираем дубликаты критериев по ключу / названию
@@ -61,14 +69,24 @@ export default function ModuleScreen() {
     slideId?: string;
   }>();
 
-  const { slides, isLoading, error, fetchSlidesByModule, clearError } = useSlidesStore();
-  const { width, height } = useWindowDimensions();
+  const {lessons, isLoadingModule, errorModule, fetchLessonByModule} = useLessonsStore();
+  const { slides, isLoading, error,fetchSlidesByLessons, clearError } = useSlidesStore();
   const scrollViewRef = useRef<Animated.ScrollView>(null);
+  const { width, height } = useWindowDimensions();
   const router = useRouter();
   const { user } = useAuthStore();
 
-  const stablePageHeightRef = useRef<number>(getInitialPageHeight());
-  const [pageH, setPageH] = useState<number>(stablePageHeightRef.current);
+
+
+  useEffect(() => {
+    if (!moduleId) return;
+    fetchLessonByModule(moduleId).catch((err) => console.error(err));
+  }, [moduleId]);
+
+  useEffect(() => {
+    if (lessons.length === 0) return;
+    fetchSlidesByLessons(lessons);
+  }, [lessons]);
 
   const emailSentRef = useRef(false);
 
@@ -80,6 +98,9 @@ export default function ModuleScreen() {
     const { height: screenH } = Dimensions.get('screen');
     return screenH;
   }
+
+  const stablePageHeightRef = useRef<number>(getInitialPageHeight());
+  const [pageH, setPageH] = useState<number>(stablePageHeightRef.current);
 
   useEffect(() => {
     if (height > stablePageHeightRef.current) {
@@ -177,14 +198,17 @@ export default function ModuleScreen() {
 
   useSaveProgressOnLeave();
 
-  useEffect(() => {
-    if (slides.length > 0 && !currentSlideId) {
-      const firstSlide = slides[0];
-      setCurrentSlideId(firstSlide.id);
-      setCurrentSlideIndex(0);
-      updateUrl(firstSlide.id);
-    }
-  }, [slides, currentSlideId]);
+useEffect(() => {
+  if (slides.length === 0) return;
+  if (slideId) return;
+  const firstSlide = slides[0];
+  setCurrentSlideId(firstSlide.id);
+  setCurrentSlideIndex(0);
+  setTimeout(() => {
+    router.setParams({ slideId: firstSlide.id });
+  }, 0);
+}, [slides]);
+
 
   // триггер при достижении последнего слайда
   const triggerLastSlideEmail = useCallback(
@@ -308,11 +332,6 @@ export default function ModuleScreen() {
   };
 
   useEffect(() => {
-    if (!moduleId) return;
-    fetchSlidesByModule(moduleId).catch((err) => console.error(err));
-  }, [moduleId, fetchSlidesByModule]);
-
-  useEffect(() => {
     if (slideId && scrollViewRef.current && slides.length > 0) {
       const index = slides.findIndex((s) => s.id === slideId);
       if (index >= 0) {
@@ -326,15 +345,41 @@ export default function ModuleScreen() {
     }
   }, [slides, pageH, slideId]);
 
-  if (error)
+// <<<<<<< HEAD
+//   if (error)
+// =======
+  // const { average, skills, fetchAverage, fetchSkills } = useMainRatingStore();
+
+  useEffect(() => {
+    if (!user?.id || !moduleId) return;
+
+    fetchAverage(user.id, moduleId);
+    fetchSkills(user.id, moduleId);
+  }, [user, moduleId]);
+
+  useEffect(() => {
+    if (!moduleId || slides.length === 0) return;
+  
+    const index = slides.findIndex((s) => s.id === slideId);
+    const currentIndex = index >= 0 ? index : 0;
+  
+    analyticsStore.trackEvent('course_screen__load', {
+      id: moduleId,
+      index: currentIndex,
+      pages: slides.length,
+    });
+  }, [moduleId, slides.length, slideId]);
+
+  if (error || errorModule)
+// >>>>>>> 68b55f45adf0936059d0a33fe4f3edd9a8f09a77
     return (
       <View style={styles.errorContainer}>
         <Text style={styles.errorText}>Помилка: {error}</Text>
         <Text
           style={styles.retryText}
           onPress={() => {
-            clearError();
-            if (moduleId) fetchSlidesByModule(moduleId);
+            // clearError();
+            // if (moduleId) fetchSlidesByModule(moduleId);
           }}
         >
           Спробувати знову
@@ -342,7 +387,7 @@ export default function ModuleScreen() {
       </View>
     );
 
-  if (isLoading)
+  if (isLoading || isLoadingModule)
     return (
       <View style={styles.loader}>
         <ActivityIndicator size="large" />

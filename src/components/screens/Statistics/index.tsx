@@ -14,7 +14,6 @@ export default function StatisticsScreen() {
   const { width } = useWindowDimensions(); 
   const isLargeScreen = width >= 768; 
   const isXLargeScreen = width >= 1024;
-
   const { courses, fetchCourses, isLoading: coursesLoading } = useCourseStore();
   const { criterias, fetchAllCriterias } = useCriteriaStore();
   const { fetchUserRatings, ratings } = useMainRatingStore();
@@ -77,7 +76,6 @@ export default function StatisticsScreen() {
   useEffect(() => {
     analyticsStore.trackEvent('progress_screen__load');
   }, []);
-
   return (
     <View style={styles.screen}>
       <View style={styles.iconWrapper}>
@@ -159,6 +157,7 @@ export default function StatisticsScreen() {
                 data={criterias.filter((c) => c.course_id === course.id)}
                 keyExtractor={(item) => item.id}
                 renderItem={({ item }) => {
+      
                   const skill = ratings.find((s) => s.criteria_key === item.key);
                   return (
                     <View style={styles.tableRow}>

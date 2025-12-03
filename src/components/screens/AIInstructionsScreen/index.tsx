@@ -55,21 +55,13 @@ const MockAIInstructionsScreen = () => {
     (async () => {
       try {
         setSaving(true);
-        console.log('Saving company. selectedCompany:', selectedCompany);
-        console.log('Saving company. payload:', payload);
-
-        // Проверяем, доступна ли компания для чтения перед обновлением
         try {
           const companyCheck = await getCompanyById(selectedCompany);
-          console.log('Company check before update:', companyCheck);
         } catch (err) {
           console.error('Error checking company before update:', err);
         }
 
         const result = await updateCompanyServiceStandards(selectedCompany, payload);
-        // Логируем полный ответ для дебага
-        console.log('updateCompanyServiceStandards result:', result);
-
         if (result.error) {
           console.error('Failed to update company:', result.error);
           const message = result.error?.message || JSON.stringify(result.error);
