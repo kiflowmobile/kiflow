@@ -32,175 +32,176 @@ export default function ModuleScreen() {
   }>();
 
   const {lessons, isLoadingModule, errorModule, fetchLessonByModule} = useLessonsStore();
-    const { slides, isLoading, error, fetchSlidesByModule, clearError } = useSlidesStore();
+  const { slides, isLoading, error,fetchSlidesByLessons, clearError } = useSlidesStore();
+  const scrollViewRef = useRef<Animated.ScrollView>(null);
+  const { width, height } = useWindowDimensions();
+  const router = useRouter();
+  const { user } = useAuthStore();
 
 
 
-    useEffect(() => {
+  useEffect(() => {
     if (!moduleId) return;
     fetchLessonByModule(moduleId).catch((err) => console.error(err));
   }, [moduleId]);
 
+  useEffect(() => {
+    if (lessons.length === 0) return;
+    fetchSlidesByLessons(lessons);
+  }, [lessons]);
 
-  console.log('lesson', lessons)
+  function getInitialPageHeight() {
+    if (Platform.OS === 'web') {
+      const h = window.innerHeight || document.documentElement.clientHeight || 0;
+      return h;
+    }
+    const { height: screenH } = Dimensions.get('screen');
+    return screenH;
+  }
 
+  const stablePageHeightRef = useRef<number>(getInitialPageHeight());
+  const [pageH, setPageH] = useState<number>(stablePageHeightRef.current);
 
-  // const { width, height } = useWindowDimensions();
-  // const scrollViewRef = useRef<Animated.ScrollView>(null);
-  // const router = useRouter();
-  // const { user } = useAuthStore();
+  useEffect(() => {
+    if (height > stablePageHeightRef.current) {
+      stablePageHeightRef.current = height;
+      setPageH(height);
+    }
+  }, [height, width]);
 
-  // const stablePageHeightRef = useRef<number>(getInitialPageHeight());
-  // const [pageH, setPageH] = useState<number>(stablePageHeightRef.current);
+  const [currentSlideId, setCurrentSlideId] = useState<string | undefined>(slideId);
+  const [currentSlideIndex, setCurrentSlideIndex] = useState<number | undefined>(0);
 
-  // function getInitialPageHeight() {
-  //   if (Platform.OS === 'web') {
-  //     const h = window.innerHeight || document.documentElement.clientHeight || 0;
-  //     return h;
-  //   }
-  //   const { height: screenH } = Dimensions.get('screen');
-  //   return screenH;
-  // }
+  const showPagination = useMemo(() => slides.length > 1, [slides.length]);
 
-  // useEffect(() => {
-  //   if (height > stablePageHeightRef.current) {
-  //     stablePageHeightRef.current = height;
-  //     setPageH(height);
-  //   }
-  // }, [height, width]);
+  const updateUrl = (id: string) => {
+    router.setParams({ slideId: id });
+  };
 
-  // const [currentSlideId, setCurrentSlideId] = useState<string | undefined>(slideId);
-  // const [currentSlideIndex, setCurrentSlideIndex] = useState<number | undefined>(0);
+  const { setModuleProgressSafe } = useUserProgressStore();
+  const lastScrollIndexRef = useRef<number>(-1);
+  const lastSavedIndexRef = useRef<number>(-1);
 
-  // const showPagination = useMemo(() => slides.length > 1, [slides.length]);
+  const [scrollEnabled, setScrollEnabled] = useState(true);
+  useEffect(() => {
+    if (Platform.OS === 'web') {
+      const onFocus = (e: FocusEvent) => {
+        const target = e.target as HTMLElement | null;
+        if (
+          target &&
+          (target.tagName === 'INPUT' ||
+            target.tagName === 'TEXTAREA' ||
+            target.getAttribute('contenteditable') === 'true')
+        ) {
+          setScrollEnabled(false);
+        }
+      };
+      const onBlur = (e: FocusEvent) => {
+        const target = e.target as HTMLElement | null;
+        if (
+          target &&
+          (target.tagName === 'INPUT' ||
+            target.tagName === 'TEXTAREA' ||
+            target.getAttribute('contenteditable') === 'true')
+        ) {
+          setScrollEnabled(true);
+        }
+      };
+      window.addEventListener('focusin', onFocus);
+      window.addEventListener('focusout', onBlur);
+      return () => {
+        window.removeEventListener('focusin', onFocus);
+        window.removeEventListener('focusout', onBlur);
+      };
+    }
+  }, []);
 
-  // const updateUrl = (id: string) => {
-  //   router.setParams({ slideId: id });
-  // };
+  const handleSlideChange = useCallback(
+    async (index: number) => {
+      if (index < 0 || index >= slides.length) return;
 
-  // const { setModuleProgressSafe } = useUserProgressStore();
-  // const lastScrollIndexRef = useRef<number>(-1);
-  // const lastSavedIndexRef = useRef<number>(-1);
+      setCurrentSlideId(slides[index].id);
+      setCurrentSlideIndex(index);
+      updateUrl(slides[index].id);
 
-  // const [scrollEnabled, setScrollEnabled] = useState(true);
-  // useEffect(() => {
-  //   if (Platform.OS === 'web') {
-  //     const onFocus = (e: FocusEvent) => {
-  //       const target = e.target as HTMLElement | null;
-  //       if (
-  //         target &&
-  //         (target.tagName === 'INPUT' ||
-  //           target.tagName === 'TEXTAREA' ||
-  //           target.getAttribute('contenteditable') === 'true')
-  //       ) {
-  //         setScrollEnabled(false);
-  //       }
-  //     };
-  //     const onBlur = (e: FocusEvent) => {
-  //       const target = e.target as HTMLElement | null;
-  //       if (
-  //         target &&
-  //         (target.tagName === 'INPUT' ||
-  //           target.tagName === 'TEXTAREA' ||
-  //           target.getAttribute('contenteditable') === 'true')
-  //       ) {
-  //         setScrollEnabled(true);
-  //       }
-  //     };
-  //     window.addEventListener('focusin', onFocus);
-  //     window.addEventListener('focusout', onBlur);
-  //     return () => {
-  //       window.removeEventListener('focusin', onFocus);
-  //       window.removeEventListener('focusout', onBlur);
-  //     };
-  //   }
-  // }, []);
+      if (!user || !courseId || !moduleId) return;
 
-  // const handleSlideChange = useCallback(
-  //   async (index: number) => {
-  //     if (index < 0 || index >= slides.length) return;
+      if (index > lastSavedIndexRef.current) {
+        await setModuleProgressSafe(courseId, moduleId, index, slides.length, slides[index].id);
+        lastSavedIndexRef.current = index;
+      }
+    },
+    [moduleId, courseId, user?.id, slides],
+  );
 
-  //     setCurrentSlideId(slides[index].id);
-  //     setCurrentSlideIndex(index);
-  //     updateUrl(slides[index].id);
+  const onScroll = useAnimatedScrollHandler({
+    onScroll: (event) => {
+      const index = Math.round(event.contentOffset.y / pageH);
+      if (index !== lastScrollIndexRef.current) {
+        lastScrollIndexRef.current = index;
+        runOnJS(handleSlideChange)(index);
+      }
+    },
+  });
 
-  //     if (!user || !courseId || !moduleId) return;
+  useSaveProgressOnLeave();
 
-  //     if (index > lastSavedIndexRef.current) {
-  //       await setModuleProgressSafe(courseId, moduleId, index, slides.length, slides[index].id);
-  //       lastSavedIndexRef.current = index;
-  //     }
-  //   },
-  //   [moduleId, courseId, user?.id, slides],
-  // );
-
-  // const onScroll = useAnimatedScrollHandler({
-  //   onScroll: (event) => {
-  //     const index = Math.round(event.contentOffset.y / pageH);
-  //     if (index !== lastScrollIndexRef.current) {
-  //       lastScrollIndexRef.current = index;
-  //       runOnJS(handleSlideChange)(index);
-  //     }
-  //   },
-  // });
-
-  // useSaveProgressOnLeave();
-
-  // useEffect(() => {
-  //   if (slides.length > 0 && !currentSlideId) {
-  //     const firstSlide = slides[0];
-  //     setCurrentSlideId(firstSlide.id);
-  //     setCurrentSlideIndex(0);
-  //     updateUrl(firstSlide.id);
-  //   }
-  // }, [slides, currentSlideId]);
-
-  // const goToNextSlide = () => {
-  //   const currentIndex = slides.findIndex((s) => s.id === currentSlideId);
-  //   if (currentIndex >= 0 && currentIndex < slides.length - 1) {
-  //     const nextIndex = currentIndex + 1;
-  //     scrollViewRef.current?.scrollTo({ y: nextIndex * pageH, animated: true });
-  //     handleSlideChange(nextIndex);
-  //   }
-  // };
+useEffect(() => {
+  if (slides.length === 0) return;
+  if (slideId) return;
+  const firstSlide = slides[0];
+  setCurrentSlideId(firstSlide.id);
+  setCurrentSlideIndex(0);
+  setTimeout(() => {
+    router.setParams({ slideId: firstSlide.id });
+  }, 0);
+}, [slides]);
 
 
+  const goToNextSlide = () => {
+    const currentIndex = slides.findIndex((s) => s.id === currentSlideId);
+    if (currentIndex >= 0 && currentIndex < slides.length - 1) {
+      const nextIndex = currentIndex + 1;
+      scrollViewRef.current?.scrollTo({ y: nextIndex * pageH, animated: true });
+      handleSlideChange(nextIndex);
+    }
+  };
 
-  // useEffect(() => {
-  //   if (slideId && scrollViewRef.current && slides.length > 0) {
-  //     const index = slides.findIndex((s) => s.id === slideId);
-  //     if (index >= 0) {
-  //       scrollViewRef.current.scrollTo({
-  //         y: index * pageH,
-  //         animated: false,
-  //       });
-  //       setCurrentSlideId(slideId);
-  //       setCurrentSlideIndex(index);
-  //     }
-  //   }
-  // }, [slides, pageH, slideId]);
+  useEffect(() => {
+    if (slideId && scrollViewRef.current && slides.length > 0) {
+      const index = slides.findIndex((s) => s.id === slideId);
+      if (index >= 0) {
+        scrollViewRef.current.scrollTo({
+          y: index * pageH,
+          animated: false,
+        });
+        setCurrentSlideId(slideId);
+        setCurrentSlideIndex(index);
+      }
+    }
+  }, [slides, pageH, slideId]);
 
-  // const { average, skills, fetchAverage, fetchSkills } = useMainRatingStore();
+  const { average, skills, fetchAverage, fetchSkills } = useMainRatingStore();
 
-  // useEffect(() => {
-  //   if (!user?.id || !moduleId) return;
+  useEffect(() => {
+    if (!user?.id || !moduleId) return;
 
-  //   fetchAverage(user.id, moduleId);
-  //   fetchSkills(user.id, moduleId);
-  // }, [user, moduleId]);
+    fetchAverage(user.id, moduleId);
+    fetchSkills(user.id, moduleId);
+  }, [user, moduleId]);
 
-  // useEffect(() => {
-  //   if (!moduleId || slides.length === 0) return;
+  useEffect(() => {
+    if (!moduleId || slides.length === 0) return;
   
-  //   const index = slides.findIndex((s) => s.id === slideId);
-  //   const currentIndex = index >= 0 ? index : 0;
+    const index = slides.findIndex((s) => s.id === slideId);
+    const currentIndex = index >= 0 ? index : 0;
   
-  //   analyticsStore.trackEvent('course_screen__load', {
-  //     id: moduleId,
-  //     index: currentIndex,
-  //     pages: slides.length,
-  //   });
-  // }, [moduleId, slides.length, slideId]);
+    analyticsStore.trackEvent('course_screen__load', {
+      id: moduleId,
+      index: currentIndex,
+      pages: slides.length,
+    });
+  }, [moduleId, slides.length, slideId]);
 
   if (error || errorModule)
     return (
@@ -234,7 +235,6 @@ export default function ModuleScreen() {
 
   return (
     <View style={{ flex: 1 }}>
-      module 
       <Animated.ScrollView
         ref={scrollViewRef}
         showsVerticalScrollIndicator={false}

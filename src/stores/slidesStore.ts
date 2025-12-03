@@ -4,6 +4,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { create } from 'zustand';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
+import { Lessons } from '../constants/types/lesson';
 
 interface SlidesState {
   slides: Slide[];
@@ -14,13 +15,13 @@ interface SlidesState {
   // Track which slides have been answered (one answer per AI slide)
   answeredBySlideId: Record<string, boolean>;
 
-  fetchSlidesByModule: (moduleId: string) => Promise<void>;
+  // fetchSlidesByModule: (moduleId: string) => Promise<void>;
   setCurrentSlideIndex: (index: number) => void;
   nextSlide: () => void;
   previousSlide: () => void;
   clearError: () => void;
   clearSlides: () => void;
-
+  fetchSlidesByLessons: (lessons:Lessons[]) => void;
   setSlides: (slides: Slide[]) => void;
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
@@ -41,40 +42,32 @@ export const useSlidesStore = create<SlidesState>()((set, get) => ({
   error: null,
   answeredBySlideId: {},
 
-  fetchSlidesByModule: async (moduleId: string) => {
-    set({ isLoading: true, error: null, currentModuleId: moduleId });
+  fetchSlidesByLessons:async (lessons) =>{
+    try{
+      set({ isLoading: true, error: null});
 
-    try {
+      if (!lessons || lessons.length === 0) {
+        set({ slides: [], isLoading: false });
+        return;
+      }
+
+      const lessonIds = lessons.map((l) => l.id);
+
       const { data, error } = await supabase
         .from('slides')
         .select('*')
-        .eq('module_id', moduleId)
+        .in('lesson_id', lessonIds)
         .order('slide_order', { ascending: true });
 
-      if (error) throw error;
+        set({
+          slides:data ?? [],
+          isLoading: false
+        })
 
-      const fetchedSlides: Slide[] = data || [];
-
-      const dashboardSlide: Slide = {
-        id: uuidv4() as UUID,
-        slide_type: 'dashboard',
-        slide_title: 'Твоя статистика',
-        module_id: moduleId,
-        slide_order: fetchedSlides.length,
-      };
-
-      set({
-        slides: [...fetchedSlides, dashboardSlide],
-        currentSlideIndex: 0,
-        isLoading: false,
-        error: null,
-      });
-    } catch (error: any) {
-      set({ error: error.message || 'Failed to fetch slides', isLoading: false });
-      throw error;
+    }catch(err){
+      console.log(err)
     }
   },
-
   setCurrentSlideIndex: (index: number) => {
     const { slides } = get();
     const safeIndex = Math.max(0, Math.min(index, slides.length - 1));
