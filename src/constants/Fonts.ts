@@ -34,6 +34,11 @@ export const TEXT_VARIANTS = {
     fontSize: FONT_SIZE.xl,
     fontWeight: '600',
   },
+  body1: {
+    fontFamily: FONT_FAMILY.secondary,
+    fontSize: FONT_SIZE.sm,
+    fontWeight: '400',
+  },
   body2: {
     fontFamily: FONT_FAMILY.secondary,
     fontSize: FONT_SIZE.xs,
