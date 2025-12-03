@@ -1,11 +1,4 @@
-import {
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  TextInput,
-  View,
-  StyleSheet,
-} from 'react-native';
+import { KeyboardAvoidingView, Platform, ScrollView, TextInput, StyleSheet } from 'react-native';
 import { usePromptsStore } from '@/src/services/slidePrompt';
 import { useAuthStore, useCriteriaStore, useMainRatingStore, useSlidesStore } from '@/src/stores';
 
@@ -16,12 +9,15 @@ import { getCompanyByCode } from '@/src/services/company';
 import ChatHeader from './components/ChatHeader';
 import ChatMessages from './components/ChatMessages';
 import ChatInput from './components/ChatInput';
+import CaseOverlay from './components/CaseOverlay';
+import CaseFooter from './components/CaseFooter';
 import { formatAIResponseForChat } from './formatAIResponseForChat';
-import { shadow } from '@/src/components/ui/styles/shadow';
+// text variants imported where needed in smaller components
 import { useLocalSearchParams } from 'expo-router';
 import { useState, useRef, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAnalyticsStore } from '@/src/stores/analyticsStore';
+import { Colors } from '@/src/constants/Colors';
 
 interface Message {
   id: string;
@@ -38,36 +34,24 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
-  const [isLocked, setIsLocked] = useState(false)
+  const [isLocked, setIsLocked] = useState(false);
   const { prompt, fetchPromptBySlide } = usePromptsStore();
   const { criterias, fetchCriterias } = useCriteriaStore();
   const { user } = useAuthStore();
   const { saveRating } = useMainRatingStore();
   const inputRef = useRef<TextInput | null>(null);
   const pageScrollLockedRef = useRef(false);
+  const scrollRef = useRef<ScrollView | null>(null);
   const { moduleId, courseId } = useLocalSearchParams();
   const moduleIdStr = Array.isArray(moduleId) ? moduleId[0] : moduleId;
   const courseIdStr = Array.isArray(courseId) ? courseId[0] : courseId;
   const CHAT_STORAGE_KEY = `course-chat-${courseIdStr}`;
   const analyticsStore = useAnalyticsStore.getState();
   const [userMessageCount, setUserMessageCount] = useState(0);
+  const [caseState, setCaseState] = useState<'idle' | 'analyzing' | 'result' | 'completed'>('idle');
+  // previous messages ref removed — not needed after Try again resets to prompt
 
-
-
-  const loadChat = async () => {
-    try {
-      const stored = await AsyncStorage.getItem(CHAT_STORAGE_KEY);
-      if (!stored) return;
-
-      const parsed = JSON.parse(stored);
-      if (parsed[slideId]) {
-        setMessages(parsed[slideId]);
-        // setAnswered(true);
-      }
-    } catch (err) {
-      console.error('Error loading chat:', err);
-    }
-  };
+  // loadChat removed — loading handled in combined effect (loadChatOrPrompt)
 
   const lockPageScroll = () => {
     if (Platform.OS !== 'web' || pageScrollLockedRef.current) return;
@@ -141,28 +125,26 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
     if (slideId) {
       loadChatOrPrompt();
     }
-  }, [slideId, prompt]);
+  }, [slideId, prompt, CHAT_STORAGE_KEY]);
 
   useEffect(() => {
     if (courseId) fetchCriterias(courseIdStr);
   }, [courseId, courseIdStr, fetchCriterias]);
 
-  useEffect(() => {
-    if (slideId) {
-      fetchPromptBySlide(slideId);
-      loadChat();
-    }
-  }, [slideId]);
+  // consolidated prompt/chat loading handled by the effect above
 
   const handleSend = async () => {
-    console.log('answered', isLocked)
-    console.log('Messages', messages)
-    console.log('userMessageCount', userMessageCount)
-    analyticsStore.trackEvent("course_screen__submit__click", {
-      courseIdStr, 
+    console.log('answered', isLocked);
+    console.log('Messages', messages);
+    console.log('userMessageCount', userMessageCount);
+    analyticsStore.trackEvent('course_screen__submit__click', {
+      courseIdStr,
       slideId,
     });
-    if (!input.trim()  || loading) return;
+    if (!input.trim() || loading) return;
+
+    // show analyzing overlay and block scrolling
+    setCaseState('analyzing');
 
     if (userMessageCount >= 3) {
       setIsLocked(true);
@@ -172,19 +154,18 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
     const userMsg: Message = { id: Date.now().toString(), role: 'user', text: input.trim() };
     setMessages((prev) => [...prev, userMsg]);
 
-    //рахуємо кількість користувальских відповідей 
-    const newCount = userMessageCount + 1
-    setUserMessageCount(newCount)
-    console.log('userMessageCount', userMessageCount)
+    //рахуємо кількість користувальских відповідей
+    const newCount = userMessageCount + 1;
+    setUserMessageCount(newCount);
+    console.log('userMessageCount', userMessageCount);
 
-    if(newCount >= 3){
-      setIsLocked(true)
+    if (newCount >= 3) {
+      setIsLocked(true);
     }
 
     setInput('');
     setLoading(true);
     useSlidesStore.getState().markSlideAnswered(slideId);
- 
 
     try {
       const slidePrompt = prompt[slideId]?.prompt || '';
@@ -243,6 +224,9 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
       const updatedMessages = [...messages, userMsg, aiMsg];
       setMessages(updatedMessages);
 
+      // перейти в состояние результата (показываем оценку и кнопки)
+      setCaseState('result');
+
       // ✅ нова логіка збереження чату
       try {
         const existing = await AsyncStorage.getItem(CHAT_STORAGE_KEY);
@@ -261,6 +245,46 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleTryAgain = async () => {
+    // Reset messages to show only the original case prompt (no previous answers)
+    const slidePrompt = prompt[slideId]?.question;
+    if (slidePrompt) {
+      const aiMsg: Message = {
+        id: Date.now().toString(),
+        role: 'ai',
+        text: slidePrompt,
+      };
+      setMessages([aiMsg]);
+    } else {
+      setMessages([]);
+    }
+
+    // remove saved chat from AsyncStorage so previous answer is not restored
+    try {
+      const existing = await AsyncStorage.getItem(CHAT_STORAGE_KEY);
+      const parsed = existing ? JSON.parse(existing) : {};
+      if (parsed[slideId]) {
+        delete parsed[slideId];
+        await AsyncStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(parsed));
+      }
+    } catch (err) {
+      console.warn('Failed to remove saved chat for try again:', err);
+    }
+
+    // reset counters and input
+    setUserMessageCount(0);
+    setInput('');
+    setIsLocked(false);
+    setCaseState('idle');
+
+    // scroll to top so user sees the case prompt
+    setTimeout(() => {
+      try {
+        scrollRef.current?.scrollTo({ y: 0, animated: true } as any);
+      } catch {}
+    }, 50);
   };
 
   const handleAudioProcessed = (transcribedText: string) => {
@@ -286,6 +310,8 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
     unlockPageScroll();
   };
 
+  const isSubmitDisabled = !input.trim() || loading || isLocked;
+
   return (
     <SafeAreaView style={styles.screen}>
       <KeyboardAvoidingView
@@ -293,24 +319,42 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 80 : 0}
       >
-        <ChatHeader title={title} />
-        <View style={styles.chatBox}>
-          <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
-            <ChatMessages messages={messages} loading={loading} />
-          </ScrollView>
-        </View>
-        <ChatInput
-          input={input}
-          setInput={setInput}
-          onSend={handleSend}
-          onAudioProcessed={handleAudioProcessed}
-          inputRef={inputRef}
-          onFocus={handleFocus}
-          onBlur={handleBlur}
+        <ScrollView
+          ref={scrollRef as any}
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+          // блокируем скролл только во время анализа; в состоянии result разрешаем прокрутку
+          scrollEnabled={caseState !== 'analyzing'}
+        >
+          <ChatHeader title={title} />
+          <ChatMessages messages={messages} loading={loading} />
+          {caseState === 'idle' && (
+            <ChatInput
+              input={input}
+              setInput={setInput}
+              onSend={handleSend}
+              onAudioProcessed={handleAudioProcessed}
+              inputRef={inputRef}
+              onFocus={handleFocus}
+              onBlur={handleBlur}
+              loading={loading}
+              isLocked={isLocked}
+              id={courseIdStr}
+              slideId={slideId}
+            />
+          )}
+        </ScrollView>
+        <CaseOverlay visible={caseState === 'analyzing'} />
+
+        <CaseFooter
+          caseState={caseState}
+          isSubmitDisabled={isSubmitDisabled}
           loading={loading}
-          isLocked={isLocked}
-          id={courseIdStr}
-          slideId={slideId}
+          onSubmit={handleSend}
+          onTryAgain={handleTryAgain}
+          onComplete={() => setCaseState('completed')}
         />
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -320,13 +364,18 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
 export default AICourseChat;
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: '#ffffff', padding: 16 },
-  chatBox: {
+  screen: {
     flex: 1,
-    borderRadius: 16,
-    padding: 16,
-    ...shadow,
-    backgroundColor: '#ffffff',
-    marginVertical: 8,
+    backgroundColor: Colors.bg,
   },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    // оставляем отступ внизу, чтобы последний блок (оценка) можно было докрутить над фиксированной панелью
+    paddingBottom: Platform.OS === 'ios' ? 140 : 120,
+  },
+  // bottom / overlay styles moved to dedicated components
 });
