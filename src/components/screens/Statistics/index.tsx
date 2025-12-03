@@ -76,8 +76,6 @@ export default function StatisticsScreen() {
   useEffect(() => {
     analyticsStore.trackEvent('progress_screen__load');
   }, []);
-
-  // console.log('ratings', ratings)
   return (
     <View style={styles.screen}>
       <View style={styles.iconWrapper}>

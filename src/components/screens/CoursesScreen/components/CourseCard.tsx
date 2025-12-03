@@ -27,8 +27,6 @@ const CourseCard: React.FC<CourseCardProps> = ({ course }) => {
   const analyticsStore = useAnalyticsStore.getState();
 
   const handleStartCourse = () => {
-    console.log('handleStartCourse')
-
     if (!courseProgress || courseProgress === 0) {
       analyticsStore.trackEvent('course__start', { id: course.id });
     }

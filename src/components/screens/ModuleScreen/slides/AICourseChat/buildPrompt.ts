@@ -8,7 +8,6 @@ export function buildPrompt(
   criteriasText: string = '',
   companyStandards?: unknown,
 ): string {
-  console.log('criteriasText',criteriasText)
   const standardsInstruction = companyStandards
     ? `
     Ти — експерт із високорівневих продажів меблів і сервісної комунікації компанії Interno.

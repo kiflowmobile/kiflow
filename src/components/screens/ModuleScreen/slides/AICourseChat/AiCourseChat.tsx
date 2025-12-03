@@ -181,8 +181,6 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
     try {
       const slidePrompt = prompt[slideId]?.prompt || '';
       const criteriasText = criterias.map((item) => `${item.key} - ${item.name.trim()}`).join('\n');
-      console.log('criteriasText', criteriasText)
-      console.log(criterias)
 
       let companyIdToUse: string | undefined = undefined;
       try {
