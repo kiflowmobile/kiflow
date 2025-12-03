@@ -18,10 +18,21 @@ interface EmailData {
   moduleId?: string;
 
   userName?: string;
-  quizScore?: number;
-
-  averageScore?: number;
+  quizScore?: number; // 🔹 уже совпадает с сервером
+  averageScore?: number; // 🔹 тоже
   skills?: SkillFromClient[];
+}
+
+// 🔹 отдельный тип именно для письма про завершение курса
+export interface CourseCompletionEmailData extends Omit<EmailData, 'slide' | 'moduleTitle'> {
+  courseId: string; // 🔸 делаем обязательным, сервер без него ругается
+  modules?: {
+    moduleId: string;
+    moduleTitle?: string;
+    progress?: number;
+    // 🔹 сюда можем передавать навыки по модулю, чтобы письмо их показывало
+    skills?: SkillFromClient[];
+  }[];
 }
 
 export const sendLastSlideEmail = async (
@@ -54,6 +65,56 @@ export const sendLastSlideEmail = async (
 
     if (!response.ok) {
       let errorText = 'Failed to send email';
+      try {
+        const errorData = await response.json();
+        errorText = errorData.error || JSON.stringify(errorData);
+      } catch {
+        try {
+          errorText = await response.text();
+        } catch {}
+      }
+      return { success: false, error: errorText };
+    }
+
+    return { success: true };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    };
+  }
+};
+
+export const sendCourseCompletionEmail = async (
+  emailData: CourseCompletionEmailData, // 🔹 используем новый тип
+): Promise<{ success: boolean; error?: string }> => {
+  try {
+    const envBaseUrl =
+      process.env.EXPO_PUBLIC_API_BASE_URL ||
+      process.env.API_BASE_URL ||
+      process.env.APP_API_BASE_URL ||
+      '';
+
+    const fallbackBaseUrl =
+      Platform.OS === 'web'
+        ? ''
+        : process.env.EXPO_PUBLIC_WEB_APP_URL || 'https://kiflow.vercel.app';
+
+    const apiBase = envBaseUrl.trim() !== '' ? envBaseUrl : fallbackBaseUrl;
+
+    const url =
+      apiBase === ''
+        ? '/api/email/send-course-completion'
+        : `${apiBase.replace(/\/+$/g, '')}/api/email/send-course-completion`;
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ...emailData, debug: true }),
+    });
+
+    if (!response.ok) {
+      let errorText = 'Failed to send course completion email';
       try {
         const errorData = await response.json();
         errorText = errorData.error || JSON.stringify(errorData);
