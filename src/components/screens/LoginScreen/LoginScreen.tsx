@@ -1,18 +1,17 @@
 import { useAuthStore } from '@/src/stores/authStore';
 import { useRootNavigationState, useRouter } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
-import {
-  KeyboardAvoidingView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import { KeyboardAvoidingView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Button from '../../ui/button';
-import { Input, InputField } from '../../ui/input';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Svg, { Path } from 'react-native-svg';
 import { useAnalyticsStore } from '@/src/stores/analyticsStore';
+import Input from '../../ui/input';
+import { Colors } from '@/src/constants/Colors';
+import BackIcon from '@/src/assets/images/arrow-left.svg';
+import DoneIcon from '@/src/assets/images/done.svg';
+import OpenEye from '@/src/assets/images/eye-open.svg';
+import ClosedEye from '@/src/assets/images/eye-closed.svg';
+import { TEXT_VARIANTS } from '@/src/constants/Fonts';
 
 interface AuthError {
   message?: string;
@@ -29,31 +28,33 @@ export default function LoginScreen() {
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
   const [touched, setTouched] = useState<{ email?: boolean; password?: boolean }>({});
-  const user = useAuthStore()
+  const user = useAuthStore((state) => state.user);
   const analyticsStore = useAnalyticsStore.getState();
 
   const [formError, setFormError] = useState<string | null>(null);
 
   const router = useRouter();
 
-  const { signIn, isLoading, error, clearError } = useAuthStore();
-
+  const signIn = useAuthStore((state) => state.signIn);
+  const isLoading = useAuthStore((state) => state.isLoading);
+  const error = useAuthStore((state) => state.error);
+  const clearError = useAuthStore((state) => state.clearError);
 
   const normalizeEmail = (value: string) => value.trim().toLowerCase();
   const normalizePassword = (value: string) => value;
 
   const rootNavigationState = useRootNavigationState();
 
+  const isGuest = useAuthStore((state) => state.isGuest);
+
   useEffect(() => {
     if (!rootNavigationState?.key) return;
-    if (!user.isGuest ) {
+    if (user && !isGuest) {
       setTimeout(() => {
         router.replace('/courses');
       }, 0);
     }
-  }, [user, rootNavigationState]);
-  
- 
+  }, [user, isGuest, rootNavigationState, router]);
 
   const validate = (nextEmail = email, nextPassword = password) => {
     const nextErrors: typeof errors = {};
@@ -133,6 +134,21 @@ export default function LoginScreen() {
     router.push('/auth/registration');
   };
 
+  const handleGoBack = () => {
+    try {
+      // expo-router silently ignores back() if there is no history entry
+      router.back();
+    } catch {
+      router.push('/');
+    }
+  };
+
+  const isEmailValid = useMemo(() => {
+    const e = normalizeEmail(email);
+    // email введён, формат ок, поле уже трогали и нет ошибки
+    return !!e && emailRegex.test(e) && touched.email && !errors.email;
+  }, [email, touched.email, errors.email]);
+
 
   useEffect(() => {
     analyticsStore.trackEvent('sign_in_screen__load');
@@ -140,98 +156,91 @@ export default function LoginScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <KeyboardAvoidingView behavior="padding" style={styles.container}>
+      <TouchableOpacity style={styles.backButton} onPress={handleGoBack} hitSlop={8}>
+        <BackIcon width={24} height={24} />
+      </TouchableOpacity>
+      <KeyboardAvoidingView behavior="padding" style={styles.keyboardContainer}>
         <View style={styles.inner}>
-
-          <Text style={styles.title}>Sign in</Text>
+          <Text style={styles.title}>Log in</Text>
 
           <View style={styles.form}>
-            {formError ? (
-              <View style={styles.formErrorBanner}>
-                <Text style={styles.formErrorText}>{formError}</Text>
-              </View>
-            ) : null}
-
             {/* Email */}
-            {touched.email && errors.email ? (
-              <View style={styles.formErrorBanner}>
-                <Text style={styles.formErrorText}>{errors.email}</Text>
-              </View>
-            ) : null}
             <Input
-              variant="outline"
-              size="xl"
-              style={[styles.input, touched.email && errors.email && styles.inputError]}
-            >
-              <InputField
-                placeholder="Email"
-                keyboardType="email-address"
-                autoCapitalize="none"
-                autoCorrect={false}
-                value={email}
-                onChangeText={setEmail}
-                onBlur={() => handleBlur('email')}
-                returnKeyType="next"
-              />
-            </Input>
+              value={email}
+              onChangeText={(value) => {
+                setEmail(value);
+              }}
+              onBlur={() => handleBlur('email')}
+              renderCustomPlaceholder={() => (
+                <Text
+                  style={{
+                    ...TEXT_VARIANTS.placeholder,
+                    color: '#a1a1a1',
+                  }}
+                >
+                  Email
+                </Text>
+              )}
+              keyboardType="email-address"
+              autoCapitalize="none"
+              autoCorrect={false}
+              returnKeyType="next"
+              containerStyle={styles.input}
+              isInvalid={touched.email && !!errors.email}
+              errorMessage={touched.email ? errors.email : undefined}
+              rightIcon={
+                isEmailValid ? (
+                  <DoneIcon width={24} height={24} />
+                ) : undefined
+              }
+            />
 
             {/* Password */}
-            {touched.password && errors.password ? (
-              <View style={styles.formErrorBanner}>
-                <Text style={styles.formErrorText}>{errors.password}</Text>
-              </View>
-            ) : null}
-<View style={styles.passwordContainer}>
-  <Input
-    variant="outline"
-    size="xl"
-    style={[styles.input, touched.password && errors.password && styles.inputError]}
-  >
-    <InputField
-      placeholder="Password"
-      secureTextEntry={!showPassword}
-      autoCapitalize="none"
-      autoCorrect={false}
-      value={password}
-      onChangeText={setPassword}
-      onBlur={() => handleBlur('password')}
-      returnKeyType="go"
-      onSubmitEditing={handleLogin}
-      style={{ flex: 1 }}
-    />
-  </Input>
-
-  <TouchableOpacity
-    style={styles.eyeButton}
-    onPress={() => setShowPassword(!showPassword)}
-  >
-    {showPassword ? (
-      <Svg width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth={1} strokeLinecap="round" strokeLinejoin="round">
-        <Path d="M10.585 10.587a2 2 0 0 0 2.829 2.828" />
-        <Path d="M16.681 16.673a8.717 8.717 0 0 1 -4.681 1.327c-3.6 0 -6.6 -2 -9 -6c1.272 -2.12 2.712 -3.678 4.32 -4.674m2.86 -1.146a9.055 9.055 0 0 1 1.82 -.18c3.6 0 6.6 2 9 6c-.666 1.11 -1.379 2.067 -2.138 2.87" />
-        <Path d="M3 3l18 18" />
-      </Svg>
-    ) : (
-      <Svg width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth={1} strokeLinecap="round" strokeLinejoin="round">
-        <Path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
-        <Path d="M21 12c-2.4 4 -5.4 6 -9 6c-3.6 0 -6.6 -2 -9 -6c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6" />
-      </Svg>
-    )}
-  </TouchableOpacity>
-</View>
-
-
-            
+            <Input
+              value={password}
+              onChangeText={setPassword}
+              onBlur={() => handleBlur('password')}
+              renderCustomPlaceholder={() => (
+                <Text
+                  style={{
+                    ...TEXT_VARIANTS.placeholder,
+                    color: '#a1a1a1',
+                  }}
+                >
+                  Password
+                </Text>
+              )}
+              secureTextEntry={!showPassword}
+              autoCapitalize="none"
+              autoCorrect={false}
+              returnKeyType="go"
+              onSubmitEditing={handleLogin}
+              containerStyle={styles.input}
+              isInvalid={touched.password && !!errors.password}
+              errorMessage={touched.password ? errors.password : undefined}
+              rightIcon={
+                showPassword ? (
+                  <OpenEye width={24} height={24} />
+                ) : (
+                  <ClosedEye width={24} height={24} />
+                )
+              }
+              onPressRightIcon={() => setShowPassword((prev) => !prev)}
+            />
 
             <Button
               title={isLoading ? 'Signing in...' : 'Sign In'}
-              variant="primary"
+              variant="dark"
               size="lg"
               onPress={handleLogin}
               disabled={isLoading || !isValid}
               style={styles.button}
             />
-
+            <View style={styles.forgotPasswordContainer}>
+              <TouchableOpacity hitSlop={8}>
+                <Text style={styles.forgotPasswordText}>Forgot password?</Text>
+              </TouchableOpacity>
+            </View>
             <View style={styles.registerContainer}>
               <Text style={styles.registerText}>Don’t have an account?</Text>
               <TouchableOpacity onPress={handleGoToRegister}>
@@ -246,43 +255,34 @@ export default function LoginScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff' },
-  inner: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 16 },
-  title: { fontSize: 24, fontWeight: 'bold', marginBottom: 12 },
-  form: { width: '100%', maxWidth: 400 },
-  formErrorBanner: {
-    backgroundColor: '#fdecea',
-    borderColor: '#f5c2c0',
-    borderWidth: StyleSheet.hairlineWidth,
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-    borderRadius: 8,
-    marginBottom: 12,
+  container: { flex: 1, backgroundColor: Colors.bg },
+  keyboardContainer: { flex: 1 },
+  backButton: {
+    alignSelf: 'flex-start',
+    marginTop: 16,
+    marginLeft: 16,
   },
-  formErrorText: { color: '#8a1c1c', fontSize: 14 },
-  input: { marginBottom: 8 },
-  inputError: { borderColor: 'red' },
-  errorText: { color: 'red', fontSize: 13, marginBottom: 10, marginLeft: 4 },
-  button: { marginTop: 6 },
+  inner: { marginTop: 112, justifyContent: 'center', alignItems: 'center', padding: 32 },
+  title: { marginBottom: 32, ...TEXT_VARIANTS.largeTitle },
+  form: { width: '100%' },
+  input: { marginBottom: 12, width: '100%',  },
+  button: { marginTop: 24 },
+  forgotPasswordContainer: {
+    alignItems: 'center',
+    marginTop: 16,
+  },
+
+  forgotPasswordText: {
+    color: Colors.blue,
+    ...TEXT_VARIANTS.title3,
+  },
+
   registerContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
-    marginTop: 16,
+    marginTop: 140,
   },
-  registerText: { color: '#555', fontSize: 14 },
-  registerLink: { color: '#000000', fontWeight: '600', fontSize: 14 },
-  passwordContainer: {
-    position: 'relative',
-    width: '100%',
-    maxWidth: 400,
-  },
-  eyeButton: {
-    position: 'absolute',
-    right: 12,
-    top: 14,
-    padding: 4,
-  },
-  eyeIcon: {
-    fontSize: 18,
-  },
+
+  registerText: { color: Colors.black, ...TEXT_VARIANTS.title3 },
+  registerLink: { color: Colors.blue, ...TEXT_VARIANTS.title3 },
 });

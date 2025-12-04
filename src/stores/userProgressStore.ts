@@ -78,7 +78,6 @@ export const useUserProgressStore = create<UserProgressStore>((set, get) => ({
   },
 
   fetchUserProgress: async (userId: string) => {
-    console.log('fetchUserProgress');
     set({ isLoading: true, error: null });
     try {
       const localData = await loadProgressLocal(userId);

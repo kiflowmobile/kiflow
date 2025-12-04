@@ -24,7 +24,7 @@ new_course AS (
     'Інтерно Суперсервіс',
     NULL,
     'https://i.postimg.cc/MHgqG70K/photo-2025-11-25-15-12-31.jpg',
-    false,
+    true,
     'interno_course',
     'info@interno.ua',
     NOW()

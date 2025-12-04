@@ -1,22 +1,25 @@
 import 'react-native-reanimated';
 import { useAuthStore } from '@/src/stores/authStore';
 import { useFonts } from 'expo-font';
-import { Stack, useRouter } from 'expo-router';
+import { Stack, useRouter, useRootNavigationState } from 'expo-router';
 import { useEffect } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useUserProgressStore } from '../stores';
 import CustomHeader from '../components/ui/CustomHeader';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import "../firebase"; 
+import '../firebase';
 import { initAmplitude } from '../amplitude';
 
 export default function RootLayout() {
   const { initFromLocal } = useUserProgressStore();
   const { user, isGuest, isLoading } = useAuthStore();
-  const router = useRouter();
+  const router = useRouter(); 
+  const navigationState = useRootNavigationState();
+  const isNavigationReady = Boolean(navigationState?.key);
 
   const [loaded] = useFonts({
-    SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
+    RobotoCondensed: require('../assets/fonts/RobotoCondensed.ttf'),
+    Inter: require('../assets/fonts/Inter.ttf'),
   });
 
   const checkSession = useAuthStore((state) => state.checkSession);
@@ -30,14 +33,15 @@ export default function RootLayout() {
   }, [user, initFromLocal]);
 
   useEffect(() => {
-    if (loaded && !isLoading && isGuest === true) {
-      router.replace('/');
+    if (loaded && !isLoading && isGuest === true && isNavigationReady) {
+      // Delay navigation to the next tick so the Root navigator has a chance to mount.
+      // This avoids "Attempted to navigate before mounting the Root Layout component".
+      const id = setTimeout(() => {
+        router.replace('/');
+      }, 0);
+      return () => clearTimeout(id);
     }
-  }, [isGuest, isLoading, loaded, router]);
-
-  if (!loaded) {
-    return null;
-  }
+  }, [isGuest, isLoading, isNavigationReady, loaded, router]);
 
   useEffect(() => {
     initAmplitude();
@@ -46,18 +50,34 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
-      <Stack
+        <Stack
           screenOptions={{
-            header: () => <CustomHeader />,
+            headerShown: false,
           }}
         >
-          <Stack.Screen name="index" options={{ headerShown: false }} />
-          <Stack.Screen name="course-code" options={{ headerShown: false }} />
-          <Stack.Screen name="module/[moduleId]" options={{ headerShown: false }} />
-          <Stack.Screen name="auth/login" options={{ headerShown: false }} />
-          <Stack.Screen name="auth/registration" options={{ headerShown: false }} />
-          <Stack.Screen name="+not-found" options={{ headerShown: false }} />
-          <Stack.Screen name="courses/[id]" />
+          <Stack.Screen name="index" />
+          <Stack.Screen name="course-code" />
+          <Stack.Screen name="module/[moduleId]" />
+          <Stack.Screen name="auth/login" />
+          <Stack.Screen name="auth/registration" />
+          <Stack.Screen name="+not-found" />
+
+          <Stack.Screen
+            name="courses/[id]"
+            options={{
+              headerShown: true,
+              header: () => <CustomHeader showBackButton />,
+            }}
+          />
+
+          <Stack.Screen
+            name="statistics/[id]"
+            options={{
+              headerShown: true,
+              header: () => <CustomHeader showBackButton title="Course progress" />,
+            }}
+          />
+
           <Stack.Screen name="instractions" />
         </Stack>
       </SafeAreaProvider>

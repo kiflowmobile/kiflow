@@ -28,6 +28,7 @@ import { useLessonsStore } from '@/src/stores/lessonsStore';
 
 const analyticsStore = useAnalyticsStore.getState();
 
+// <<<<<<< HEAD
 function dedupeClientSkills(rawSkills: any[] | undefined) {
   if (!Array.isArray(rawSkills)) return [];
 
@@ -344,10 +345,10 @@ useEffect(() => {
 
   useEffect(() => {
     if (!moduleId || slides.length === 0) return;
-  
+
     const index = slides.findIndex((s) => s.id === slideId);
     const currentIndex = index >= 0 ? index : 0;
-  
+
     analyticsStore.trackEvent('course_screen__load', {
       id: moduleId,
       index: currentIndex,
@@ -409,6 +410,7 @@ useEffect(() => {
               onComplete={goToNextSlide}
               currentIndex={i}
               totalSlides={slides.length}
+              setScrollEnabled={setScrollEnabled}
             />
           </View>
         ))}

@@ -1,34 +1,188 @@
 'use client';
-import { PrimitiveIcon, UIIcon } from '@gluestack-ui/icon';
-import { createInput } from '@gluestack-ui/input';
-import { useStyleContext, withStyleContext } from '@gluestack-ui/nativewind-utils/withStyleContext';
+
+import React, { forwardRef, useEffect, useState } from 'react';
+import {
+  View,
+  TextInput,
+  TextInputProps,
+  StyleSheet,
+  ViewStyle,
+  TextStyle,
+  StyleProp,
+  Text,
+  Pressable,
+} from 'react-native';
 import * as Haptics from 'expo-haptics';
-import { cssInterop } from 'nativewind';
-import React from 'react';
-import { Pressable, StyleSheet, TextInput, View } from 'react-native';
 import { Colors } from '../../../constants/Colors';
 
-const SCOPE = 'INPUT';
+export type InputProps = TextInputProps & {
+  errorMessage?: string;
+  isInvalid?: boolean;
+  disabled?: boolean;
+  leftIcon?: React.ReactNode;
+  rightIcon?: React.ReactNode;
+  onPressRightIcon?: () => void;
+  /** доп. стили для контейнера (поверх базовых 327x56) */
+  containerStyle?: StyleProp<ViewStyle>;
+  /** доп. стили для TextInput */
+  inputStyle?: StyleProp<TextStyle>;
+  hapticFeedback?: boolean;
+  renderCustomPlaceholder?: (state: { focused: boolean; hasError: boolean; disabled?: boolean }) => React.ReactNode;
+};
+
+const Input = forwardRef<TextInput, InputProps>(
+  (
+    {
+      errorMessage,
+      isInvalid,
+      disabled,
+      leftIcon,
+      rightIcon,
+      onPressRightIcon,
+      containerStyle,
+      inputStyle,
+      hapticFeedback = true,
+      placeholderTextColor,
+      onFocus,
+      onBlur,
+      renderCustomPlaceholder,
+      onChangeText,
+      value,
+      defaultValue,
+      placeholder,
+      ...rest
+    },
+    ref,
+  ) => {
+    const [focused, setFocused] = useState(false);
+    const [hasText, setHasText] = useState(() => Boolean(value ?? defaultValue ?? ''));
+
+    useEffect(() => {
+      if (value !== undefined && value !== null) {
+        setHasText(String(value).length > 0);
+      }
+    }, [value]);
+
+    const handleFocus = (e: any) => {
+      if (hapticFeedback) {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => undefined);
+      }
+      setFocused(true);
+      onFocus?.(e);
+    };
+
+    const handleBlur = (e: any) => {
+      setFocused(false);
+      onBlur?.(e);
+    };
+
+    const hasError = isInvalid ?? Boolean(errorMessage);
+    const isDisabled = disabled;
+
+    const flattenedContainerStyle = StyleSheet.flatten(containerStyle) || {};
+
+    const marginKeys: (keyof ViewStyle)[] = [
+      'margin',
+      'marginTop',
+      'marginRight',
+      'marginBottom',
+      'marginLeft',
+      'marginHorizontal',
+      'marginVertical',
+      'marginStart',
+      'marginEnd',
+    ];
+
+    const wrapperMarginStyle: ViewStyle = {};
+    const containerWithoutMargins: ViewStyle = {};
+
+    Object.entries(flattenedContainerStyle).forEach(([key, value]) => {
+      if (marginKeys.includes(key as keyof ViewStyle)) {
+        (wrapperMarginStyle as any)[key] = value;
+      } else {
+        (containerWithoutMargins as any)[key] = value;
+      }
+    });
+
+    const containerStyles: StyleProp<ViewStyle> = [
+      styles.inputContainer,
+      focused && styles.inputContainerFocused,
+      isDisabled && styles.inputContainerDisabled,
+      hasError && styles.inputContainerError,
+      containerWithoutMargins,
+    ];
+
+    const fieldStyles: StyleProp<TextStyle> = [styles.inputField, inputStyle];
+
+    const handleChangeText = (text: string) => {
+      setHasText(text.length > 0);
+      onChangeText?.(text);
+    };
+
+    return (
+      <View style={wrapperMarginStyle}>
+        <View style={containerStyles}>
+          {leftIcon ? <View style={styles.iconWrapper}>{leftIcon}</View> : null}
+
+          <View style={styles.fieldWrapper}>
+            <TextInput
+              ref={ref}
+              editable={!isDisabled}
+              style={fieldStyles}
+              placeholder={renderCustomPlaceholder ? undefined : placeholder}
+              value={value}
+              defaultValue={defaultValue}
+              onChangeText={handleChangeText}
+              placeholderTextColor={placeholderTextColor ?? '#a1a1a1'}
+              onFocus={handleFocus}
+              onBlur={handleBlur}
+              {...rest}
+            />
+
+            {renderCustomPlaceholder && !hasText ? (
+              <View pointerEvents="none" style={styles.customPlaceholder}>
+                {renderCustomPlaceholder({ focused, hasError, disabled: isDisabled })}
+              </View>
+            ) : null}
+          </View>
+
+          {rightIcon ? (
+            onPressRightIcon ? (
+              <Pressable style={styles.iconWrapper} onPress={onPressRightIcon} hitSlop={8}>
+                {rightIcon}
+              </Pressable>
+            ) : (
+              <View style={styles.iconWrapper}>{rightIcon}</View>
+            )
+          ) : null}
+        </View>
+
+        {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
+      </View>
+    );
+  },
+);
 
 const styles = StyleSheet.create({
   inputContainer: {
-    borderWidth: 1,
-    borderColor: Colors.gray[200],
+    width:'100%',
+    height: 56,
     borderRadius: 8,
     backgroundColor: Colors.white,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
     flexDirection: 'row',
     alignItems: 'center',
     overflow: 'hidden',
   },
   inputContainerFocused: {
-    borderColor: Colors.gray[400],
-    boxShadow: '0px 1px 2px rgba(0, 0, 0, 0.1)',
-  },
-  inputContainerHover: {
-    borderColor: Colors.gray[300],
+    borderColor: Colors.blue,
   },
   inputContainerDisabled: {
     opacity: 0.4,
+  },
+  inputContainerError: {
+    borderColor: Colors.red,
   },
   inputField: {
     flex: 1,
@@ -36,205 +190,36 @@ const styles = StyleSheet.create({
     fontSize: 16,
     paddingHorizontal: 16,
     paddingVertical: 16,
+  },
+  fieldWrapper: {
+    flex: 1,
+    position: 'relative',
     height: '100%',
+    justifyContent: 'center',
   },
-  inputFieldUnderlined: {
-    paddingHorizontal: 0,
-  },
-  inputFieldRounded: {
+  customPlaceholder: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: 0,
+    bottom: 0,
+    justifyContent: 'center',
     paddingHorizontal: 16,
+    color: '#000',
   },
-  inputIcon: {
+  iconWrapper: {
     justifyContent: 'center',
     alignItems: 'center',
-    color: Colors.gray[500],
+    paddingHorizontal: 12,
   },
-  inputSlot: {
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  sizeXl: {
-    height: 56,
-    minHeight: 56,
-  },
-  sizeLg: {
-    height: 48,
-    minHeight: 48,
-  },
-  sizeMd: {
-    height: 44,
-    minHeight: 44,
-  },
-  sizeSm: {
-    height: 44,
-    minHeight: 44,
-  },
-  variantUnderlined: {
-    borderRadius: 0,
-    borderBottomWidth: 1,
-    borderWidth: 0,
-  },
-  variantOutline: {
-    borderRadius: 8,
-    borderWidth: 1,
-  },
-  variantRounded: {
-    borderRadius: 20,
-    borderWidth: 1,
+  errorText: {
+    marginTop: 4,
+    marginLeft: 4,
+    fontSize: 12,
+    color: Colors.red,
   },
 });
-
-const UIInput = createInput({
-  Root: withStyleContext(View, SCOPE),
-  Icon: UIIcon,
-  Slot: Pressable,
-  Input: TextInput,
-});
-
-cssInterop(PrimitiveIcon, {
-  className: {
-    target: 'style',
-    nativeStyleToProp: {
-      height: true,
-      width: true,
-      fill: true,
-      color: 'classNameColor',
-      stroke: true,
-    },
-  },
-});
-
-type InputSize = 'sm' | 'md' | 'lg' | 'xl';
-type InputVariant = 'outline' | 'underlined' | 'rounded';
-
-type IInputProps = React.ComponentProps<typeof UIInput> & { 
-  className?: string;
-  style?: any;
-  variant?: InputVariant;
-  size?: InputSize;
-  hapticFeedback?: boolean;
-};
-
-const Input = React.forwardRef<React.ComponentRef<typeof UIInput>, IInputProps>(function Input(
-  { className, variant = 'outline', size = 'md', style, hapticFeedback = true, ...props },
-  ref
-) {
-  const handleFocus = (event: any) => {
-    if (hapticFeedback) {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    }
-    if (props.onFocus) {
-      props.onFocus(event);
-    }
-  };
-
-  const containerStyle = [
-    styles.inputContainer,
-    styles[`size${size.charAt(0).toUpperCase() + size.slice(1)}` as keyof typeof styles],
-    styles[`variant${variant.charAt(0).toUpperCase() + variant.slice(1)}` as keyof typeof styles],
-    style,
-  ];
-
-  return (
-    <UIInput
-      ref={ref}
-      {...props}
-      style={containerStyle}
-      context={{ variant, size }}
-      onFocus={handleFocus}
-    />
-  );
-});
-
-type IInputIconProps = React.ComponentProps<typeof UIInput.Icon> & {
-  className?: string;
-  height?: number;
-  width?: number;
-  style?: any;
-  size?: number | InputSize;
-};
-
-const InputIcon = React.forwardRef<React.ComponentRef<typeof UIInput.Icon>, IInputIconProps>(
-  function InputIcon({ className, size, style, ...props }, ref) {
-    const iconStyle = [
-      styles.inputIcon,
-      style,
-    ];
-
-    if (typeof size === 'number') {
-      return (
-        <UIInput.Icon
-          ref={ref}
-          {...props}
-          style={iconStyle}
-          size={size}
-        />
-      );
-    } else if ((props.height !== undefined || props.width !== undefined) && size === undefined) {
-      return <UIInput.Icon ref={ref} {...props} style={iconStyle} />;
-    }
-    return (
-      <UIInput.Icon
-        ref={ref}
-        {...props}
-        style={iconStyle}
-      />
-    );
-  }
-);
-
-type IInputSlotProps = React.ComponentProps<typeof UIInput.Slot> & { 
-  className?: string;
-  style?: any;
-};
-
-const InputSlot = React.forwardRef<React.ComponentRef<typeof UIInput.Slot>, IInputSlotProps>(
-  function InputSlot({ className, style, ...props }, ref) {
-    const slotStyle = [
-      styles.inputSlot,
-      style,
-    ];
-
-    return (
-      <UIInput.Slot
-        ref={ref}
-        {...props}
-        style={slotStyle}
-      />
-    );
-  }
-);
-
-type IInputFieldProps = React.ComponentProps<typeof UIInput.Input> & { 
-  className?: string;
-  style?: any;
-};
-
-const InputField = React.forwardRef<React.ComponentRef<typeof UIInput.Input>, IInputFieldProps>(
-  function InputField({ className, style, ...props }, ref) {
-    const { variant: parentVariant } = useStyleContext(SCOPE);
-
-    const fieldStyle = [
-      styles.inputField,
-      parentVariant === 'underlined' && styles.inputFieldUnderlined,
-      parentVariant === 'rounded' && styles.inputFieldRounded,
-      style,
-    ];
-
-    return (
-      <UIInput.Input
-        ref={ref}
-        {...props}
-        style={fieldStyle}
-        placeholderTextColor={Colors.gray[400]}
-      />
-    );
-  }
-);
 
 Input.displayName = 'Input';
-InputIcon.displayName = 'InputIcon';
-InputSlot.displayName = 'InputSlot';
-InputField.displayName = 'InputField';
 
-export { Input, InputField, InputIcon, InputSlot };
+export default Input;

@@ -65,6 +65,7 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
         setIsLocked(userCount >= 3);
   
         setMessages(parsed[slideId]);
+
       }
     } catch (err) {
       console.error('Error loading chat:', err);
@@ -118,6 +119,7 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
           const parsed = JSON.parse(stored);
           if (parsed[slideId]) {
             setMessages(parsed[slideId]);
+
             setUserMessageCount(parsed[slideId].length)
             return;
           }
@@ -161,7 +163,6 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
       slideId,
     });
     if (!input.trim()  || loading) return;
-
 
     const userMsg: Message = { id: Date.now().toString(), role: 'user', text: input.trim() };
     setMessages((prev) => [...prev, userMsg]);

@@ -4,12 +4,10 @@ import { getCurrentUserProfile, updateCurrentUserProfile } from '@/src/services/
 import { useAuthStore } from '@/src/stores/authStore';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { ScrollView, StyleSheet, Switch, View, Text} from 'react-native';
+import { ScrollView, StyleSheet, Switch, View, Text } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import AvatarSection from './components/AvatarSection';
 import LoadingState from './components/LoadingState';
-import PasswordSection from './components/PasswordSection';
-import UserInfoSection from './components/UserInfoSection';
 import CompanyCode from './components/CompanyCode';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAnalyticsStore } from '@/src/stores/analyticsStore';
@@ -21,9 +19,12 @@ export default function ProfileScreen() {
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
   const [editMode, setEditMode] = useState(false);
-  const [isDeveloper, setIsDeveloper] = useState(false);
-  const analyticsStore = useAnalyticsStore.getState();
 
+  const [isDeveloper, setIsDeveloper] = useState(false);
+  const [devUnlocked, setDevUnlocked] = useState(false);
+  const [avatarTapCount, setAvatarTapCount] = useState(0);
+
+  const analyticsStore = useAnalyticsStore.getState();
 
   const [formData, setFormData] = useState<UserUpdateData>({
     full_name: '',
@@ -38,18 +39,25 @@ export default function ProfileScreen() {
   }, [authUser, isGuest]);
 
   useEffect(() => {
-    const loadDevMode = async () => {
+    const loadDevState = async () => {
       try {
         const value = await AsyncStorage.getItem('isDeveloper');
-        setIsDeveloper(value === 'true');
+        const unlocked = await AsyncStorage.getItem('devUnlocked');
+
+        const isDev = value === 'true';
+        const isUnlocked = unlocked === 'true';
+
+        setIsDeveloper(isDev);
+        setDevUnlocked(isUnlocked);
       } catch (error) {
         console.error('Error loading developer mode:', error);
         setIsDeveloper(false);
+        setDevUnlocked(false);
       }
     };
-    loadDevMode();
-  }, []);
 
+    loadDevState();
+  }, []);
 
   const loadUserProfile = async () => {
     try {
@@ -79,12 +87,11 @@ export default function ProfileScreen() {
   };
 
   const handleSave = async () => {
-    analyticsStore.trackEvent(' profile_screen__save__click');
+    analyticsStore.trackEvent('profile_screen__save__click');
 
     try {
       setUpdating(true);
 
-      // Відправляємо ім'я та аватар для оновлення
       const updateData = {
         full_name: formData.full_name,
         avatar_url: formData.avatar_url,
@@ -111,7 +118,7 @@ export default function ProfileScreen() {
   };
 
   const handleCancel = () => {
-    analyticsStore.trackEvent(' profile_screen__cancel__click');
+    analyticsStore.trackEvent('profile_screen__cancel__click');
 
     if (user) {
       setFormData((prev) => ({
@@ -125,29 +132,13 @@ export default function ProfileScreen() {
     setEditMode(false);
   };
 
-  // Хендлери для дочірніх компонентів
-  const handleFormDataChange = (field: keyof UserUpdateData, value: string) => {
-    setFormData((prev) => {
-      const next = { ...prev, [field]: value } as UserUpdateData;
-      if (field === 'first_name' || field === 'last_name') {
-        const first = field === 'first_name' ? value : prev.first_name || '';
-        const last = field === 'last_name' ? value : prev.last_name || '';
-        const full = `${first ?? ''} ${last ?? ''}`.trim();
-        next.full_name = full;
-      }
-      return next;
-    });
-  };
-
   const handleEdit = () => {
-    analyticsStore.trackEvent(' profile_screen__edit__click');
-
-    setEditMode(true);
+    analyticsStore.trackEvent('profile_screen__edit__click');
+    router.push('/profile/edit');
   };
 
   const handleCourseCodePress = () => {
     analyticsStore.trackEvent('profile_screen__change_company__click');
-
     router.push('/course-code');
   };
 
@@ -161,10 +152,7 @@ export default function ProfileScreen() {
       console.error('Error signing out:', error);
     }
   };
-  if (loading) {
-    return <LoadingState />;
-  }
-  
+
   const toggleDeveloperMode = async (value: boolean) => {
     try {
       setIsDeveloper(value);
@@ -174,46 +162,66 @@ export default function ProfileScreen() {
     }
   };
 
-  // useEffect(() => {
-  //   analyticsStore.trackEvent('profile_screen__load');
-  // }, []);
+  const handleAvatarSecretTap = async () => {
+    const nextCount = avatarTapCount + 1;
+    setAvatarTapCount(nextCount);
 
+    if (!devUnlocked && nextCount >= 7) {
+      setAvatarTapCount(0);
+      setDevUnlocked(true);
+      setIsDeveloper(true);
 
+      analyticsStore.trackEvent?.('profile_screen__developer_mode_unlocked');
 
+      try {
+        await AsyncStorage.multiSet([
+          ['devUnlocked', 'true'],
+          ['isDeveloper', 'true'],
+        ]);
+      } catch (error) {
+        console.error('Error saving devUnlocked/isDeveloper:', error);
+      }
+    }
+  };
+
+  if (loading) {
+    return <LoadingState />;
+  }
 
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
         <View style={styles.content}>
-        
           <AvatarSection
             fullName={formData.full_name || user?.full_name || ''}
+            email={user?.email ?? undefined}
+            startedAt={user?.created_at ?? null}
             onEditPress={handleEdit}
             onSignOutPress={handleSignOut}
             onSave={handleSave}
             onCancel={handleCancel}
             editMode={editMode}
             updating={updating}
+            onAvatarSecretTap={handleAvatarSecretTap}
           />
-          <View style={{ flexDirection: 'column', alignItems: 'flex-start', marginTop: 16 }}>
-            <Text style={{ flex: 1, fontSize: 16 }}>Developer Mode</Text>        
-            <Switch
-              value={isDeveloper}
-              onValueChange={toggleDeveloperMode}
-            />
-          </View>
-          <UserInfoSection
-            user={user}
-            formData={formData}
-            editMode={editMode}
-            onFormDataChange={handleFormDataChange}
-          />
-          <PasswordSection />
+
           <CompanyCode onPress={handleCourseCodePress} />
+
+          {devUnlocked && (
+            <View style={styles.devRow}>
+              <Text style={styles.devLabel}>Developer Mode</Text>
+              <Switch
+                value={isDeveloper}
+                onValueChange={toggleDeveloperMode}
+                trackColor={{ false: '#ededed', true: '#d7f5ff' }}
+                ios_backgroundColor="#ededed"
+                thumbColor={isDeveloper ? '#ffffff' : '#9e9e9e'}
+                style={styles.switch}
+              />
+            </View>
+          )}
         </View>
-        
       </ScrollView>
-      
     </SafeAreaView>
   );
 }
@@ -234,5 +242,20 @@ const styles = StyleSheet.create({
     display: 'flex',
     paddingInline: 16,
     gap: 16,
+  },
+  devRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: 16,
+  },
+  devLabel: {
+    fontSize: 16,
+    color: Colors.black,
+  },
+  switch: {
+    // slightly smaller switch to better match screenshot
+    transform: [{ scaleX: 0.94 }, { scaleY: 0.94 }],
+    marginLeft: 8,
   },
 });

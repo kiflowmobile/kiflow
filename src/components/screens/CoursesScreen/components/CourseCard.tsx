@@ -1,18 +1,19 @@
-import { HStack } from '@/src/components/ui/hstack';
-import { VStack } from '@/src/components/ui/vstack';
 import type { Course } from '@/src/constants/types/course';
 import { useCourseProgress } from '@/src/hooks/useCourseProgress';
 import { navigateToCourse } from '@/src/utils/courseNavigation';
 import { useRouter } from 'expo-router';
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Button from '../../../ui/button';
-import CourseProgressSection from '../../../ui/course-progress';
+import ProgressBar from '../../../ui/progress-bar';
 import { shadow } from '../../../ui/styles/shadow';
 import { useAuthStore, useUserProgressStore } from '@/src/stores';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Svg, { Path } from 'react-native-svg';
 import { useAnalyticsStore } from '@/src/stores/analyticsStore';
+import { Colors } from '@/src/constants/Colors';
+import { TEXT_VARIANTS } from '@/src/constants/Fonts';
+import ArrowRight from '@/src/assets/images/arrow-right.svg';
 
 interface CourseCardProps {
   course: Course;
@@ -25,6 +26,29 @@ const CourseCard: React.FC<CourseCardProps> = ({ course }) => {
   const router = useRouter();
   const [isDeveloper, setIsDeveloper] = React.useState(false);
   const analyticsStore = useAnalyticsStore.getState();
+
+
+  const totalLessons = useMemo(() => {
+    if (course.modules && course.modules.length > 0) {
+      return course.modules.length;
+    }
+    if (modules && modules.length > 0) {
+      return modules.length;
+    }
+    return 0;
+  }, [course.modules, modules]);
+
+  const isCompleted = courseProgress === 100;
+  const isInProgress = courseProgress > 0 && courseProgress < 100;
+  const isNotStarted = courseProgress === 0;
+
+
+
+  useEffect(() => {
+    if (user) {
+      fetchUserProgress(user.id);
+    }
+  }, [user, fetchUserProgress]);
 
   const handleStartCourse = () => {
     if (!courseProgress || courseProgress === 0) {
@@ -77,92 +101,105 @@ console.log("courseProgress", courseProgress)
 
 
 return (
-  <TouchableOpacity 
-    style={styles.card} 
-    onPress={handleStartCourse}
-    activeOpacity={0.7}
-  >
+  <TouchableOpacity style={styles.card} onPress={handleStartCourse} activeOpacity={0.7}>
     <View style={styles.imageWrapper}>
       <Image
         source={{ uri: course.image || 'https://picsum.photos/800/600' }}
         style={styles.image}
-        resizeMode="contain"
+        resizeMode="cover"
       />
-      
+
+      <View style={styles.badgesContainer}>
+        {totalLessons > 0 && (
+          <View style={styles.lessonBadge}>
+            <Text style={styles.badgeText}>{totalLessons} modules</Text>
+          </View>
+        )}
+        {isCompleted && (
+          <View style={styles.completedBadge}>
+            <Text style={styles.badgeText}>Completed</Text>
+          </View>
+        )}
+      </View>
+
       {isDeveloper && courseProgress > 0 && (
         <TouchableOpacity style={styles.resetButton} onPress={handleResetProgress}>
-        <Svg
-          width={24}
-          height={24}
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="#ffffff"
-          strokeWidth={1.5}
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <Path d="M20 11a8.1 8.1 0 0 0 -15.5 -2m-.5 -4v4h4" />
-          <Path d="M4 13a8.1 8.1 0 0 0 15.5 2m.5 4v-4h-4" />
-        </Svg>
-      </TouchableOpacity>
+          <Svg
+            width={24}
+            height={24}
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="#ffffff"
+            strokeWidth={1.5}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <Path d="M20 11a8.1 8.1 0 0 0 -15.5 -2m-.5 -4v4h4" />
+            <Path d="M4 13a8.1 8.1 0 0 0 15.5 2m.5 4v-4h-4" />
+          </Svg>
+        </TouchableOpacity>
       )}
     </View>
 
-    <VStack style={styles.content}>
+    <View style={styles.content}>
+      {/* Progress bar for in-progress courses */}
+      {isInProgress && <ProgressBar percent={courseProgress} height={8} />}
+
       <Text style={styles.title}>{course.title}</Text>
       <Text style={styles.description} numberOfLines={2}>
         {course.description || 'Опис відсутній'}
       </Text>
 
-      <CourseProgressSection progress={courseProgress} />
-
-      <HStack style={styles.button_block}>
-        {courseProgress === 0 && (
+      <View style={styles.button_block}>
+        {isNotStarted && (
           <Button
-            title="ПОЧАТИ КУРС"
-            variant="primary"
+            title="Start course"
+            variant="dark"
+            size="md"
+            onPress={handleStartCourse}
+            style={styles.button}
+            icon={< ArrowRight />}
+            iconPosition="right"
+          />
+        )}
+
+        {isInProgress && (
+          <Button
+            title="Continue"
+            variant="dark"
+            size="md"
+            onPress={handleStartCourse}
+            style={styles.button}
+            icon={
+              <Svg
+                width={20}
+                height={20}
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="#ffffff"
+                strokeWidth={2}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <Path d="M5 12h14" />
+                <Path d="M12 5l7 7-7 7" />
+              </Svg>
+            }
+            iconPosition="right"
+          />
+        )}
+
+        {isCompleted && (
+          <Button
+            title="Start again"
+            variant="accent"
             size="md"
             onPress={handleStartCourse}
             style={styles.button}
           />
         )}
-
-        {courseProgress > 0 && courseProgress < 100 && (
-          <Button
-            title="ПРОДОВЖИТИ"
-            variant="primary"
-            size="md"
-            onPress={handleStartCourse}
-            style={styles.button}
-          />
-        )}
-
-        {courseProgress === 100 && (
-          <TouchableOpacity 
-            style={styles.completedWrapper}
-            onPress={handleStartCourse}
-            activeOpacity={0.7}
-          >
-            <Svg
-              width={28}
-              height={28}
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="#4cd964"
-              strokeWidth={1.5}
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <Path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" />
-              <Path d="M9 12l2 2l4 -4" />
-            </Svg>
-            <Text style={styles.completedText}>Курс завершено</Text>
-          </TouchableOpacity>
-        )}
-
-
-      </HStack>
-    </VStack>
+      </View>
+    </View>
   </TouchableOpacity>
 );
 };
@@ -181,7 +218,30 @@ const styles = StyleSheet.create({
   },
   image: {
     width: '100%',
-    height: 160,
+    height: 200,
+  },
+  badgesContainer: {
+    position: 'absolute',
+    bottom: 12,
+    left: 12,
+    flexDirection: 'row',
+    gap: 8,
+  },
+  lessonBadge: {
+    backgroundColor: '#5774CD',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 14,
+  },
+  completedBadge: {
+    backgroundColor: Colors.green,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 14,
+  },
+  badgeText: {
+    color: '#ffffff',
+    ...TEXT_VARIANTS.label,
   },
   resetButton: {
     position: 'absolute',
@@ -196,35 +256,33 @@ const styles = StyleSheet.create({
     padding: 16,
     gap: 8,
   },
+  progressContainer: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginBottom: 4,
+  },
+  progressText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#666',
+  },
   title: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#111',
+    ...TEXT_VARIANTS.title2,
+    marginTop: 4,
   },
   description: {
     fontSize: 13,
     color: '#333',
+    lineHeight: 18,
   },
   button_block: {
     width: '100%',
-    display: 'flex',
-    alignItems: 'center', 
-    justifyContent: 'center',
-    marginTop: 12,
+    marginTop: 16,
   },
   button: {
     marginTop: 16,
-    width: '80%',        
-  },
-  completedWrapper: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 16,
-    gap: 6,
-  },
-  completedText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#22c55e',
+    width: '100%', 
   },
 });
