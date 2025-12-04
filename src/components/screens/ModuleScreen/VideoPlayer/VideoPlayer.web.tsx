@@ -295,7 +295,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ uri, mux, thumbnail }) => {
         <div
           style={{
             position: 'absolute',
-            bottom: 0,
+            bottom: 20,
             left: 0,
             right: 0,
             padding: '20px',
@@ -310,7 +310,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ uri, mux, thumbnail }) => {
             onClick={handleProgressClick}
             style={{
               width: '100%',
-              height: '2px',
+              height: '4px',
               backgroundColor: 'rgba(255, 255, 255, 0.3)',
               cursor: 'pointer',
               position: 'relative',

@@ -11,6 +11,7 @@ type Props = {
   onSubmit: () => void;
   onTryAgain: () => void;
   onComplete: () => void;
+  attemptsLeft?: number;
 };
 
 const CaseFooter: React.FC<Props> = ({
@@ -20,6 +21,7 @@ const CaseFooter: React.FC<Props> = ({
   onSubmit,
   onTryAgain,
   onComplete,
+  attemptsLeft = 3,
 }) => {
   return (
     <View
@@ -31,9 +33,10 @@ const CaseFooter: React.FC<Props> = ({
           <Button
             title="Try again"
             onPress={onTryAgain}
-            variant="light"
+            variant="accent"
             size="md"
             style={{ flex: 1, marginRight: 8 }}
+            disabled={attemptsLeft <= 0}
           />
 
           <Button

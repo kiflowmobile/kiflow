@@ -73,6 +73,28 @@ const ChatInput: React.FC<ChatInputProps> = ({
       slideId,
       case: 'focus',
     });
+    
+    // Убираем outline при фокусе на web
+    if (Platform.OS === 'web') {
+      setTimeout(() => {
+        if (inputRef.current) {
+          const inputElement = inputRef.current as any;
+          // Пробуем разные способы доступа к DOM элементу
+          const domNode = 
+            inputElement._internalFiberInstanceHandleDEV?.stateNode ||
+            inputElement._nativeNode ||
+            (typeof document !== 'undefined' && document.activeElement);
+          
+          if (domNode && domNode.style) {
+            domNode.style.outline = 'none';
+            domNode.style.outlineStyle = 'none';
+            domNode.style.outlineWidth = '0';
+            domNode.style.border = 'none';
+            domNode.style.boxShadow = 'none';
+          }
+        }
+      }, 0);
+    }
   };
 
   const handleChangeText = (text: string) => {
@@ -278,6 +300,37 @@ const ChatInput: React.FC<ChatInputProps> = ({
     };
   }, []);
 
+  // Убираем outline при фокусе на web через глобальные стили
+  useEffect(() => {
+    if (Platform.OS === 'web' && typeof document !== 'undefined') {
+      const styleId = 'remove-textinput-outline';
+      if (!document.getElementById(styleId)) {
+        const style = document.createElement('style');
+        style.id = styleId;
+        style.textContent = `
+          textarea:focus,
+          input:focus,
+          textarea:focus-visible,
+          input:focus-visible {
+            outline: none !important;
+            outline-style: none !important;
+            outline-width: 0 !important;
+            border: none !important;
+            box-shadow: none !important;
+          }
+        `;
+        document.head.appendChild(style);
+      }
+      return () => {
+        const existingStyle = document.getElementById(styleId);
+        if (existingStyle) {
+          document.head.removeChild(existingStyle);
+        }
+      };
+    }
+  }, []);
+
+
   return (
     <View style={styles.footer}>
       <View style={styles.inputContainer}>
@@ -419,7 +472,16 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#0f172a',
     paddingRight: 80, // space for mic button
+    ...Platform.select({
+      web: {
+        outline: 'none',
+        outlineStyle: 'none',
+        outlineWidth: 0,
+        borderWidth: 0,
+      } as any,
+    }),
   },
+  
   micWrap: {
     position: 'absolute',
     right: 12,

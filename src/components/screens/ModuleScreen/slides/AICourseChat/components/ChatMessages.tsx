@@ -12,9 +12,11 @@ interface Message {
 interface ChatMessagesProps {
   messages: Message[];
   loading: boolean;
+  attemptsLeft?: number;
+  showAttemptsMessage?: boolean;
 }
 
-const ChatMessages: React.FC<ChatMessagesProps> = ({ messages, loading }) => {
+const ChatMessages: React.FC<ChatMessagesProps> = ({ messages, loading, attemptsLeft, showAttemptsMessage }) => {
   // Первое AI сообщение (сценарий/вопрос) отображаем как обычный текст
   const firstAIMessage = messages.find(msg => msg.role === 'ai');
   const otherMessages = messages.filter((msg, index) => {
@@ -33,6 +35,13 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({ messages, loading }) => {
         <MessageBubble key={msg.id} {...msg} />
       ))}
       {loading && <MessageBubble id="ai-thinking" role="ai" text="AI думає..." />}
+      {showAttemptsMessage && attemptsLeft !== undefined && attemptsLeft > 0 && (
+        <View style={styles.attemptsMessage}>
+          <Text style={styles.attemptsText}>
+            Feel free to refine your answer. You have {attemptsLeft} {attemptsLeft === 1 ? 'attempt' : 'attempts'} left.
+          </Text>
+        </View>
+      )}
     </View>
   );
 };
@@ -47,6 +56,18 @@ const styles = StyleSheet.create({
     lineHeight: 24,
     color: '#0f172a',
     marginBottom: 16,
+  },
+  attemptsMessage: {
+    marginTop: 16,
+    padding: 12,
+    backgroundColor: '#f3f4f6',
+    borderRadius: 8,
+  },
+  attemptsText: {
+    ...TEXT_VARIANTS.body2,
+    fontSize: 14,
+    color: '#475569',
+    textAlign: 'center',
   },
 });
 

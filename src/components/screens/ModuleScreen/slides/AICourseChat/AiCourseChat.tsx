@@ -28,9 +28,12 @@ interface Message {
 interface AICourseChatProps {
   title: string;
   slideId: string;
+  setScrollEnabled?: (enabled: boolean) => void;
+  isActive?: boolean;
+  onComplete?: () => void;
 }
 
-const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
+const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId, setScrollEnabled, isActive, onComplete }) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
@@ -46,12 +49,32 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
   const moduleIdStr = Array.isArray(moduleId) ? moduleId[0] : moduleId;
   const courseIdStr = Array.isArray(courseId) ? courseId[0] : courseId;
   const CHAT_STORAGE_KEY = `course-chat-${courseIdStr}`;
+  const ATTEMPTS_STORAGE_KEY = `case-attempts-${courseIdStr}-${slideId}`;
   const analyticsStore = useAnalyticsStore.getState();
   const [userMessageCount, setUserMessageCount] = useState(0);
   const [caseState, setCaseState] = useState<'idle' | 'analyzing' | 'result' | 'completed'>('idle');
-  // previous messages ref removed — not needed after Try again resets to prompt
+  const [attemptsLeft, setAttemptsLeft] = useState(3);
+  const [lastUserAnswer, setLastUserAnswer] = useState('');
+  useEffect(() => {
+    if (!setScrollEnabled || !isActive) return;
+    // Allow scrolling only when caseState is 'completed'
+    setScrollEnabled(caseState === 'completed');
+    return () => {
+      setScrollEnabled(true);
+    };
+  }, [setScrollEnabled, caseState, isActive]);
 
-  // loadChat removed — loading handled in combined effect (loadChatOrPrompt)
+  useEffect(() => {
+    if (!setScrollEnabled || !isActive || caseState === 'completed') return;
+
+    const intervalId = setInterval(() => {
+      setScrollEnabled(false);
+    }, 100);
+
+    return () => {
+      clearInterval(intervalId);
+    };
+  }, [setScrollEnabled, caseState, isActive]);
 
   const lockPageScroll = () => {
     if (Platform.OS !== 'web' || pageScrollLockedRef.current) return;
@@ -95,12 +118,36 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
   useEffect(() => {
     const loadChatOrPrompt = async () => {
       try {
+        // Загружаем количество попыток
+        const attemptsStored = await AsyncStorage.getItem(ATTEMPTS_STORAGE_KEY);
+        if (attemptsStored) {
+          const attempts = parseInt(attemptsStored, 10);
+          setAttemptsLeft(attempts);
+        } else {
+          // Если попыток нет в хранилище, устанавливаем 3
+          setAttemptsLeft(3);
+          await AsyncStorage.setItem(ATTEMPTS_STORAGE_KEY, '3');
+        }
+
         const stored = await AsyncStorage.getItem(CHAT_STORAGE_KEY);
         if (stored) {
           const parsed = JSON.parse(stored);
           if (parsed[slideId]) {
-            setMessages(parsed[slideId]);
-            // setAnswered(true);
+            const savedMessages = parsed[slideId];
+            setMessages(savedMessages);
+            
+            // Если есть сохраненные сообщения и их больше одного (не только промпт),
+            // значит кейс уже был завершен - разблокируем скролл
+            if (savedMessages.length > 1) {
+              setCaseState('completed');
+              // Если кейс завершен, сбрасываем попытки
+              try {
+                await AsyncStorage.removeItem(ATTEMPTS_STORAGE_KEY);
+                setAttemptsLeft(3);
+              } catch (err) {
+                console.warn('Failed to reset attempts for completed case:', err);
+              }
+            }
             return;
           }
         }
@@ -115,7 +162,6 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
         };
 
         setMessages([aiMsg]);
-        // setAnswered(useSlidesStore.getState().isSlideAnswered(slideId));
         setInput('');
       } catch (err) {
         console.error('Error loading chat or prompt:', err);
@@ -125,7 +171,7 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
     if (slideId) {
       loadChatOrPrompt();
     }
-  }, [slideId, prompt, CHAT_STORAGE_KEY]);
+  }, [slideId, prompt, CHAT_STORAGE_KEY, ATTEMPTS_STORAGE_KEY]);
 
   useEffect(() => {
     if (courseId) fetchCriterias(courseIdStr);
@@ -153,6 +199,9 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
 
     const userMsg: Message = { id: Date.now().toString(), role: 'user', text: input.trim() };
     setMessages((prev) => [...prev, userMsg]);
+    
+    // Сохраняем ответ пользователя для возможного использования при "Try again"
+    setLastUserAnswer(input.trim());
 
     //рахуємо кількість користувальских відповідей
     const newCount = userMessageCount + 1;
@@ -248,6 +297,17 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
   };
 
   const handleTryAgain = async () => {
+    // Уменьшаем количество попыток
+    const newAttempts = attemptsLeft - 1;
+    setAttemptsLeft(newAttempts);
+    
+    // Сохраняем новое количество попыток
+    try {
+      await AsyncStorage.setItem(ATTEMPTS_STORAGE_KEY, String(newAttempts));
+    } catch (err) {
+      console.warn('Failed to save attempts:', err);
+    }
+
     // Reset messages to show only the original case prompt (no previous answers)
     const slidePrompt = prompt[slideId]?.question;
     if (slidePrompt) {
@@ -273,9 +333,11 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
       console.warn('Failed to remove saved chat for try again:', err);
     }
 
-    // reset counters and input
+    // Восстанавливаем предыдущий ответ в инпут
+    setInput(lastUserAnswer);
+    
+    // reset counters
     setUserMessageCount(0);
-    setInput('');
     setIsLocked(false);
     setCaseState('idle');
 
@@ -296,6 +358,9 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
 
   const handleFocus = () => {
     lockPageScroll();
+    if (setScrollEnabled && caseState !== 'completed') {
+      setScrollEnabled(false);
+    }
 
     if (Platform.OS === 'web') {
       setTimeout(() => {
@@ -308,6 +373,17 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
 
   const handleBlur = () => {
     unlockPageScroll();
+    if (setScrollEnabled && caseState !== 'completed') {
+      if (Platform.OS === 'web' && typeof requestAnimationFrame !== 'undefined') {
+        requestAnimationFrame(() => {
+          setScrollEnabled(false);
+        });
+      } else {
+        setTimeout(() => {
+          setScrollEnabled(false);
+        }, 10);
+      }
+    }
   };
 
   const isSubmitDisabled = !input.trim() || loading || isLocked;
@@ -325,11 +401,16 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
-          // блокируем скролл только во время анализа; в состоянии result разрешаем прокрутку
-          scrollEnabled={caseState !== 'analyzing'}
+          // блокируем скролл до нажатия Complete (управляется через setScrollEnabled из родителя)
+          scrollEnabled={true}
         >
           <ChatHeader title={title} />
-          <ChatMessages messages={messages} loading={loading} />
+          <ChatMessages 
+            messages={messages} 
+            loading={loading}
+            attemptsLeft={attemptsLeft}
+            showAttemptsMessage={caseState === 'idle' && attemptsLeft < 3 && attemptsLeft > 0 && lastUserAnswer.length > 0}
+          />
           {caseState === 'idle' && (
             <ChatInput
               input={input}
@@ -354,7 +435,20 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
           loading={loading}
           onSubmit={handleSend}
           onTryAgain={handleTryAgain}
-          onComplete={() => setCaseState('completed')}
+          onComplete={async () => {
+            setCaseState('completed');
+            // Сбрасываем попытки при завершении кейса
+            try {
+              await AsyncStorage.removeItem(ATTEMPTS_STORAGE_KEY);
+            } catch (err) {
+              console.warn('Failed to reset attempts:', err);
+            }
+            // Переход на следующий слайд
+            if (onComplete) {
+              onComplete();
+            }
+          }}
+          attemptsLeft={attemptsLeft}
         />
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -374,8 +468,6 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: 16,
     paddingTop: 16,
-    // оставляем отступ внизу, чтобы последний блок (оценка) можно было докрутить над фиксированной панелью
-    paddingBottom: Platform.OS === 'ios' ? 140 : 120,
+    paddingBottom: 80,
   },
-  // bottom / overlay styles moved to dedicated components
 });

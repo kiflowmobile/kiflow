@@ -95,7 +95,15 @@ const ModuleSlide: React.FC<CourseSlideProps> = ({
         />
       );
     case 'ai':
-      return <AICourseChat title={slideData.slide_title} slideId={slideData.id} />;
+      return (
+        <AICourseChat
+          title={slideData.slide_title}
+          slideId={slideData.id}
+          setScrollEnabled={setScrollEnabled}
+          isActive={isActive}
+          onComplete={onComplete}
+        />
+      );
     case 'content':
       return (
         <ContentWithExample
