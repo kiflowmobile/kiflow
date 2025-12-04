@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { Spinner, SPINNER_SIZES } from '../../ui/spinner';
 import { Text, View } from 'react-native';
 import TextSlide from './slides/TextSlide';
@@ -8,6 +8,7 @@ import ContentWithExample from './slides/ContentWithExample';
 import DashboardSlide from './slides/DashboardSlide';
 import MediaPlaceholder from './slides/MediaPlaceholder';
 import { useSlidesStore, useModulesStore } from '@/src/stores';
+import { getLessonOrderBySlideId } from '@/src/services/lessons';
 import VideoPlayer from './VideoPlayer';
 import { useLocalSearchParams } from 'expo-router';
 
@@ -36,6 +37,35 @@ const ModuleSlide: React.FC<CourseSlideProps> = ({
   const moduleIdStr = Array.isArray(moduleId) ? moduleId[0] : moduleId;
   const courseIdStr = Array.isArray(courseId) ? courseId[0] : courseId;
 
+  // попытка получить номер урока (lesson_order) из БД по id слайда
+  const [lessonNumberFromDb, setLessonNumberFromDb] = useState<number | null>(null);
+  useEffect(() => {
+    let mounted = true;
+    const fetchLessonNumber = async () => {
+      if (!slideData?.id) {
+        setLessonNumberFromDb(null);
+        return;
+      }
+
+      try {
+        const res = await getLessonOrderBySlideId(String(slideData.id));
+        if (!mounted) return;
+        if (!res.error && res.data && res.data.lesson_order != null) {
+          setLessonNumberFromDb(res.data.lesson_order);
+        } else {
+          setLessonNumberFromDb(null);
+        }
+      } catch {
+        setLessonNumberFromDb(null);
+      }
+    };
+
+    fetchLessonNumber();
+    return () => {
+      mounted = false;
+    };
+  }, [slideData?.id]);
+
   if (isLoading) {
     return (
       <View className="flex-1 items-center justify-center">
@@ -50,17 +80,15 @@ const ModuleSlide: React.FC<CourseSlideProps> = ({
   }
 
   switch (slideData.slide_type) {
-    case 'text':
-      // determine module ordinal (prefer module.module_order, fallback to index + 1)
+    case 'text': {
       const moduleIdFromSlide = slideData.module_id;
-      const moduleObj = modules.find((m) => m.id === moduleIdFromSlide) || null;
-      const moduleOrdinal = moduleObj
-        ? moduleObj.module_order ?? modules.findIndex((m) => m.id === moduleIdFromSlide) + 1
-        : (() => {
-            const idx = modules.findIndex((m) => m.id === moduleIdFromSlide);
-            return idx >= 0 ? idx + 1 : moduleIdStr ? Number(moduleIdStr) || 1 : 1;
-          })();
-      const lessonNumber = slideData.slide_order ?? 1;
+      const moduleIndex = modules.findIndex((m) => m.id === moduleIdFromSlide);
+      const moduleObj = modules[moduleIndex];
+      const moduleOrdinal =
+        moduleObj?.module_order ?? (moduleIndex >= 0 ? moduleIndex + 1 : Number(moduleIdStr) || 1);
+
+      const lessonNumber = lessonNumberFromDb ?? slideData.slide_order ?? 1;
+
       return (
         <TextSlide
           title={slideData.slide_title}
@@ -68,6 +96,7 @@ const ModuleSlide: React.FC<CourseSlideProps> = ({
           subtitle={`Module ${moduleOrdinal} / Lesson ${lessonNumber}`}
         />
       );
+    }
     case 'video': {
       const { uri, mux } = slideData.slide_data?.video || {};
       const hasVideo = !!uri || !!mux;

@@ -4,14 +4,13 @@ import {
   Text,
   View,
   TouchableOpacity,
-  SafeAreaView,
   Animated,
   ImageBackground,
 } from 'react-native';
-import CloseIcon from '@/src/components/ui/CloseIcon';
 import ArrowsUp from '@/src/assets/images/arrows-up.svg';
 import { Colors } from '@/src/constants/Colors';
 import { TEXT_VARIANTS } from '@/src/constants/Fonts';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 interface textData {
   content: string;
@@ -53,9 +52,6 @@ const TextSlide: React.FC<TextSlideProps> = ({ title, data, subtitle }) => {
         style={styles.imageBackground}
         imageStyle={styles.imageStyle}
       >
-        <View style={styles.topLeft} pointerEvents="box-none">
-          <CloseIcon size={22} color={Colors.white} />
-        </View>
 
         <View style={styles.centerArea}>
           <View style={styles.pill}>

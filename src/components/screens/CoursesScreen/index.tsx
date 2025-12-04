@@ -6,6 +6,7 @@ import CourseCard from './components/CourseCard';
 import { useEffect } from 'react';
 import { useAnalyticsStore } from '@/src/stores/analyticsStore';
 import { Colors } from '@/src/constants/Colors';
+import { TEXT_VARIANTS } from '@/src/constants/Fonts';
 
 const CoursesScreen = () => {
   const { courses, isLoading, error, fetchCourses, clearError } = useCourseStore();
@@ -17,7 +18,6 @@ const CoursesScreen = () => {
       console.error('Непередбачена помилка при завантаженні курсів:', err);
     });
   }, [fetchCourses]);
-
 
   useEffect(() => {
     analyticsStore.trackEvent('courses_screen__load');
@@ -44,7 +44,7 @@ const CoursesScreen = () => {
         ) : courses.length === 0 ? (
           <View style={styles.emptyContainer}>
             <Image
-              source={require('@/src/assets/images/welcome-screen.png')}
+              source={require('@/src/assets/images/book.png')}
               style={styles.emptyImage}
               resizeMode="contain"
             />
@@ -110,23 +110,22 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 60,
+    marginTop: 240,
   },
   emptyImage: {
-    width: 160,
-    height: 160,
+    width: 100,
+    height: 100,
     marginBottom: 24,
   },
   emptyMainText: {
     textAlign: 'center',
-    color: '#666',
+    ...TEXT_VARIANTS.body2,
     fontSize: 16,
-    marginBottom: 12,
-    paddingHorizontal: 36,
+    marginBottom: 16,
+    paddingHorizontal: 40,
   },
   emptyLinkText: {
     color: Colors.blue,
-    fontSize: 16,
-    fontWeight: '600',
+    ...TEXT_VARIANTS.button,
   },
 });
