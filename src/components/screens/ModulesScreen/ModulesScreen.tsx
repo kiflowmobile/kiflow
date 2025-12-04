@@ -2,11 +2,12 @@ import ProgressBar from '@/src/components/ui/progress-bar';
 import { useModulesStore, useUserProgressStore, useCourseStore } from '@/src/stores';
 import { useCourseProgress } from '@/src/hooks/useCourseProgress';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useAnalyticsStore } from '@/src/stores/analyticsStore';
 import { Colors } from '@/src/constants/Colors';
 import { TEXT_VARIANTS } from '@/src/constants/Fonts';
+import { fetchLessonCountsByModuleIds } from '@/src/services/lessons';
 
 const DOT_SIZE = 24;
 const LINE_DEFAULT = '#D9D9D9';
@@ -31,6 +32,8 @@ export default function CourseScreen() {
 
   const { getModuleProgress } = useUserProgressStore();
   const { modules: progressModules } = useCourseProgress((params.id as string) || '');
+
+  const [lessonCounts, setLessonCounts] = useState<Record<string, number>>({});
 
   useEffect(() => {
     if (!params.id) return;
@@ -118,6 +121,13 @@ export default function CourseScreen() {
 
         <Text style={styles.moduleTitle}>{item.title}</Text>
         {item.description ? <Text style={styles.moduleDescription}>{item.description}</Text> : null}
+
+        {/* lessons count badge */}
+        <View style={styles.lessonsBadge} pointerEvents="none">
+          <Text style={styles.lessonsBadgeText} allowFontScaling={false}>
+            {`${lessonCounts[item.id] ?? 0} lessons`}
+          </Text>
+        </View>
         {params.id ? (
           <>
             <View style={styles.progressBarWrapper}>
@@ -132,6 +142,25 @@ export default function CourseScreen() {
   useEffect(() => {
     analyticsStore.trackEvent('modules_screen__load');
   }, [analyticsStore]);
+
+  useEffect(() => {
+    if (!modules || modules.length === 0) return;
+
+    let mounted = true;
+
+    (async () => {
+      try {
+        const ids = modules.map((m: any) => m.id);
+        const res: any = await fetchLessonCountsByModuleIds(ids);
+        if (mounted) setLessonCounts(res?.data || {});
+      } catch {
+      }
+    })();
+
+    return () => {
+      mounted = false;
+    };
+  }, [modules]);
 
   return (
     <View style={styles.container}>
@@ -236,13 +265,15 @@ const styles = StyleSheet.create({
   },
 
   statusDotCurrent: {
-    backgroundColor: '#000',
+    backgroundColor: '#fff',
+    borderWidth: 3,
+    borderColor: '#000',
   },
   statusDotCurrentInner: {
-    width: DOT_SIZE * 0.5,
-    height: DOT_SIZE * 0.5,
-    borderRadius: (DOT_SIZE * 0.5) / 2,
-    backgroundColor: '#fff',
+    width: DOT_SIZE * 0.4,
+    height: DOT_SIZE * 0.4,
+    borderRadius: (DOT_SIZE * 0.4) / 2,
+    backgroundColor: '#000',
   },
 
   moduleTitle: {
@@ -256,8 +287,9 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   moduleDescription: {
-    fontSize: 14,
-    color: '#444',
+    marginTop: 8,
+    color: '#525252',
+    ...TEXT_VARIANTS.body2,
   },
   progressText: {
     fontSize: 12,
@@ -268,6 +300,24 @@ const styles = StyleSheet.create({
   progressBarWrapper: {
     marginBottom: 6,
     marginTop: 12,
+  },
+
+  lessonsBadge: {
+    position: 'absolute',
+    right: 16,
+    top: 16,
+    backgroundColor: Colors.blue,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  lessonsBadgeText: {
+    color: Colors.white,
+    fontSize: 14,
+    fontFamily: 'RobotoCondensed',
+    fontWeight: '600',
   },
 
   loadingText: {
