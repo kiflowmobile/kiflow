@@ -26,16 +26,8 @@ import { sendLastSlideEmail } from '@/src/services/emailService';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useLessonsStore } from '@/src/stores/lessonsStore';
 
-// <<<<<<< HEAD
-// import { sendLastSlideEmail } from '@/src/services/emailService';
-// import AsyncStorage from '@react-native-async-storage/async-storage';
-
-// =======
-// import { useLessonsStore } from '@/src/stores/lessonsStore';
-// >>>>>>> 68b55f45adf0936059d0a33fe4f3edd9a8f09a77
 const analyticsStore = useAnalyticsStore.getState();
 
-// убираем дубликаты критериев по ключу / названию
 function dedupeClientSkills(rawSkills: any[] | undefined) {
   if (!Array.isArray(rawSkills)) return [];
 
@@ -209,8 +201,6 @@ useEffect(() => {
   }, 0);
 }, [slides]);
 
-
-  // триггер при достижении последнего слайда
   const triggerLastSlideEmail = useCallback(
     async (index: number) => {
       const isLastSlide = index === slides.length - 1;
@@ -262,7 +252,6 @@ useEffect(() => {
           userName:
             (user?.user_metadata &&
               (user.user_metadata.full_name || user.user_metadata.first_name)) ||
-            // fallback to email
             user.email ||
             undefined,
           userEmail: user.email,
@@ -345,10 +334,6 @@ useEffect(() => {
     }
   }, [slides, pageH, slideId]);
 
-// <<<<<<< HEAD
-//   if (error)
-// =======
-  // const { average, skills, fetchAverage, fetchSkills } = useMainRatingStore();
 
   useEffect(() => {
     if (!user?.id || !moduleId) return;
@@ -371,7 +356,6 @@ useEffect(() => {
   }, [moduleId, slides.length, slideId]);
 
   if (error || errorModule)
-// >>>>>>> 68b55f45adf0936059d0a33fe4f3edd9a8f09a77
     return (
       <View style={styles.errorContainer}>
         <Text style={styles.errorText}>Помилка: {error}</Text>

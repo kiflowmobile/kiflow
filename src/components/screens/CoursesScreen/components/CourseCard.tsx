@@ -72,6 +72,10 @@ const handleResetProgress = async (e?: any) => {
 };
 
 
+
+console.log("courseProgress", courseProgress)
+
+
 return (
   <TouchableOpacity 
     style={styles.card} 
