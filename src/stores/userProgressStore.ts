@@ -1,12 +1,13 @@
 import { create } from 'zustand';
 import { useSlidesStore } from './slidesStore';
 import { useModulesStore } from './modulesStore';
-import { useAuthStore } from './authStore';
 import { loadProgressLocal, saveProgressLocal } from '../utils/progressAsyncStorage';
+import { sendCourseCompletionEmailUtil } from '../utils/courseCompletionEmail';
 import { UserCourseSummary } from '../constants/types/progress';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { supabase } from '../config/supabaseClient';
 
 const getAuthStore = () => require('./authStore').useAuthStore;
-
 
 type ModuleProgressEntry = {
   module_id: string;
@@ -25,6 +26,7 @@ interface UserProgressStore {
 
   setCourseProgress: (courseId: string, progress: number, lastSlideId?: string | null) => void;
   getCourseProgress: (courseId: string) => number;
+  syncProgressFromDBToLocalStorage: () => void;
 
   setModuleProgressSafe: (
     courseId: string,
@@ -61,7 +63,6 @@ export const useUserProgressStore = create<UserProgressStore>((set, get) => ({
   error: null,
 
   initFromLocal: async () => {
-    // const { user } = useAuthStore.getState();
     const { user } = getAuthStore().getState();
 
     if (!user) return;
@@ -122,6 +123,9 @@ export const useUserProgressStore = create<UserProgressStore>((set, get) => ({
     const percent = clampedIndex === totalSlides - 1 ? 100 : Math.min(basePercent, 99);
 
     const sanitizedLastSlideId = lastSlideId ?? null;
+
+    const prevCourse = get().courses.find((c) => c.course_id === courseId);
+    const prevProgress = prevCourse?.progress ?? 0;
 
     set((state) => {
       const updatedCourses = [...state.courses];
@@ -206,6 +210,22 @@ export const useUserProgressStore = create<UserProgressStore>((set, get) => ({
 
       return { courses: persistCourses(updatedCourses) };
     });
+
+    try {
+      const newCourse = get().courses.find((c) => c.course_id === courseId);
+      const newProgress = newCourse?.progress ?? 0;
+
+      if (prevProgress < 100 && newProgress === 100) {
+        const user = getAuthStore().getState().user;
+        if (user?.id) {
+          sendCourseCompletionEmailUtil(courseId, user).catch((e) => {
+            console.warn('Failed to send course completion email', e);
+          });
+        }
+      }
+    } catch (e) {
+      console.warn('Error while attempting to send course completion email', e);
+    }
   },
 
   getModuleProgress: (courseId: string, moduleId: string) => {
@@ -219,11 +239,67 @@ export const useUserProgressStore = create<UserProgressStore>((set, get) => ({
   },
 
   syncProgressToDB: async () => {
-    return;
+    const { user } = getAuthStore().getState();
+    if (!user) return;
+
+    const allKeys = await AsyncStorage.getAllKeys();
+    const progressKeys = allKeys.filter((k) => k.startsWith('progress_'));
+
+    if (progressKeys.length === 0) return;
+
+    for (const progressKey of progressKeys) {
+      const raw = await AsyncStorage.getItem(progressKey);
+      if (!raw) return;
+      const course = JSON.parse(raw)[0];
+
+      const payload = {
+        user_id: user.id,
+        course_id: course.course_id,
+        progress: course.progress,
+        last_slide_id: course.last_slide_id,
+        modules: course.modules,
+      };
+      const { error } = await supabase.from('user_course_summaries').upsert(payload, {
+        onConflict: 'user_id,course_id',
+      });
+
+      if (error) {
+        console.log('ERROR UPSERT:', error);
+      }
+    }
+  },
+
+  syncProgressFromDBToLocalStorage: async () => {
+    try {
+      const { user } = getAuthStore().getState();
+      if (!user) return;
+
+      const { data, error } = await supabase
+        .from('user_course_summaries')
+        .select('course_id, progress, last_slide_id, modules')
+        .eq('user_id', user.id);
+
+      if (!data || data.length === 0) return;
+
+      let formatted = [];
+
+      for (const item of data) {
+        const newItem = {
+          course_id: item.course_id,
+          progress: item.progress,
+          last_slide_id: item.last_slide_id,
+          modules: item.modules,
+        };
+        formatted.push(newItem);
+      }
+
+      await AsyncStorage.setItem(`progress_${user.id}`, JSON.stringify(formatted));
+    } catch (err) {
+      console.log('❌ Failed to sync progress data from DB:', err);
+    }
   },
 
   resetCourseProgress: async (courseId: string) => {
-    // const { user } = useAuthStore.getState();
     const { user } = getAuthStore().getState();
 
     if (!user) return;

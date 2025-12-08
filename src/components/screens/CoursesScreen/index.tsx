@@ -4,7 +4,6 @@ import { ScrollView, StyleSheet, View, Text, Image, TouchableOpacity } from 'rea
 import { useRouter } from 'expo-router';
 import CourseCard from './components/CourseCard';
 import { useEffect } from 'react';
-import { useSaveProgressOnExit } from '@/src/hooks/useSaveProgressOnExit';
 import { useAnalyticsStore } from '@/src/stores/analyticsStore';
 import { Colors } from '@/src/constants/Colors';
 
@@ -19,7 +18,6 @@ const CoursesScreen = () => {
     });
   }, [fetchCourses]);
 
-  useSaveProgressOnExit();
 
   useEffect(() => {
     analyticsStore.trackEvent('courses_screen__load');

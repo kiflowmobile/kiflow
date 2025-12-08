@@ -27,7 +27,7 @@ const CourseCard: React.FC<CourseCardProps> = ({ course }) => {
   const [isDeveloper, setIsDeveloper] = React.useState(false);
   const analyticsStore = useAnalyticsStore.getState();
 
-  // Calculate total lessons from modules
+
   const totalLessons = useMemo(() => {
     if (course.modules && course.modules.length > 0) {
       return course.modules.length;
@@ -51,10 +51,7 @@ const CourseCard: React.FC<CourseCardProps> = ({ course }) => {
   }, [user, fetchUserProgress]);
 
   const handleStartCourse = () => {
-
     if (!courseProgress || courseProgress === 0) {
-      console.log(courseProgress)
-
       analyticsStore.trackEvent('course__start', { id: course.id });
     }
   
@@ -85,11 +82,10 @@ const handleResetProgress = async (e?: any) => {
     e.stopPropagation();
   }
   if (!user) return;
-  console.log('reset progress')
   try {
     resetCourseProgress(course.id)
 
-    const storageQuizeKey = `course-progress-${course.id}`;
+    const storageQuizeKey = `quiz-progress-${course.id}`;
     await AsyncStorage.removeItem(storageQuizeKey);
     const storageChatKey = `course-chat-${course.id}`;
     await AsyncStorage.removeItem(storageChatKey);
@@ -98,6 +94,10 @@ const handleResetProgress = async (e?: any) => {
     console.error('Error resetting course progress:', err);
   }
 };
+
+
+
+console.log("courseProgress", courseProgress)
 
 
 return (
@@ -109,7 +109,6 @@ return (
         resizeMode="cover"
       />
 
-      {/* Badges overlay */}
       <View style={styles.badgesContainer}>
         {totalLessons > 0 && (
           <View style={styles.lessonBadge}>
@@ -123,7 +122,6 @@ return (
         )}
       </View>
 
-      {/* Кнопка скидання прогресу */}
       {isDeveloper && courseProgress > 0 && (
         <TouchableOpacity style={styles.resetButton} onPress={handleResetProgress}>
           <Svg

@@ -65,7 +65,6 @@ export default function StatisticsScreen() {
     };
   }, [courses]);
 
-  // Load skills per course by iterating modules (fetchSkills for each module)
   useEffect(() => {
     if (!user?.id || !modules.length || !courses.length) {
       setLoading((s) => ({ ...s, skills: false }));
@@ -85,7 +84,6 @@ export default function StatisticsScreen() {
             const skills = useMainRatingStore.getState().skills as unknown as Skill[];
             if (skills && skills.length) acc.push(...skills);
           } catch {
-            // ignore per-module errors
           }
         }
         map[course.id] = acc;
@@ -291,7 +289,6 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   scoreBubbleContainer: { alignItems: 'center', marginLeft: 8 },
-  /* wrapper to position image and overlay */
   scoreImageWrapper: { width: 40, height: 40, position: 'relative' },
   scoreOverlay: {
     position: 'absolute',

@@ -64,6 +64,26 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId, setScrollEn
     };
   }, [setScrollEnabled, caseState, isActive]);
 
+  const loadChat = async () => {
+    try {
+      const stored = await AsyncStorage.getItem(CHAT_STORAGE_KEY);
+      if (!stored) return;
+  
+      const parsed: Record<string, Message[]> = JSON.parse(stored);
+  
+      if (parsed[slideId]) {
+        const userCount = parsed[slideId].filter((item: Message) => item.role === 'user').length;  
+        setUserMessageCount(userCount);
+        setIsLocked(userCount >= 3);
+  
+        setMessages(parsed[slideId]);
+
+      }
+    } catch (err) {
+      console.error('Error loading chat:', err);
+    }
+  };
+  
   useEffect(() => {
     if (!setScrollEnabled || !isActive || caseState === 'completed') return;
 
@@ -191,11 +211,6 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId, setScrollEn
 
     // show analyzing overlay and block scrolling
     setCaseState('analyzing');
-
-    if (userMessageCount >= 3) {
-      setIsLocked(true);
-      return;
-    }
 
     const userMsg: Message = { id: Date.now().toString(), role: 'user', text: input.trim() };
     setMessages((prev) => [...prev, userMsg]);

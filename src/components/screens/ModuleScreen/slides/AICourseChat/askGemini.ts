@@ -51,7 +51,6 @@ export async function askGemini(
           try {
             const repaired = jsonrepair(typeof raw === 'string' ? raw : JSON.stringify(raw));
             companyStandards = JSON.parse(repaired);
-            console.log('askGemini: repaired companyStandards JSON');
           } catch {
             console.warn('askGemini: failed to parse or repair companyStandards');
             companyStandards = raw;
@@ -62,7 +61,6 @@ export async function askGemini(
       console.warn('Warning: failed to fetch company by id', err);
     }
   }
-
   const body = {
     contents: [
       {
@@ -118,7 +116,6 @@ export async function askGemini(
       try {
         const repairedJson = jsonrepair(rawText);
         parsed = JSON.parse(repairedJson);
-        console.log('✅ JSON successfully repaired');
       } catch (repairErr) {
         console.error('❌ JSON repair failed:', repairErr, rawText);
         parsed = { content: rawText, rating: null, criterias: criteriasText };

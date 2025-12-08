@@ -6,7 +6,6 @@ export const useCourseProgress = (courseId: string) => {
   const { courses } = useUserProgressStore();
   const course = courses.find(c => c.course_id === courseId);
   const analyticsStore = useAnalyticsStore.getState();
-
   const prevProgressRef = useRef(course?.progress ?? 0);
 
   useEffect(() => {
