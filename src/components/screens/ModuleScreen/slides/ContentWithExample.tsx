@@ -1,7 +1,8 @@
-import { Icon } from '@/src/components/ui/icon';
-import { AlertCircle, CheckCircle } from 'lucide-react-native';
+import { TEXT_VARIANTS } from '@/src/constants/Fonts';
 import React from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import QuoteIcon from '@/src/assets/images/quote.svg';
+import { Colors } from '@/src/constants/Colors';
 
 export interface ContentWithExampleProps {
   title: string;
@@ -23,28 +24,38 @@ const ContentWithExample: React.FC<ContentWithExampleProps> = ({
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.card}>
-          <Icon as={AlertCircle} size={44} color="#111" style={styles.icon} />
           <Text style={styles.title}>{title}</Text>
 
-          <View style={[styles.section, { backgroundColor: 'rgba(0,0,0,0.05)' }]}>
+          <View style={styles.top}>
             <Text style={styles.mainPoint}>{mainPoint}</Text>
           </View>
 
-          <View style={styles.section}>
+          <View style={styles.tipsContainer}>
             {tips.map((tip, index) => (
               <View key={index} style={styles.tipRow}>
-                <Icon as={CheckCircle} size={20} color="#111" style={styles.tipIcon} />
+                <Text style={styles.bullet}>•</Text>
                 <Text style={styles.tipText}>{tip}</Text>
               </View>
             ))}
           </View>
 
-          <View style={[styles.section, { backgroundColor: 'rgba(0,0,0,0.03)' }]}>
-            <View style={styles.exampleHeader}>
-              <Icon as={AlertCircle} size={20} color="#111" style={styles.exampleIcon} />
-              <Text style={styles.exampleTitle}>Приклад</Text>
+          <View style={[styles.section, styles.exampleSection]}>
+            <View style={styles.exampleBadge}>
+              <Text style={styles.exampleBadgeText}>Example</Text>
             </View>
-            <Text style={styles.exampleText}>{example}</Text>
+
+            <View style={styles.exampleContent}>
+              {example
+                .split('\n\n')
+                .map((para) => para.trim())
+                .filter(Boolean)
+                .map((para, idx) => (
+                  <View key={idx} style={styles.exampleRow}>
+                    <QuoteIcon width={24} height={24} style={styles.quoteIcon} />
+                    <Text style={styles.exampleText}>{para}</Text>
+                  </View>
+                ))}
+            </View>
           </View>
         </View>
       </ScrollView>
@@ -57,66 +68,107 @@ export default ContentWithExample;
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: '#ffffff',
+    backgroundColor: Colors.bg,
   },
   scrollContainer: {
     flexGrow: 1,
     justifyContent: 'center',
-    alignItems: 'center',
+    alignItems: 'stretch',
   },
   card: {
-    paddingInline: 16,
-    backgroundColor: '#ffffff',
+    paddingHorizontal: 16,
+    width: '100%',
   },
   icon: { marginBottom: 0 },
   title: {
-    fontSize: 22,
-    fontWeight: '700',
-    textAlign: 'center',
-    marginBottom: 8,
-    color: '#111',
+    ...TEXT_VARIANTS.body1,
+    lineHeight: 22,
+    marginBottom: 12,
   },
   section: {
     borderRadius: 12,
     padding: 12,
-  },
-  mainPoint: {
-    fontSize: 16,
-    color: '#111',
-    lineHeight: 20,
+    marginTop: 12,
   },
   tipRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
     marginBottom: 8,
   },
-  tipIcon: {
-    marginTop: 2,
+
+  exampleSection: {
+    backgroundColor: Colors.white,
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+    position: 'relative',
+    borderRadius: 12,
+    marginTop: 54,
+  },
+  exampleBadge: {
+    position: 'absolute',
+    top: -34,
+    left: 0,
+    backgroundColor: Colors.blue,
+    paddingHorizontal: 16,
+    paddingVertical: 6,
+    borderTopLeftRadius: 12,
+    borderTopRightRadius: 12,
+    borderBottomLeftRadius: 0,
+    borderBottomRightRadius: 0,
+  },
+  exampleBadgeText: {
+    color: '#fff',
+    ...TEXT_VARIANTS.title3,
+  },
+  exampleContent: {
+    marginTop: 8,
+  },
+  exampleRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginBottom: 18,
+  },
+  quoteMark: {
+    fontSize: 26,
+    color: '#666',
+    marginRight: 10,
+    lineHeight: 28,
+  },
+  quoteIcon: {
+    marginRight: 12,
+  },
+  exampleText: {
+    flex: 1,
+    ...TEXT_VARIANTS.body1,
+    lineHeight: 22,
+
+    color: '#525252',
+  },
+
+  top: {
+    marginTop: 4,
+    marginBottom: 6,
+  },
+  mainPoint: {
+    ...TEXT_VARIANTS.body1,
+    marginBottom: 8,
+    color: '#111',
+    lineHeight: 22,
+  },
+  tipsContainer: {
+    marginTop: 12,
+    marginBottom: 6,
+  },
+  bullet: {
+    fontSize: 20,
+    lineHeight: 28,
+    marginRight: 12,
+    color: '#111',
+    marginTop: 4,
   },
   tipText: {
     flex: 1,
-    flexShrink: 1,
-    marginLeft: 8,
-    fontSize: 16,
-    color: '#111',
-    lineHeight: 20,
-  },
-  exampleHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 4,
-  },
-  exampleIcon: {},
-  exampleTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginLeft: 6,
-    color: '#111',
-  },
-  exampleText: {
-    fontSize: 16,
-    fontStyle: 'italic',
-    color: '#111',
+    ...TEXT_VARIANTS.body1,
     lineHeight: 22,
   },
 });

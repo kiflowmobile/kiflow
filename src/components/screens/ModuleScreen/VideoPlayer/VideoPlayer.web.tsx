@@ -1,6 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useInView } from './useInView';
-import { PanGestureHandler, TapGestureHandler } from 'react-native-gesture-handler';
 
 interface VideoPlayerProps {
   uri?: string;
@@ -15,9 +14,8 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ uri, mux, thumbnail }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isMuted, setIsMuted] = useState(true);
-
-  const panRef = useRef(null);
-  const tapRef = useRef(null);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -80,6 +78,27 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ uri, mux, thumbnail }) => {
     }
   }, [inView]);
 
+  useEffect(() => {
+    const videoEl = videoRef.current;
+    if (!videoEl) return;
+
+    const handleTimeUpdate = () => {
+      setCurrentTime(videoEl.currentTime);
+    };
+
+    const handleLoadedMetadata = () => {
+      setDuration(videoEl.duration);
+    };
+
+    videoEl.addEventListener('timeupdate', handleTimeUpdate);
+    videoEl.addEventListener('loadedmetadata', handleLoadedMetadata);
+
+    return () => {
+      videoEl.removeEventListener('timeupdate', handleTimeUpdate);
+      videoEl.removeEventListener('loadedmetadata', handleLoadedMetadata);
+    };
+  }, [mux, uri]);
+
   const handlePlayPause = () => {
     const videoEl = videoRef.current;
     if (!videoEl) return;
@@ -109,6 +128,23 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ uri, mux, thumbnail }) => {
     const newMuted = !isMuted;
     videoEl.muted = newMuted;
     setIsMuted(newMuted);
+  };
+
+  const formatTime = (seconds: number): string => {
+    if (!isFinite(seconds) || isNaN(seconds)) return '00:00';
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  const handleProgressClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    const videoEl = videoRef.current;
+    if (!videoEl || !duration) return;
+
+    const rect = e.currentTarget.getBoundingClientRect();
+    const clickX = e.clientX - rect.left;
+    const percentage = clickX / rect.width;
+    videoEl.currentTime = percentage * duration;
   };
 
   const MuteIcon = () => (
@@ -215,57 +251,102 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ uri, mux, thumbnail }) => {
           </div>
         )}
 
-        <PanGestureHandler ref={panRef}>
-          <TapGestureHandler waitFor={panRef} ref={tapRef}>
-            <div
-              style={{
-                position: 'absolute',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                width: 120,
-                height: 120,
-                top: '50%',
-                left: '50%',
-                transform: 'translate(-50%, -50%)',
-                zIndex: 2,
-              }}
+        {/* Large pause icon when paused */}
+        {!isPlaying && (
+          <div
+            onClick={handlePlayPause}
+            style={{
+              position: 'absolute',
+              top: '50%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)',
+              zIndex: 10,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <svg
+              width="80"
+              height="80"
+              viewBox="0 0 24 24"
+              fill="white"
+              xmlns="http://www.w3.org/2000/svg"
             >
-              <button
-                onClick={handlePlayPause}
-                aria-label={isPlaying ? 'Pause' : 'Play'}
-                style={{
-                  width: 120,
-                  height: 120,
-                  borderRadius: '50%',
-                  background: 'rgba(0,0,0,0.45)',
-                  border: 'none',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  opacity: isPlaying ? 0 : 1,
-                  transition: 'opacity 0.3s ease',
-                }}
-              >
-                <span
-                  style={{
-                    fontSize: 64,
-                    color: 'white',
-                    lineHeight: 1,
-                  }}
-                >
-                  {isPlaying ? '❚❚' : '▶'}
-                </span>
-              </button>
-            </div>
-          </TapGestureHandler>
-        </PanGestureHandler>
+              <rect x="6" y="4" width="4" height="16" rx="1" />
+              <rect x="14" y="4" width="4" height="16" rx="1" />
+            </svg>
+          </div>
+        )}
 
+        {/* Clickable overlay for play/pause */}
+        <div
+          onClick={handlePlayPause}
+          style={{
+            position: 'absolute',
+            inset: 0,
+            zIndex: 1,
+            cursor: 'pointer',
+          }}
+        />
+
+        {/* Progress bar with time stamps */}
         <div
           style={{
             position: 'absolute',
-            bottom: '20%',
+            bottom: 20,
+            left: 0,
+            right: 0,
+            padding: '20px',
+            zIndex: 10,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '8px',
+          }}
+        >
+          {/* Progress bar */}
+          <div
+            onClick={handleProgressClick}
+            style={{
+              width: '100%',
+              height: '4px',
+              backgroundColor: 'rgba(255, 255, 255, 0.3)',
+              cursor: 'pointer',
+              position: 'relative',
+            }}
+          >
+            <div
+              style={{
+                width: `${duration > 0 ? (currentTime / duration) * 100 : 0}%`,
+                height: '100%',
+                backgroundColor: 'white',
+                transition: 'width 0.1s linear',
+              }}
+            />
+          </div>
+
+          {/* Time stamps */}
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              color: 'white',
+              fontSize: '14px',
+              fontFamily: 'system-ui, -apple-system, sans-serif',
+            }}
+          >
+            <span>{formatTime(currentTime)}</span>
+            <span>{formatTime(duration)}</span>
+          </div>
+        </div>
+
+        {/* Mute button */}
+        <div
+          style={{
+            position: 'absolute',
+            bottom: '80px',
             right: '30px',
             display: 'flex',
             gap: '12px',
@@ -273,7 +354,10 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ uri, mux, thumbnail }) => {
           }}
         >
           <button
-            onClick={toggleMute}
+            onClick={(e) => {
+              e.stopPropagation();
+              toggleMute();
+            }}
             style={{
               background: 'rgba(0,0,0,0.5)',
               border: 'none',

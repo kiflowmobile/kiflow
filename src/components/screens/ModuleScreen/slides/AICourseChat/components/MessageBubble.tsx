@@ -1,7 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { Icon } from '@/src/components/ui/icon';
-import { MessageCircle } from 'lucide-react-native';
+import { Colors } from '@/src/constants/Colors';
 
 interface MessageBubbleProps {
   id: string;
@@ -14,9 +13,6 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ role, text, id }) => (
     key={id}
     style={[styles.messageBubble, role === 'ai' ? styles.aiBubble : styles.userBubble]}
   >
-    {role === 'ai' && (
-      <Icon as={MessageCircle} size={20} color="#0f172a" style={styles.messageIcon} />
-    )}
     <Text style={styles.messageText}>{text}</Text>
   </View>
 );
@@ -29,7 +25,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   aiBubble: {
-    backgroundColor: 'rgba(0, 0, 0, 0.05)',
+    backgroundColor: Colors.white,
     alignSelf: 'flex-start',
     flexDirection: 'row',
     alignItems: 'center',
