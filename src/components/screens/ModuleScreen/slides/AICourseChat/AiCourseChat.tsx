@@ -57,8 +57,8 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId, setScrollEn
   const [lastUserAnswer, setLastUserAnswer] = useState('');
   useEffect(() => {
     if (!setScrollEnabled || !isActive) return;
-    // Allow scrolling only when caseState is 'completed'
-    setScrollEnabled(caseState === 'completed');
+    // Allow scrolling when there's a result (answer from AI) or when completed
+    setScrollEnabled(caseState === 'result' || caseState === 'completed');
     return () => {
       setScrollEnabled(true);
     };
@@ -85,7 +85,8 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId, setScrollEn
   };
   
   useEffect(() => {
-    if (!setScrollEnabled || !isActive || caseState === 'completed') return;
+    // Don't block scrolling if there's a result or completed
+    if (!setScrollEnabled || !isActive || caseState === 'result' || caseState === 'completed') return;
 
     const intervalId = setInterval(() => {
       setScrollEnabled(false);
@@ -157,15 +158,24 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId, setScrollEn
             setMessages(savedMessages);
             
             // Если есть сохраненные сообщения и их больше одного (не только промпт),
-            // значит кейс уже был завершен - разблокируем скролл
+            // проверяем состояние кейса
             if (savedMessages.length > 1) {
-              setCaseState('completed');
-              // Если кейс завершен, сбрасываем попытки
-              try {
-                await AsyncStorage.removeItem(ATTEMPTS_STORAGE_KEY);
-                setAttemptsLeft(3);
-              } catch (err) {
-                console.warn('Failed to reset attempts for completed case:', err);
+              // Проверяем, есть ли ответ AI (последнее сообщение должно быть от AI)
+              // Структура: [кейс AI, ответ пользователя, ответ AI с оценкой]
+              const hasAIResponse = savedMessages.length >= 3 && savedMessages[savedMessages.length - 1].role === 'ai';
+              if (hasAIResponse) {
+                // Если есть ответ AI, показываем результат (пользователь еще не нажал Complete)
+                setCaseState('result');
+              } else {
+                // Иначе кейс завершен
+                setCaseState('completed');
+                // Если кейс завершен, сбрасываем попытки
+                try {
+                  await AsyncStorage.removeItem(ATTEMPTS_STORAGE_KEY);
+                  setAttemptsLeft(3);
+                } catch (err) {
+                  console.warn('Failed to reset attempts for completed case:', err);
+                }
               }
             }
             return;
@@ -425,6 +435,7 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId, setScrollEn
             loading={loading}
             attemptsLeft={attemptsLeft}
             showAttemptsMessage={caseState === 'idle' && attemptsLeft < 3 && attemptsLeft > 0 && lastUserAnswer.length > 0}
+            caseState={caseState}
           />
           {caseState === 'idle' && (
             <ChatInput

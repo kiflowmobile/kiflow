@@ -7,7 +7,7 @@ import AICourseChat from './slides/AICourseChat/AiCourseChat';
 import ContentWithExample from './slides/ContentWithExample';
 import DashboardSlide from './slides/DashboardSlide';
 import MediaPlaceholder from './slides/MediaPlaceholder';
-import { useSlidesStore, useModulesStore } from '@/src/stores';
+import { useSlidesStore, useModulesStore, useLessonsStore } from '@/src/stores';
 import VideoPlayer from './VideoPlayer';
 import { useLocalSearchParams } from 'expo-router';
 
@@ -30,6 +30,7 @@ const ModuleSlide: React.FC<CourseSlideProps> = ({
 }) => {
   const { slides, isLoading, error } = useSlidesStore();
   const { modules } = useModulesStore();
+  const { lessons } = useLessonsStore();
 
   const slideData = useMemo(() => slides.find((s) => s.id === slideId), [slides, slideId]);
   const { moduleId, courseId } = useLocalSearchParams();
@@ -60,12 +61,26 @@ const ModuleSlide: React.FC<CourseSlideProps> = ({
             const idx = modules.findIndex((m) => m.id === moduleIdFromSlide);
             return idx >= 0 ? idx + 1 : moduleIdStr ? Number(moduleIdStr) || 1 : 1;
           })();
-      const lessonNumber = slideData.slide_order ?? 1;
+      
+      // Find lesson by lesson_id from slide data (if available) or fallback to slide_order
+      const lessonIdFromSlide = (slideData as any).lesson_id;
+      const lessonObj = lessonIdFromSlide 
+        ? lessons.find((l) => l.id === lessonIdFromSlide) || null
+        : null;
+      
+      const lessonNumber = lessonObj 
+        ? lessonObj.lesson_order 
+        : slideData.slide_order ?? 1;
+      
+      // Get total lessons count for the module
+      const moduleLessons = lessons.filter((l) => l.module_id === moduleIdFromSlide);
+      const totalLessons = moduleLessons.length;
+      
       return (
         <TextSlide
           title={slideData.slide_title}
           data={slideData.slide_data ?? ''}
-          subtitle={`Module ${moduleOrdinal} / Lesson ${lessonNumber}`}
+          subtitle={`Module ${moduleOrdinal} / Lesson ${lessonNumber}${totalLessons > 0 ? ` of ${totalLessons}` : ''}`}
         />
       );
     case 'video': {

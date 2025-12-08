@@ -14,9 +14,30 @@ interface ChatMessagesProps {
   loading: boolean;
   attemptsLeft?: number;
   showAttemptsMessage?: boolean;
+  caseState?: 'idle' | 'analyzing' | 'result' | 'completed';
 }
 
-const ChatMessages: React.FC<ChatMessagesProps> = ({ messages, loading, attemptsLeft, showAttemptsMessage }) => {
+const ChatMessages: React.FC<ChatMessagesProps> = ({ messages, loading, attemptsLeft, showAttemptsMessage, caseState }) => {
+  // Если показываем результат, показываем ТОЛЬКО последний ответ AI (без кейса и ответа пользователя)
+  if (caseState === 'result' || caseState === 'completed') {
+    // Находим последнее AI сообщение (это ответ с оценкой)
+    // Игнорируем первое AI сообщение (кейс) и все сообщения пользователя
+    const aiMessages = messages.filter(msg => msg.role === 'ai');
+    // Берем последнее AI сообщение (это ответ с оценкой, не кейс)
+    // Если есть несколько AI сообщений, берем последнее (ответ с оценкой)
+    const lastAIMessage = aiMessages.length > 0 ? aiMessages[aiMessages.length - 1] : null;
+    
+    // Показываем ТОЛЬКО последний ответ AI, ничего больше
+    return (
+      <View style={styles.chatContent}>
+        {lastAIMessage && (
+          <MessageBubble key={lastAIMessage.id} {...lastAIMessage} />
+        )}
+      </View>
+    );
+  }
+
+  // Для других состояний показываем кейс и все сообщения как обычно
   // Первое AI сообщение (сценарий/вопрос) отображаем как обычный текст
   const firstAIMessage = messages.find(msg => msg.role === 'ai');
   const otherMessages = messages.filter((msg, index) => {

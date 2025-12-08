@@ -4,6 +4,7 @@ import { getCompanyById } from '@/src/services/company';
 import { jsonrepair } from 'jsonrepair';
 
 const GEMINI_API_KEY = process.env.EXPO_PUBLIC_GEMINI_API_KEY;
+console.log('GEMINI_API_KEY', GEMINI_API_KEY);
 
 export interface GeminiResponse {
   content: string;
