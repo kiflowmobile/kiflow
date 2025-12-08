@@ -1,4 +1,29 @@
 ----------------------------------------------------------
+-- 0. Видаляємо старі дані, якщо такі існують
+----------------------------------------------------------
+
+-- Видаляємо звʼязки курсів з компанією
+DELETE FROM public.company_courses
+WHERE company_id IN (
+  SELECT id FROM public.companies WHERE code = 'INTERNO'
+);
+
+-- Видаляємо модулі курсу
+DELETE FROM public.modules
+WHERE course_id IN (
+  SELECT id FROM public.courses WHERE code = 'interno_course'
+);
+
+-- Видаляємо сам курс
+DELETE FROM public.courses
+WHERE code = 'interno_course';
+
+-- Видаляємо компанію
+DELETE FROM public.companies
+WHERE code = 'INTERNO';
+
+
+----------------------------------------------------------
 -- 1. Створюємо компанію
 ----------------------------------------------------------
 WITH new_company AS (
