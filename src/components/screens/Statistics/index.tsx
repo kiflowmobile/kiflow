@@ -8,6 +8,8 @@ import { useQuizStore } from '@/src/stores/quizStore';
 import { useRouter } from 'expo-router';
 import { shadow } from '../../ui/styles/shadow';
 import { useAnalyticsStore } from '@/src/stores/analyticsStore';
+import ModuleCard from './ModuleCard';
+import { fetchLessonCountsByModuleIds } from '@/src/services/lessons';
 import { Colors } from '@/src/constants/Colors';
 import ProgressBar from '@/src/components/ui/progress-bar';
 import { TEXT_VARIANTS } from '@/src/constants/Fonts';
@@ -15,15 +17,14 @@ import { formatBubbleScore } from '@/src/utils/scoreUtils';
 
 export default function StatisticsScreen() {
   const { courses, fetchCourses, isLoading: coursesLoading } = useCourseStore();
-  const { criterias, fetchAllCriterias } = useCriteriaStore();
-  const { fetchUserRatings, ratings } = useMainRatingStore();
+  const { fetchAllCriterias } = useCriteriaStore();
+  const { fetchUserRatings } = useMainRatingStore();
   const { modules, fetchMyModulesByCourses } = useModulesStore();
   const { user } = useAuthStore();
   const router = useRouter();
   const analyticsStore = useAnalyticsStore.getState();
 
   const { getCourseProgress, getModuleProgress } = useUserProgressStore();
-  // Skill shape (matches CourseModulesScreen)
   interface Skill {
     criterion_id: string;
     criterion_name: string;
@@ -34,6 +35,10 @@ export default function StatisticsScreen() {
   const [quizScores, setQuizScores] = useState<Record<string, number | undefined>>({});
   // skills aggregated per courseId (collected from modules)
   const [skillsByCourse, setSkillsByCourse] = useState<Record<string, Skill[]>>({});
+  // real lessons counts per course (from lessons service + user progress)
+  const [lessonsCountsByCourse, setLessonsCountsByCourse] = useState<
+    Record<string, { totalLessons: number; completedLessons: number }>
+  >({});
   // loading flags
   const [loading, setLoading] = useState({ skills: true, quiz: true });
 
@@ -83,8 +88,7 @@ export default function StatisticsScreen() {
             await fetchSkills(user.id, mod.id);
             const skills = useMainRatingStore.getState().skills as unknown as Skill[];
             if (skills && skills.length) acc.push(...skills);
-          } catch {
-          }
+          } catch {}
         }
         map[course.id] = acc;
       }
@@ -104,6 +108,54 @@ export default function StatisticsScreen() {
       fetchUserRatings(user.id);
     }
   }, [user?.id, fetchCourses, fetchAllCriterias, fetchUserRatings]);
+
+  // Aggregate real lesson counts per course using lessons service + user progress
+  useEffect(() => {
+    if (!modules.length || !courses.length) return;
+
+    let canceled = false;
+
+    const load = async () => {
+      try {
+        const allModuleIds = modules.map((m) => m.id);
+        const { data: counts, error } = await fetchLessonCountsByModuleIds(allModuleIds);
+        if (error) return;
+
+        const map: Record<string, { totalLessons: number; completedLessons: number }> = {};
+
+        for (const course of courses) {
+          const courseModuleIds = modules.filter((m) => m.course_id === course.id).map((m) => m.id);
+
+          const totalLessons = courseModuleIds.reduce((acc, mid) => acc + (counts[mid] ?? 0), 0);
+
+          // completed lessons based on user progress entries (percent)
+          const courseProgressEntry = useUserProgressStore
+            .getState()
+            .courses.find((c) => c.course_id === course.id);
+
+          const completedLessons = (courseProgressEntry?.modules || []).reduce(
+            (acc: number, m: any) => {
+              const lessonsCount = counts[m.module_id] ?? 0;
+              const completed = lessonsCount ? Math.round((m.progress / 100) * lessonsCount) : 0;
+              return acc + completed;
+            },
+            0,
+          );
+
+          map[course.id] = { totalLessons, completedLessons };
+        }
+
+        if (!canceled) setLessonsCountsByCourse(map);
+      } catch {
+        // ignore
+      }
+    };
+
+    load();
+    return () => {
+      canceled = true;
+    };
+  }, [modules, courses]);
 
   useEffect(() => {
     if (courses.length) {
@@ -201,41 +253,58 @@ export default function StatisticsScreen() {
                     <View style={styles.progressRowMain}>
                       <ProgressBar percent={getCourseProgress(course.id)} height={8} />
                     </View>
-
-                    <View style={styles.skillsSection}>
-                      <Text style={styles.skillsHeader}>Skills level</Text>
-
-                      {criterias
-                        .filter((c) => c.course_id === course.id)
-                        .slice(0, 4)
-                        .map((item) => {
-                          const skill = ratings.find((s) => s.criteria_key === item.key);
-                          const score = Math.round(skill?.rating ?? 0);
-                          return (
-                            <View key={item.id} style={styles.skillRow}>
-                              <Text style={styles.skillName} numberOfLines={2}>
-                                {item.name}
-                              </Text>
-                              <View style={styles.skillRight}>
-                                <View style={styles.segments}>
-                                  {Array.from({ length: 5 }).map((_, idx) => (
-                                    <View
-                                      key={idx}
-                                      style={[
-                                        styles.segment,
-                                        idx < score ? styles.segmentFilled : styles.segmentEmpty,
-                                      ]}
-                                    />
-                                  ))}
-                                </View>
-                                <Text style={styles.skillScore}>{`${skill?.rating ?? 0}/5`}</Text>
-                              </View>
-                            </View>
-                          );
-                        })}
-                    </View>
                   </View>
                 </View>
+
+                {/* Course-level summary using ModuleCard component */}
+                {(() => {
+                  const courseProgressEntry = useUserProgressStore
+                    .getState()
+                    .courses.find((c) => c.course_id === (course.id as string));
+
+                  const lessonCounts = lessonsCountsByCourse[course.id];
+
+                  const totalLessons =
+                    lessonCounts?.totalLessons ??
+                    (courseProgressEntry?.modules
+                      ? courseProgressEntry.modules.reduce(
+                          (acc: number, m: any) =>
+                            acc + (Number.isFinite(m.total_slides) ? m.total_slides : 0),
+                          0,
+                        )
+                      : 0);
+
+                  const completedLessons =
+                    lessonCounts?.completedLessons ??
+                    (courseProgressEntry?.modules
+                      ? courseProgressEntry.modules.reduce((acc: number, m: any) => {
+                          const ts = Number.isFinite(m.total_slides) ? m.total_slides : 0;
+                          const completed = ts ? Math.round((m.progress / 100) * ts) : 0;
+                          return acc + completed;
+                        }, 0)
+                      : 0);
+
+                  const syntheticModule = {
+                    id: course.id,
+                    title: course.title,
+                    description: (course as any).description ?? '',
+                    course_id: course.id,
+                    created_at: (course as any).created_at ?? new Date().toISOString(),
+                    module_order: 0,
+                  };
+
+                  return (
+                    <ModuleCard
+                      key={`${course.id}-summary`}
+                      module={syntheticModule}
+                      skills={skillsByCourse[course.id] ?? []}
+                      loadingSkills={loading.skills}
+                      percent={getCourseProgress(course.id)}
+                      completedSlides={completedLessons}
+                      totalSlides={totalLessons}
+                    />
+                  );
+                })()}
               </Pressable>
             );
           })}
