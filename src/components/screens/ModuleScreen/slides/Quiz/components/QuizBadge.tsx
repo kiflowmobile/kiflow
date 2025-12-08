@@ -2,16 +2,16 @@ import React from 'react';
 import { View as RNView, Text, StyleSheet } from 'react-native';
 import { Colors } from '@/src/constants/Colors';
 import { TEXT_VARIANTS } from '@/src/constants/Fonts';
+import TestSvg from '@/src/assets/images/test-icon.svg';
 
-interface Props {
-  title: string;
-}
 
-const QuizBadge: React.FC<Props> = ({ title }) => {
+
+const QuizBadge: React.FC = () => {
   return (
     <RNView style={styles.badgeWrapper}>
       <RNView style={styles.badge}>
-        <Text style={styles.badgeText}>{title}</Text>
+        <TestSvg width={16} height={16} />
+        <Text style={styles.badgeText}>Test</Text>
       </RNView>
     </RNView>
   );

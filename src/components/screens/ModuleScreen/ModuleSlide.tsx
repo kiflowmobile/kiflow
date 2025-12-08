@@ -18,6 +18,8 @@ interface CourseSlideProps {
   currentIndex: number;
   totalSlides: number;
   setScrollEnabled?: (enabled: boolean) => void;
+  isMuted?: boolean;
+  toggleMute?: () => void;
 }
 
 const ModuleSlide: React.FC<CourseSlideProps> = ({
@@ -27,6 +29,8 @@ const ModuleSlide: React.FC<CourseSlideProps> = ({
   currentIndex,
   totalSlides,
   setScrollEnabled,
+  isMuted,
+  toggleMute,
 }) => {
   const { slides, isLoading, error } = useSlidesStore();
   const { modules } = useModulesStore();
@@ -52,7 +56,6 @@ const ModuleSlide: React.FC<CourseSlideProps> = ({
 
   switch (slideData.slide_type) {
     case 'text':
-      // determine module ordinal (prefer module.module_order, fallback to index + 1)
       const moduleIdFromSlide = slideData.module_id;
       const moduleObj = modules.find((m) => m.id === moduleIdFromSlide) || null;
       const moduleOrdinal = moduleObj
@@ -62,7 +65,6 @@ const ModuleSlide: React.FC<CourseSlideProps> = ({
             return idx >= 0 ? idx + 1 : moduleIdStr ? Number(moduleIdStr) || 1 : 1;
           })();
       
-      // Find lesson by lesson_id from slide data (if available) or fallback to slide_order
       const lessonIdFromSlide = (slideData as any).lesson_id;
       const lessonObj = lessonIdFromSlide 
         ? lessons.find((l) => l.id === lessonIdFromSlide) || null
@@ -72,7 +74,6 @@ const ModuleSlide: React.FC<CourseSlideProps> = ({
         ? lessonObj.lesson_order 
         : slideData.slide_order ?? 1;
       
-      // Get total lessons count for the module
       const moduleLessons = lessons.filter((l) => l.module_id === moduleIdFromSlide);
       const totalLessons = moduleLessons.length;
       
@@ -90,7 +91,13 @@ const ModuleSlide: React.FC<CourseSlideProps> = ({
         <>
           {isActive &&
             (hasVideo ? (
-              <VideoPlayer uri={uri ?? undefined} mux={mux ?? undefined} isActive={isActive} />
+              <VideoPlayer 
+                uri={uri ?? undefined} 
+                mux={mux ?? undefined} 
+                isActive={isActive}
+                isMuted={isMuted}
+                toggleMute={toggleMute}
+              />
             ) : (
               <MediaPlaceholder />
             ))}

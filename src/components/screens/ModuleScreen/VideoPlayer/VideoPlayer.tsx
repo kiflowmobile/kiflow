@@ -8,9 +8,11 @@ interface VideoPlayerProps {
   mux?: string; // Added for consistency with web version
   isActive: boolean;
   thumbnail?: string; // Added for consistency with web version
+  isMuted?: boolean; // Added for consistency with web version
+  toggleMute?: () => void; // Added for consistency with web version
 }
 
-const VideoPlayer: React.FC<VideoPlayerProps> = ({ uri, isActive }) => {
+const VideoPlayer: React.FC<VideoPlayerProps> = ({ uri, isActive, isMuted, toggleMute }) => {
   // Only call useVideoPlayer with a valid URI since it doesn't accept undefined
   const player = useVideoPlayer(uri || '');
   const { status } = useEvent(player, 'statusChange', { status: player.status });

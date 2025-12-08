@@ -124,7 +124,7 @@ const QuizSlide: React.FC<QuizProps> = ({
     <View style={styles.screen}>
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         <RNView style={styles.content}>
-          <QuizBadge title={title} />
+          <QuizBadge />
           <QuizQuestion question={quiz.question} subtitle={subtitle} />
           <QuizOptions
             options={quiz.options}
@@ -157,7 +157,8 @@ const styles = StyleSheet.create({
   },
   scrollContainer: {
     flexGrow: 1,
-    paddingVertical: 24,
+    marginTop: 64,
+    paddingBottom: 32,
     justifyContent: 'space-between',
   },
   content: {
