@@ -83,15 +83,18 @@ function LessonProgressBars({
   const currentSlideType =
     (slides && slides[currentSlideIndex] && (slides[currentSlideIndex] as any).slide_type) || null;
 
+  // Treat 'content' slides as intro screens for styling (transparent background, white close icon)
+  const isTransparentScreen = currentSlideType === 'video' || currentSlideType === 'text';
+
   return (
-    <View style={[styles.root]}>
+    <View style={[styles.root, isTransparentScreen && styles.rootTransparent]}>
       <View style={styles.leftRow}>
-          <CloseSvg
-            width={24}
-            height={24}
-            onPress={handleClose}
-            color={currentSlideType === 'video' ? '#FFFFFF' : Colors.black}
-          />
+        <CloseSvg
+          width={24}
+          height={24}
+          onPress={handleClose}
+          color={isTransparentScreen ? '#FFFFFF' : Colors.black}
+        />
       </View>
 
       {currentSlideType !== 'text' && (
@@ -99,7 +102,7 @@ function LessonProgressBars({
           <View style={styles.scrollRow}>
             <View style={[styles.lessonGroup, styles.lessonCurrentGroup]}>
               {currentLessonData.slideStates
-                .filter((_: any, idx: number) => idx > 0) 
+                .filter((_: any, idx: number) => idx > 0)
                 .map((s: any, idx: number, filteredArray: any[]) => {
                   const last = idx === filteredArray.length - 1;
                   const isVideo = currentSlideType === 'video';
@@ -134,13 +137,13 @@ function LessonProgressBars({
               <VolumeOffSvg
                 width={24}
                 height={24}
-                color={currentSlideType === 'video' ? '#FFFFFF' : Colors.black}
+                color={isTransparentScreen ? '#FFFFFF' : Colors.black}
               />
             ) : (
               <VolumeOnSvg
                 width={24}
                 height={24}
-                color={currentSlideType === 'video' ? '#FFFFFF' : Colors.black}
+                color={isTransparentScreen ? '#FFFFFF' : Colors.black}
               />
             )}
           </Pressable>
@@ -163,6 +166,9 @@ const styles = StyleSheet.create({
     height: 56,
     zIndex: 1000,
     backgroundColor: Colors.bg,
+  },
+  rootTransparent: {
+    backgroundColor: 'transparent',
   },
   leftRow: { width: 48, alignItems: 'center', justifyContent: 'center' },
   centerRow: { flex: 1, justifyContent: 'center', alignItems: 'center' },

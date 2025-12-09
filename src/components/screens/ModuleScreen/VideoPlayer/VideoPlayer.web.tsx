@@ -268,7 +268,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
         <div
           style={{
             position: 'absolute',
-            bottom: 20,
+            bottom: 40,
             left: 0,
             right: 0,
             padding: '20px',

@@ -73,18 +73,18 @@ const ChatInput: React.FC<ChatInputProps> = ({
       slideId,
       case: 'focus',
     });
-    
+
     // Убираем outline при фокусе на web
     if (Platform.OS === 'web') {
       setTimeout(() => {
         if (inputRef.current) {
           const inputElement = inputRef.current as any;
           // Пробуем разные способы доступа к DOM элементу
-          const domNode = 
+          const domNode =
             inputElement._internalFiberInstanceHandleDEV?.stateNode ||
             inputElement._nativeNode ||
             (typeof document !== 'undefined' && document.activeElement);
-          
+
           if (domNode && domNode.style) {
             domNode.style.outline = 'none';
             domNode.style.outlineStyle = 'none';
@@ -330,7 +330,6 @@ const ChatInput: React.FC<ChatInputProps> = ({
     }
   }, []);
 
-
   return (
     <View style={styles.footer}>
       <View style={styles.inputContainer}>
@@ -412,14 +411,8 @@ const ChatInput: React.FC<ChatInputProps> = ({
                   </>
                 )}
 
-                {/* Processing state: grey circle with spinner inside */}
-                {isProcessing && (
-                  <View style={styles.processingWrap} pointerEvents="none">
-                    <View style={styles.processingOuter}>
-                      <ActivityIndicator color="#6b7280" size="small" />
-                    </View>
-                  </View>
-                )}
+                {/* Processing state: handled by showing spinner inside the mic button below */}
+                {/* keep rings while recording (handled above) */}
               </>
             )}
 
@@ -432,11 +425,11 @@ const ChatInput: React.FC<ChatInputProps> = ({
                 (loading || isLocked || isProcessing) && styles.micButtonDisabled,
               ]}
             >
-              <Icon
-                as={isRecording ? Square : isDone ? Check : Mic}
-                size={18}
-                color={isRecording || isProcessing || isDone ? '#ffffff' : '#ffffff'}
-              />
+              {isProcessing ? (
+                <ActivityIndicator color="#ffffff" size="small" />
+              ) : (
+                <Icon as={isRecording ? Square : isDone ? Check : Mic} size={18} color="#ffffff" />
+              )}
             </View>
           </TouchableOpacity>
         )}
@@ -481,7 +474,7 @@ const styles = StyleSheet.create({
       } as any,
     }),
   },
-  
+
   micWrap: {
     position: 'absolute',
     right: 12,
