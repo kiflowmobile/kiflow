@@ -12,16 +12,12 @@ interface LessonProgressBarsProps {
   slides: Slide[];
   lessons: Lessons[];
   currentSlideId?: string;
-  currentSlideIndex?: number; // глобальный индекс в slides
+  currentSlideIndex?: number;
   courseId?: string;
   isMuted?: boolean;
   toggleMute?: () => void;
 }
 
-/**
- * Показывает навигацию по текущему уроку: маленькие сегменты по слайдам.
- * Содержит кнопку закрытия и (опционально) кнопку звука справа для видео-слайдов.
- */
 function LessonProgressBars({
   slides,
   lessons,
@@ -67,7 +63,6 @@ function LessonProgressBars({
       (s) => s.id === (currentSlide?.id || currentSlideId),
     );
 
-    // Все слайды закрашиваются, включая первый (титульный)
     const slideStates = sortedLessonSlides.map((s, idx) => {
       if (currentIndexInLesson === -1) return { slide: s, status: 'empty' };
       if (idx < currentIndexInLesson) return { slide: s, status: 'done' };
@@ -104,7 +99,7 @@ function LessonProgressBars({
           <View style={styles.scrollRow}>
             <View style={[styles.lessonGroup, styles.lessonCurrentGroup]}>
               {currentLessonData.slideStates
-                .filter((_: any, idx: number) => idx > 0) // Исключаем титульный слайд (первый)
+                .filter((_: any, idx: number) => idx > 0) 
                 .map((s: any, idx: number, filteredArray: any[]) => {
                   const last = idx === filteredArray.length - 1;
                   const isVideo = currentSlideType === 'video';
@@ -167,6 +162,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     height: 56,
     zIndex: 1000,
+    backgroundColor: Colors.bg,
   },
   leftRow: { width: 48, alignItems: 'center', justifyContent: 'center' },
   centerRow: { flex: 1, justifyContent: 'center', alignItems: 'center' },
