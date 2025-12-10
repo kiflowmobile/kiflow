@@ -16,6 +16,7 @@ import ModuleCard from './ModuleCard';
 import { useAnalyticsStore } from '@/src/stores/analyticsStore';
 import { Colors } from '@/src/constants/Colors';
 import { Skill } from '@/src/constants/types/skill';
+import { fetchLessonCountsByModuleIds } from '@/src/services/lessons';
 
 const CourseModulesScreen: React.FC = () => {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -27,6 +28,7 @@ const CourseModulesScreen: React.FC = () => {
   const [modules, setModules] = useState<Module[]>([]);
   const [skillsMap, setSkillsMap] = useState<Record<string, Skill[]>>({});
   const [quizAverage, setQuizAverage] = useState<number | null>(null);
+  const [lessonCountsByModule, setLessonCountsByModule] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState({ modules: true, skills: true, quiz: true });
   const analyticsStore = useAnalyticsStore.getState();
 
@@ -64,6 +66,31 @@ const CourseModulesScreen: React.FC = () => {
     };
     loadSkills();
   }, [user?.id, modules, fetchSkills]);
+
+  // 📘 Завантажуємо реальні кількості уроків для модулів (для відображення lessons в ModuleCard)
+  useEffect(() => {
+    if (!modules.length) return;
+
+    let canceled = false;
+
+    const loadCounts = async () => {
+      try {
+        const moduleIds = modules.map((m) => m.id);
+        const { data: counts = {}, error } = await fetchLessonCountsByModuleIds(
+          moduleIds as string[],
+        );
+        if (error) return;
+        if (!canceled) setLessonCountsByModule(counts as Record<string, number>);
+      } catch {
+        // ignore
+      }
+    };
+
+    loadCounts();
+    return () => {
+      canceled = true;
+    };
+  }, [modules]);
 
   // 📙 Завантажуємо середній бал квіза по курсу
   useEffect(() => {
@@ -126,7 +153,8 @@ const CourseModulesScreen: React.FC = () => {
               (m: any) => m.module_id === module.id,
             );
             const percent = moduleEntry?.progress ?? 0;
-            const totalSlides = (moduleEntry as any)?.total_slides ?? 0;
+            const totalSlides =
+              lessonCountsByModule[module.id] ?? (moduleEntry as any)?.total_slides ?? 0;
             const completedSlides = totalSlides ? Math.round((percent / 100) * totalSlides) : 0;
 
             return (

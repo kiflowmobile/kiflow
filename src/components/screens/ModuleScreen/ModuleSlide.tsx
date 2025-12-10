@@ -7,7 +7,7 @@ import AICourseChat from './slides/AICourseChat/AiCourseChat';
 import ContentWithExample from './slides/ContentWithExample';
 import DashboardSlide from './slides/DashboardSlide';
 import MediaPlaceholder from './slides/MediaPlaceholder';
-import { useSlidesStore, useModulesStore } from '@/src/stores';
+import { useSlidesStore, useModulesStore, useLessonsStore } from '@/src/stores';
 import VideoPlayer from './VideoPlayer';
 import { useLocalSearchParams } from 'expo-router';
 
@@ -18,6 +18,8 @@ interface CourseSlideProps {
   currentIndex: number;
   totalSlides: number;
   setScrollEnabled?: (enabled: boolean) => void;
+  isMuted?: boolean;
+  toggleMute?: () => void;
   lessonsId: string
 }
 
@@ -28,10 +30,13 @@ const ModuleSlide: React.FC<CourseSlideProps> = ({
   currentIndex,
   totalSlides,
   setScrollEnabled,
+  isMuted,
+  toggleMute,
   lessonsId
 }) => {
   const { slides, isLoading, error } = useSlidesStore();
   const { modules } = useModulesStore();
+  const { lessons } = useLessonsStore();
 
   const slideData = useMemo(() => slides.find((s) => s.id === slideId), [slides, slideId]);
   const { moduleId, courseId } = useLocalSearchParams();
@@ -53,7 +58,6 @@ const ModuleSlide: React.FC<CourseSlideProps> = ({
 
   switch (slideData.slide_type) {
     case 'text':
-      // determine module ordinal (prefer module.module_order, fallback to index + 1)
       const moduleIdFromSlide = slideData.module_id;
       const moduleObj = modules.find((m) => m.id === moduleIdFromSlide) || null;
       const moduleOrdinal = moduleObj
@@ -62,12 +66,24 @@ const ModuleSlide: React.FC<CourseSlideProps> = ({
             const idx = modules.findIndex((m) => m.id === moduleIdFromSlide);
             return idx >= 0 ? idx + 1 : moduleIdStr ? Number(moduleIdStr) || 1 : 1;
           })();
-      const lessonNumber = slideData.slide_order ?? 1;
+      
+      const lessonIdFromSlide = (slideData as any).lesson_id;
+      const lessonObj = lessonIdFromSlide 
+        ? lessons.find((l) => l.id === lessonIdFromSlide) || null
+        : null;
+      
+      const lessonNumber = lessonObj 
+        ? lessonObj.lesson_order 
+        : slideData.slide_order ?? 1;
+      
+      const moduleLessons = lessons.filter((l) => l.module_id === moduleIdFromSlide);
+      const totalLessons = moduleLessons.length;
+      
       return (
         <TextSlide
           title={slideData.slide_title}
           data={slideData.slide_data ?? ''}
-          subtitle={`Module ${moduleOrdinal} / Lesson ${lessonNumber}`}
+          subtitle={`Module ${moduleOrdinal} / Lesson ${lessonNumber}${totalLessons > 0 ? ` of ${totalLessons}` : ''}`}
         />
       );
     case 'video': {
@@ -77,7 +93,13 @@ const ModuleSlide: React.FC<CourseSlideProps> = ({
         <>
           {isActive &&
             (hasVideo ? (
-              <VideoPlayer uri={uri ?? undefined} mux={mux ?? undefined} isActive={isActive} />
+              <VideoPlayer 
+                uri={uri ?? undefined} 
+                mux={mux ?? undefined} 
+                isActive={isActive}
+                isMuted={isMuted}
+                toggleMute={toggleMute}
+              />
             ) : (
               <MediaPlaceholder />
             ))}

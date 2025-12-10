@@ -1,21 +1,34 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useInView } from './useInView';
+import PauseSvg from '@/src/assets/images/pause.svg';
 
 interface VideoPlayerProps {
   uri?: string;
   mux?: string;
   thumbnail?: string;
+  isMuted?: boolean;
+  toggleMute?: () => void;
 }
 
-const VideoPlayer: React.FC<VideoPlayerProps> = ({ uri, mux, thumbnail }) => {
+const VideoPlayer: React.FC<VideoPlayerProps> = ({
+  uri,
+  mux,
+  thumbnail,
+  isMuted: externalIsMuted,
+  toggleMute: externalToggleMute,
+}) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const { ref: viewRef, inView } = useInView<HTMLDivElement>({ threshold: 0.5 });
 
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [isMuted, setIsMuted] = useState(true);
+  const [internalIsMuted, setInternalIsMuted] = useState(true);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
+
+  // Используем внешнее состояние, если оно передано, иначе внутреннее
+  const isMuted = externalIsMuted !== undefined ? externalIsMuted : internalIsMuted;
+  // toggleMute handled by parent (LessonProgressBars) when provided; internal toggling remains via setInternalIsMuted
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -67,6 +80,11 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ uri, mux, thumbnail }) => {
     const videoEl = videoRef.current;
     if (!videoEl) return;
 
+    // Синхронизируем внешнее состояние muted с видео элементом
+    if (externalIsMuted !== undefined) {
+      videoEl.muted = externalIsMuted;
+    }
+
     if (inView) {
       const playPromise = videoEl.play();
       if (playPromise !== undefined) {
@@ -76,7 +94,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ uri, mux, thumbnail }) => {
       videoEl.pause();
       setIsPlaying(false);
     }
-  }, [inView]);
+  }, [inView, externalIsMuted]);
 
   useEffect(() => {
     const videoEl = videoRef.current;
@@ -109,9 +127,12 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ uri, mux, thumbnail }) => {
         playPromise
           .then(() => {
             setIsPlaying(true);
-            if (isMuted) {
+            if (isMuted && externalToggleMute) {
               videoEl.muted = false;
-              setIsMuted(false);
+              externalToggleMute();
+            } else if (isMuted && !externalToggleMute) {
+              videoEl.muted = false;
+              setInternalIsMuted(false);
             }
           })
           .catch(() => setIsPlaying(false));
@@ -122,13 +143,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ uri, mux, thumbnail }) => {
     }
   };
 
-  const toggleMute = () => {
-    const videoEl = videoRef.current;
-    if (!videoEl) return;
-    const newMuted = !isMuted;
-    videoEl.muted = newMuted;
-    setIsMuted(newMuted);
-  };
+  // toggleMute теперь определен выше в пропсах
 
   const formatTime = (seconds: number): string => {
     if (!isFinite(seconds) || isNaN(seconds)) return '00:00';
@@ -147,40 +162,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ uri, mux, thumbnail }) => {
     videoEl.currentTime = percentage * duration;
   };
 
-  const MuteIcon = () => (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width="28"
-      height="28"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="white"
-      strokeWidth="1.5"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M6 15h-2a1 1 0 0 1 -1 -1v-4a1 1 0 0 1 1 -1h2l3.5 -4.5a.8 .8 0 0 1 1.5 .5v14a.8 .8 0 0 1 -1.5 .5l-3.5 -4.5" />
-      <path d="M16 10l4 4m0 -4l-4 4" />
-    </svg>
-  );
-
-  const VolumeIcon = () => (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width="28"
-      height="28"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="white"
-      strokeWidth="1.5"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M15 8a5 5 0 0 1 0 8" />
-      <path d="M17.7 5a9 9 0 0 1 0 14" />
-      <path d="M6 15h-2a1 1 0 0 1 -1 -1v-4a1 1 0 0 1 1 -1h2l3.5 -4.5a.8 .8 0 0 1 1.5 .5v14a.8 .8 0 0 1 -1.5 .5l-3.5 -4.5" />
-    </svg>
-  );
+  // Volume icons removed from web player; mute control is rendered in LessonProgressBars
 
   return (
     <div
@@ -267,16 +249,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ uri, mux, thumbnail }) => {
               justifyContent: 'center',
             }}
           >
-            <svg
-              width="80"
-              height="80"
-              viewBox="0 0 24 24"
-              fill="white"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <rect x="6" y="4" width="4" height="16" rx="1" />
-              <rect x="14" y="4" width="4" height="16" rx="1" />
-            </svg>
+            <PauseSvg width={64} height={64} />
           </div>
         )}
 
@@ -295,7 +268,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ uri, mux, thumbnail }) => {
         <div
           style={{
             position: 'absolute',
-            bottom: 20,
+            bottom: 40,
             left: 0,
             right: 0,
             padding: '20px',
@@ -342,38 +315,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ uri, mux, thumbnail }) => {
           </div>
         </div>
 
-        {/* Mute button */}
-        <div
-          style={{
-            position: 'absolute',
-            bottom: '80px',
-            right: '30px',
-            display: 'flex',
-            gap: '12px',
-            zIndex: 10,
-          }}
-        >
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              toggleMute();
-            }}
-            style={{
-              background: 'rgba(0,0,0,0.5)',
-              border: 'none',
-              color: 'white',
-              padding: '10px 14px',
-              borderRadius: '50%',
-              fontSize: '24px',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            {isMuted ? <MuteIcon /> : <VolumeIcon />}
-          </button>
-        </div>
+        {/* Mute button removed - теперь управляется через LessonProgressBars */}
       </div>
     </div>
   );

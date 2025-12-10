@@ -20,7 +20,7 @@ import {
 import Animated, { useAnimatedScrollHandler, runOnJS } from 'react-native-reanimated';
 import ModuleSlide from './ModuleSlide';
 import { useSaveProgressOnLeave } from '@/src/hooks/useSaveProgressOnExit';
-import PaginationDots from './components/PaginationDot';
+import LessonProgressBars from './components/LessonProgressBars';
 import { useAnalyticsStore } from '@/src/stores/analyticsStore';
 import { sendLastSlideEmail } from '@/src/services/emailService';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -62,8 +62,8 @@ export default function ModuleScreen() {
     slideId?: string;
   }>();
 
-  const {lessons, isLoadingModule, errorModule, fetchLessonByModule} = useLessonsStore();
-  const { slides, isLoading, error,fetchSlidesByLessons, clearError } = useSlidesStore();
+  const { lessons, isLoadingModule, errorModule, fetchLessonByModule } = useLessonsStore();
+  const { slides, isLoading, error, fetchSlidesByLessons, clearError } = useSlidesStore();
   const scrollViewRef = useRef<Animated.ScrollView>(null);
   const { width, height } = useWindowDimensions();
   const router = useRouter();
@@ -103,6 +103,11 @@ export default function ModuleScreen() {
 
   const [currentSlideId, setCurrentSlideId] = useState<string | undefined>(slideId);
   const [currentSlideIndex, setCurrentSlideIndex] = useState<number | undefined>(0);
+  const [isMuted, setIsMuted] = useState(true);
+
+  const toggleMute = useCallback(() => {
+    setIsMuted((prev) => !prev);
+  }, []);
 
   const showPagination = useMemo(() => slides.length > 1, [slides.length]);
 
@@ -190,16 +195,16 @@ export default function ModuleScreen() {
 
   useSaveProgressOnLeave();
 
-useEffect(() => {
-  if (slides.length === 0) return;
-  if (slideId) return;
-  const firstSlide = slides[0];
-  setCurrentSlideId(firstSlide.id);
-  setCurrentSlideIndex(0);
-  setTimeout(() => {
-    router.setParams({ slideId: firstSlide.id });
-  }, 0);
-}, [slides]);
+  useEffect(() => {
+    if (slides.length === 0) return;
+    if (slideId) return;
+    const firstSlide = slides[0];
+    setCurrentSlideId(firstSlide.id);
+    setCurrentSlideIndex(0);
+    setTimeout(() => {
+      router.setParams({ slideId: firstSlide.id });
+    }, 0);
+  }, [slides]);
 
   const triggerLastSlideEmail = useCallback(
     async (index: number) => {
@@ -334,7 +339,6 @@ useEffect(() => {
     }
   }, [slides, pageH, slideId]);
 
-
   useEffect(() => {
     if (!user?.id || !moduleId) return;
 
@@ -415,19 +419,23 @@ useEffect(() => {
               currentIndex={i}
               totalSlides={slides.length}
               setScrollEnabled={setScrollEnabled}
+              isMuted={isMuted}
+              toggleMute={toggleMute}
               lessonsId={slide.lesson_id}
             />
           </View>
         ))}
       </Animated.ScrollView>
 
-      {showPagination && (
-        <PaginationDots
-          total={slides.length}
-          currentIndex={Math.max(
-            slides.findIndex((s) => s.id === currentSlideId),
-            0,
-          )}
+      {showPagination && slides.length > 0 && (
+        <LessonProgressBars
+          slides={slides}
+          lessons={lessons}
+          currentSlideId={currentSlideId}
+          currentSlideIndex={currentSlideIndex ?? 0}
+          courseId={courseId}
+          isMuted={isMuted}
+          toggleMute={toggleMute}
         />
       )}
     </View>

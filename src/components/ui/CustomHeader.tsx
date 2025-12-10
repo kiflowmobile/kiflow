@@ -1,5 +1,5 @@
 import { Colors } from '@/src/constants/Colors';
-import { Href, useRouter } from 'expo-router';
+import { Href, useRouter, useSegments } from 'expo-router';
 import BackIcon from '@/src/assets/images/arrow-left.svg';
 
 import { StyleSheet, TouchableOpacity, View, Text } from 'react-native';
@@ -16,9 +16,19 @@ export default function CustomHeader({
 }: CustomHeaderProps) {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const segments = useSegments();
 
   const handleBack = () => {
     try {
+      const segs = Array.isArray(segments) ? (segments as string[]) : undefined;
+      const isModulePage =
+        segs && (segs.includes('module') || (segs[0] === 'courses' && segs.length > 1));
+
+      if (isModulePage) {
+        router.push('/courses' as Href);
+        return;
+      }
+
       // @ts-ignore – canGoBack есть в новых версиях
       if (router.canGoBack?.()) {
         router.back();
