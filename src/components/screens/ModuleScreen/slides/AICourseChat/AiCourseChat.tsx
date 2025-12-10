@@ -33,7 +33,13 @@ interface AICourseChatProps {
   onComplete?: () => void;
 }
 
-const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId, setScrollEnabled, isActive, onComplete }) => {
+const AICourseChat: React.FC<AICourseChatProps> = ({
+  title,
+  slideId,
+  setScrollEnabled,
+  isActive,
+  onComplete,
+}) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
@@ -64,29 +70,10 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId, setScrollEn
     };
   }, [setScrollEnabled, caseState, isActive]);
 
-  const loadChat = async () => {
-    try {
-      const stored = await AsyncStorage.getItem(CHAT_STORAGE_KEY);
-      if (!stored) return;
-  
-      const parsed: Record<string, Message[]> = JSON.parse(stored);
-  
-      if (parsed[slideId]) {
-        const userCount = parsed[slideId].filter((item: Message) => item.role === 'user').length;  
-        setUserMessageCount(userCount);
-        setIsLocked(userCount >= 3);
-  
-        setMessages(parsed[slideId]);
-
-      }
-    } catch (err) {
-      console.error('Error loading chat:', err);
-    }
-  };
-  
   useEffect(() => {
     // Don't block scrolling if there's a result or completed
-    if (!setScrollEnabled || !isActive || caseState === 'result' || caseState === 'completed') return;
+    if (!setScrollEnabled || !isActive || caseState === 'result' || caseState === 'completed')
+      return;
 
     const intervalId = setInterval(() => {
       setScrollEnabled(false);
@@ -156,13 +143,14 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId, setScrollEn
           if (parsed[slideId]) {
             const savedMessages = parsed[slideId];
             setMessages(savedMessages);
-            
+
             // Если есть сохраненные сообщения и их больше одного (не только промпт),
             // проверяем состояние кейса
             if (savedMessages.length > 1) {
               // Проверяем, есть ли ответ AI (последнее сообщение должно быть от AI)
               // Структура: [кейс AI, ответ пользователя, ответ AI с оценкой]
-              const hasAIResponse = savedMessages.length >= 3 && savedMessages[savedMessages.length - 1].role === 'ai';
+              const hasAIResponse =
+                savedMessages.length >= 3 && savedMessages[savedMessages.length - 1].role === 'ai';
               if (hasAIResponse) {
                 // Если есть ответ AI, показываем результат (пользователь еще не нажал Complete)
                 setCaseState('result');
@@ -224,11 +212,9 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId, setScrollEn
 
     const userMsg: Message = { id: Date.now().toString(), role: 'user', text: input.trim() };
     setMessages((prev) => [...prev, userMsg]);
-    
-    // Сохраняем ответ пользователя для возможного использования при "Try again"
+
     setLastUserAnswer(input.trim());
 
-    //рахуємо кількість користувальских відповідей
     const newCount = userMessageCount + 1;
     setUserMessageCount(newCount);
     console.log('userMessageCount', userMessageCount);
@@ -286,7 +272,6 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId, setScrollEn
         }
       }
 
-      // форматуємо текст від AI
       const chatText = formatAIResponseForChat(aiResponse);
       const aiMsg: Message = {
         id: Date.now().toString(),
@@ -294,14 +279,11 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId, setScrollEn
         text: chatText,
       };
 
-      // створюємо оновлений масив повідомлень
       const updatedMessages = [...messages, userMsg, aiMsg];
       setMessages(updatedMessages);
 
-      // перейти в состояние результата (показываем оценку и кнопки)
       setCaseState('result');
 
-      // ✅ нова логіка збереження чату
       try {
         const existing = await AsyncStorage.getItem(CHAT_STORAGE_KEY);
         const parsed = existing ? JSON.parse(existing) : {};
@@ -322,18 +304,15 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId, setScrollEn
   };
 
   const handleTryAgain = async () => {
-    // Уменьшаем количество попыток
     const newAttempts = attemptsLeft - 1;
     setAttemptsLeft(newAttempts);
-    
-    // Сохраняем новое количество попыток
+
     try {
       await AsyncStorage.setItem(ATTEMPTS_STORAGE_KEY, String(newAttempts));
     } catch (err) {
       console.warn('Failed to save attempts:', err);
     }
 
-    // Reset messages to show only the original case prompt (no previous answers)
     const slidePrompt = prompt[slideId]?.question;
     if (slidePrompt) {
       const aiMsg: Message = {
@@ -346,7 +325,6 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId, setScrollEn
       setMessages([]);
     }
 
-    // remove saved chat from AsyncStorage so previous answer is not restored
     try {
       const existing = await AsyncStorage.getItem(CHAT_STORAGE_KEY);
       const parsed = existing ? JSON.parse(existing) : {};
@@ -358,15 +336,13 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId, setScrollEn
       console.warn('Failed to remove saved chat for try again:', err);
     }
 
-    // Восстанавливаем предыдущий ответ в инпут
     setInput(lastUserAnswer);
-    
+
     // reset counters
     setUserMessageCount(0);
     setIsLocked(false);
     setCaseState('idle');
 
-    // scroll to top so user sees the case prompt
     setTimeout(() => {
       try {
         scrollRef.current?.scrollTo({ y: 0, animated: true } as any);
@@ -426,15 +402,13 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId, setScrollEn
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
-          // блокируем скролл до нажатия Complete (управляется через setScrollEnabled из родителя)
           scrollEnabled={true}
         >
           <ChatHeader title={title} />
-          <ChatMessages 
-            messages={messages} 
+          <ChatMessages
+            messages={messages}
             loading={loading}
             attemptsLeft={attemptsLeft}
-            showAttemptsMessage={caseState === 'idle' && attemptsLeft < 3 && attemptsLeft > 0 && lastUserAnswer.length > 0}
             caseState={caseState}
           />
           {caseState === 'idle' && (
@@ -452,6 +426,7 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId, setScrollEn
               slideId={slideId}
             />
           )}
+          {/* attempts message is displayed inside ChatMessages now */}
         </ScrollView>
         <CaseOverlay visible={caseState === 'analyzing'} />
 
@@ -495,5 +470,17 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     marginTop: 68,
     paddingBottom: 80,
+  },
+  attemptsMessage: {
+    marginTop: 12,
+    padding: 12,
+    backgroundColor: '#f3f4f6',
+    borderRadius: 8,
+    marginHorizontal: 16,
+  },
+  attemptsText: {
+    fontSize: 14,
+    color: '#475569',
+    textAlign: 'center',
   },
 });
