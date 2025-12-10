@@ -28,19 +28,13 @@ interface Message {
 interface AICourseChatProps {
   title: string;
   slideId: string;
-<<<<<<< HEAD
-  lessonsId:string
-}
-
-const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId, lessonsId }) => {
-=======
   setScrollEnabled?: (enabled: boolean) => void;
   isActive?: boolean;
   onComplete?: () => void;
+  lessonsId: string
 }
 
-const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId, setScrollEnabled, isActive, onComplete }) => {
->>>>>>> b0e3684934d82480edab9ccd8f38bc96aed606b8
+const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId, setScrollEnabled, isActive, onComplete, lessonsId }) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
@@ -64,7 +58,6 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId, setScrollEn
   const [lastUserAnswer, setLastUserAnswer] = useState('');
   useEffect(() => {
     if (!setScrollEnabled || !isActive) return;
-    // Allow scrolling only when caseState is 'completed'
     setScrollEnabled(caseState === 'completed');
     return () => {
       setScrollEnabled(true);
@@ -272,7 +265,7 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId, setScrollEn
         tokens: aiResponse?.usage?.totalTokens || 0,
       });
 
-      if (user && aiResponse.rating?.criteriaScores && moduleId && lessonsId) {
+        if (user && aiResponse.rating?.criteriaScores && moduleId && lessonsId) {
         const criteriaScores = aiResponse.rating.criteriaScores;
         for (const [criteriaKey, score] of Object.entries(criteriaScores)) {
           try {
