@@ -14,7 +14,7 @@ import { useAnalyticsStore } from '@/src/stores/analyticsStore';
 import { Colors } from '@/src/constants/Colors';
 import { TEXT_VARIANTS } from '@/src/constants/Fonts';
 import ArrowRight from '@/src/assets/images/arrow-right.svg';
-import { clearUserLocalData } from '@/src/utils/asyncStorege';
+import { clearUserLocalData } from '@/src/utils/asyncStorage';
 import { quizService } from '@/src/services/quizService';
 import { deleteUserCourseSummary } from '@/src/services/course_summaries';
 import { chatService } from '@/src/services/chat_history';

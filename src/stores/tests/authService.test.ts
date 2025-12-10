@@ -1,10 +1,14 @@
-import { useAuthStore } from "../authStore";
+import * as asyncStorageUtils from '@/src/utils/asyncStorage';
+
+jest.resetModules(); 
+
+
 
 const mockSyncProgressToDB = jest.fn().mockResolvedValue(true);
 jest.mock('../userProgressStore', () => ({
   useUserProgressStore: {
     getState: () => ({
-      syncProgressToDB: mockSyncProgressToDB, // <- використовуємо тут нашу змінну
+      syncProgressToDB: mockSyncProgressToDB, 
     }),
   },
 }));
@@ -28,12 +32,10 @@ jest.mock('../chatStore', () => ({
   },
 }));
 
-// const mockClearLocal = jest.fn().mockResolvedValue(true);
-// jest.mock('../../utils/asyncStorege', () => ({
-//   clearUserLocalData: mockClearLocal,
-// }));
+const mockClearUserLocalData = jest.fn().mockResolvedValue(true);
+jest.spyOn(asyncStorageUtils, 'clearUserLocalData').mockImplementation(mockClearUserLocalData);
 
-const mockSupabaseSignOut = jest.fn().mockResolvedValue({ error: null });
+
 jest.mock('@/src/config/supabaseClient', () => {
   const mockSignOut = jest.fn().mockResolvedValue({ error: null });
   const mockGetSession = jest.fn().mockResolvedValue({
@@ -64,6 +66,7 @@ jest.mock('@react-native-async-storage/async-storage', () => ({
   multiRemove: jest.fn(() => Promise.resolve(null)),
 }));
 
+import { useAuthStore } from "../authStore";
 
 describe('AuthStore signOut', () => {
   beforeEach(() => {
@@ -73,18 +76,15 @@ describe('AuthStore signOut', () => {
   it('should sync data to DB and clear local storage on signOut', async () => {
     const { signOut, user, isGuest } = useAuthStore.getState();
 
-    // встановимо користувача в store для тесту
     useAuthStore.setState({ user: { id: 'user-1' } } as any);
-
     await signOut();
-
     expect(mockSyncProgressToDB).toHaveBeenCalled();
     expect(mockSyncQuizToDB).toHaveBeenCalled();
     expect(mockSyncChatToDB).toHaveBeenCalled();
-    // expect(mockClearLocal).toHaveBeenCalled();
-    // expect(mockSupabaseSignOut).toHaveBeenCalled();
 
-    // Перевірка, що користувач очищений
+    expect(asyncStorageUtils.clearUserLocalData).toHaveBeenCalled();
+
+
     const state = useAuthStore.getState();
     expect(state.user).toBeNull();
     expect(state.isGuest).toBe(true);

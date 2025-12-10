@@ -15,7 +15,7 @@ let analytics: ReturnType<typeof getAnalytics> | null = null;
 
 if (typeof window !== "undefined") {
   const app = initializeApp(firebaseConfig);
-  analytics = getAnalytics(app);
+  // analytics = getAnalytics(app);
 }
 
 export { analytics };
