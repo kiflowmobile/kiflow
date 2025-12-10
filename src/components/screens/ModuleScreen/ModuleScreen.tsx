@@ -69,6 +69,7 @@ export default function ModuleScreen() {
   const router = useRouter();
   const { user } = useAuthStore();
 
+
   useEffect(() => {
     if (!moduleId) return;
     fetchLessonByModule(moduleId).catch((err) => console.error(err));
@@ -358,6 +359,7 @@ export default function ModuleScreen() {
     });
   }, [moduleId, slides.length, slideId]);
 
+
   if (error || errorModule)
     return (
       <View style={styles.errorContainer}>
@@ -374,6 +376,8 @@ export default function ModuleScreen() {
       </View>
     );
 
+    
+
   if (isLoading || isLoadingModule)
     return (
       <View style={styles.loader}>
@@ -387,6 +391,8 @@ export default function ModuleScreen() {
         <Text style={styles.noSlidesText}>Слайди не знайдено</Text>
       </View>
     );
+
+ 
 
   return (
     <View style={{ flex: 1 }}>
@@ -415,6 +421,7 @@ export default function ModuleScreen() {
               setScrollEnabled={setScrollEnabled}
               isMuted={isMuted}
               toggleMute={toggleMute}
+              lessonsId={slide.lesson_id}
             />
           </View>
         ))}

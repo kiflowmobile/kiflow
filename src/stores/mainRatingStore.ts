@@ -36,11 +36,10 @@ interface MainRatingState {
     moduleId: string,
     key: string,
     courseId: string,
+    lessonId: string
   ) => Promise<void>;
   fetchUserAverage: (userId: string) => Promise<void>;
   fetchUserRatings: (userId: string) => Promise<void>; 
-
-  clear: () => void;
 }
 
 export const useMainRatingStore = create<MainRatingState>((set) => ({
@@ -91,15 +90,15 @@ export const useMainRatingStore = create<MainRatingState>((set) => ({
     }
   },
 
-  saveRating: async (userId, rating, moduleId, key, courseId) => {
+  saveRating: async (userId, rating, moduleId, key, courseId, lessonId) => {
     try {
-      const { data: existing, error: fetchError } = await fetchRating(userId, moduleId, key);
+      const { data: existing, error: fetchError } = await fetchRating(userId, moduleId, key, lessonId);
       if (fetchError && fetchError.code !== 'PGRST116') throw fetchError;
 
       const normalized = typeof rating === 'string' ? parseInt(rating, 10) : rating;
       const final = existing ? (existing.rating + normalized) / 2 : normalized;
 
-      await upsertRating(userId, final, moduleId, key, courseId);
+      await upsertRating(userId, final, moduleId, key, courseId, lessonId);
 
       await useMainRatingStore.getState().fetchAverage(userId, moduleId);
       await useMainRatingStore.getState().fetchSkills(userId, moduleId);
@@ -136,6 +135,4 @@ export const useMainRatingStore = create<MainRatingState>((set) => ({
       set({ error: err.message, isLoading: false });
     }
   },
-
-  clear: () => set({ average: null, ratings: [], skills: [], error: null }),
 }));

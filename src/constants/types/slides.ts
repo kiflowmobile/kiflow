@@ -4,6 +4,7 @@ interface BaseSlide {
   slide_order: number;
   slide_type: SlideType;
   slide_title: string;
+  lesson_id: string;
 }
 
 // ---- Різновиди слайдів ----

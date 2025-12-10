@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase } from '@/src/config/supabaseClient';
+import { chatService } from '../services/chat_history';
 const getAuthStore = () => require('./authStore').useAuthStore;
 
 interface ChatMessage {
@@ -16,7 +17,6 @@ interface ChatStore {
 
 export const useChatStore = create<ChatStore>(() => ({
   syncChatFromLocalStorageToDB: async () => {
-    // const { user } = useAuthStore.getState();
     const { user } = getAuthStore().getState();
 
     if (!user) return;
@@ -72,8 +72,6 @@ export const useChatStore = create<ChatStore>(() => ({
     } catch (err) {
       console.error('❌ Failed to sync chat data from local storage:', err);
     }
-
-    
   },
 
   syncChatFromDBToLocalStorage: async () => {
@@ -81,12 +79,8 @@ export const useChatStore = create<ChatStore>(() => ({
       const { user } = getAuthStore().getState();
         if (!user) return;
 
-        const { data, error } = await supabase
-        .from('chat_history')
-        .select('slide_id, course_id, messages')
-        .eq('user_id', user.id);
+        const data = await chatService.fetchChatHistory(user.id);
 
-        if (error) throw error;
         if (!data || data.length === 0) return;
 
         const groupedByCourse: Record<string, Record<string, any[]>> = {};

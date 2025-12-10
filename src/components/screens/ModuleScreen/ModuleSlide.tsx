@@ -20,6 +20,7 @@ interface CourseSlideProps {
   setScrollEnabled?: (enabled: boolean) => void;
   isMuted?: boolean;
   toggleMute?: () => void;
+  lessonsId: string
 }
 
 const ModuleSlide: React.FC<CourseSlideProps> = ({
@@ -31,6 +32,7 @@ const ModuleSlide: React.FC<CourseSlideProps> = ({
   setScrollEnabled,
   isMuted,
   toggleMute,
+  lessonsId
 }) => {
   const { slides, isLoading, error } = useSlidesStore();
   const { modules } = useModulesStore();
@@ -124,6 +126,7 @@ const ModuleSlide: React.FC<CourseSlideProps> = ({
           setScrollEnabled={setScrollEnabled}
           isActive={isActive}
           onComplete={onComplete}
+          lessonsId={lessonsId}
         />
       );
     case 'content':

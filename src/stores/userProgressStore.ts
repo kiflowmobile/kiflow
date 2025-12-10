@@ -78,7 +78,7 @@ export const useUserProgressStore = create<UserProgressStore>((set, get) => ({
   },
 
   fetchUserProgress: async (userId: string) => {
-    set({ isLoading: true, error: null });
+//     set({ isLoading: true, error: null });
     try {
       const localData = await loadProgressLocal(userId);
       set({ courses: localData ?? [] });

@@ -40,7 +40,7 @@ const QuizSlide: React.FC<QuizProps> = ({
   const [checked, setChecked] = useState(false);
   const analyticsStore = useAnalyticsStore.getState();
 
-  const STORAGE_KEY = `course-progress-${courseId}`;
+  const STORAGE_KEY = `quiz-progress-${courseId}`;
 
   useEffect(() => {
     const loadProgress = async () => {
@@ -50,6 +50,8 @@ const QuizSlide: React.FC<QuizProps> = ({
           const parsed = JSON.parse(data);
           if (parsed[id]?.selectedAnswer !== undefined) {
             setSelectedAnswer(parsed[id].selectedAnswer);
+            setChecked(true);
+
             if (parsed[id].checked) setChecked(true);
           }
         }
@@ -95,7 +97,6 @@ const QuizSlide: React.FC<QuizProps> = ({
       parsed[id] = {
         selectedAnswer,
         correctAnswer: quiz.correctAnswer,
-        checked: true,
       };
 
       await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(parsed));
