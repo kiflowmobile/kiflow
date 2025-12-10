@@ -18,6 +18,7 @@ interface CourseSlideProps {
   currentIndex: number;
   totalSlides: number;
   setScrollEnabled?: (enabled: boolean) => void;
+  lessonsId: string
 }
 
 const ModuleSlide: React.FC<CourseSlideProps> = ({
@@ -27,6 +28,7 @@ const ModuleSlide: React.FC<CourseSlideProps> = ({
   currentIndex,
   totalSlides,
   setScrollEnabled,
+  lessonsId
 }) => {
   const { slides, isLoading, error } = useSlidesStore();
   const { modules } = useModulesStore();
@@ -102,6 +104,7 @@ const ModuleSlide: React.FC<CourseSlideProps> = ({
           setScrollEnabled={setScrollEnabled}
           isActive={isActive}
           onComplete={onComplete}
+          lessonsId={lessonsId}
         />
       );
     case 'content':

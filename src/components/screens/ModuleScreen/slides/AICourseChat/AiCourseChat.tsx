@@ -31,9 +31,10 @@ interface AICourseChatProps {
   setScrollEnabled?: (enabled: boolean) => void;
   isActive?: boolean;
   onComplete?: () => void;
+  lessonsId: string
 }
 
-const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId, setScrollEnabled, isActive, onComplete }) => {
+const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId, setScrollEnabled, isActive, onComplete, lessonsId }) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
@@ -265,11 +266,11 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId, setScrollEn
         tokens: aiResponse?.usage?.totalTokens || 0,
       });
 
-      if (user && aiResponse.rating?.criteriaScores && moduleId) {
+        if (user && aiResponse.rating?.criteriaScores && moduleId && lessonsId) {
         const criteriaScores = aiResponse.rating.criteriaScores;
         for (const [criteriaKey, score] of Object.entries(criteriaScores)) {
           try {
-            await saveRating(user.id, score as number, moduleIdStr, criteriaKey, courseIdStr);
+            await saveRating(user.id, score as number, moduleIdStr, criteriaKey, courseIdStr, lessonsId);
           } catch (err) {
             console.warn(`Failed to save rating for ${criteriaKey}:`, err);
           }

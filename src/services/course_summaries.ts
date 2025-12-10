@@ -58,3 +58,16 @@ export const initUserProgress = async (userId: string) => {
     console.error('❌ Error initializing user progress:', err.message);
   }
 };
+
+export async function deleteUserCourseSummary(userId: string, courseId: string) {
+  const {error } = await supabase
+    .from('user_course_summaries')
+    .delete()
+    .eq('user_id', userId)
+    .eq('course_id', courseId)
+    .select();
+  if (error) {
+    console.error('Delete error:', error);
+    throw new Error(error.message);
+  }
+}

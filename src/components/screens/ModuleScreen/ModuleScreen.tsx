@@ -70,7 +70,6 @@ export default function ModuleScreen() {
   const { user } = useAuthStore();
 
 
-
   useEffect(() => {
     if (!moduleId) return;
     fetchLessonByModule(moduleId).catch((err) => console.error(err));
@@ -356,6 +355,7 @@ useEffect(() => {
     });
   }, [moduleId, slides.length, slideId]);
 
+
   if (error || errorModule)
     return (
       <View style={styles.errorContainer}>
@@ -372,6 +372,8 @@ useEffect(() => {
       </View>
     );
 
+    
+
   if (isLoading || isLoadingModule)
     return (
       <View style={styles.loader}>
@@ -385,6 +387,8 @@ useEffect(() => {
         <Text style={styles.noSlidesText}>Слайди не знайдено</Text>
       </View>
     );
+
+ 
 
   return (
     <View style={{ flex: 1 }}>
@@ -411,6 +415,7 @@ useEffect(() => {
               currentIndex={i}
               totalSlides={slides.length}
               setScrollEnabled={setScrollEnabled}
+              lessonsId={slide.lesson_id}
             />
           </View>
         ))}
