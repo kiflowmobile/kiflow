@@ -415,6 +415,7 @@ useEffect(() => {
               currentIndex={i}
               totalSlides={slides.length}
               setScrollEnabled={setScrollEnabled}
+              lessonsId={slide.lesson_id}
             />
           </View>
         ))}

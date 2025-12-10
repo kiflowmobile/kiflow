@@ -18,6 +18,7 @@ interface CourseSlideProps {
   currentIndex: number;
   totalSlides: number;
   setScrollEnabled?: (enabled: boolean) => void;
+  lessonsId: string
 }
 
 const ModuleSlide: React.FC<CourseSlideProps> = ({
@@ -27,6 +28,7 @@ const ModuleSlide: React.FC<CourseSlideProps> = ({
   currentIndex,
   totalSlides,
   setScrollEnabled,
+  lessonsId
 }) => {
   const { slides, isLoading, error } = useSlidesStore();
   const { modules } = useModulesStore();
@@ -95,7 +97,7 @@ const ModuleSlide: React.FC<CourseSlideProps> = ({
         />
       );
     case 'ai':
-      return <AICourseChat title={slideData.slide_title} slideId={slideData.id} />;
+      return <AICourseChat title={slideData.slide_title} slideId={slideData.id} lessonsId={lessonsId}/>;
     case 'content':
       return (
         <ContentWithExample

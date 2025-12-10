@@ -119,7 +119,6 @@ const QuizSlide: React.FC<QuizProps> = ({
     if (typeof onComplete === 'function') onComplete();
   };
 
-  console.log('selectedAnswer', selectedAnswer)
   const isAnswerCorrect = checked && selectedAnswer === quiz.correctAnswer;
 
   return (

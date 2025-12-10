@@ -10,13 +10,14 @@ export const fetchRatings = async (userId: string, moduleId: string) => {
 };
 
 // конкретна оцінка
-export const fetchRating = async (userId: string, moduleId: string, key: string) => {
+export const fetchRating = async (userId: string, moduleId: string, key: string, lessonId: string) => {
   return await supabase
     .from('main_rating')
     .select('rating')
     .eq('user_id', userId)
     .eq('criteria_key', key)
     .eq('module_id', moduleId ?? null)
+    .eq('lesson_id', lessonId)
     .single();
 };
 
@@ -27,10 +28,11 @@ export const upsertRating = async (
   moduleId: string,
   key: string,
   courseId: string,
+  lessonId: string
 ) => {
   const value = Number(rating);
   if (!Number.isFinite(value)) throw new Error('Rating is not a number');
-  if (!userId || !moduleId || !key || !courseId) throw new Error('Missing ids');
+  if (!userId || !moduleId || !key || !courseId || !lessonId) throw new Error('Missing ids');
 
   const { data, error } = await supabase
     .from('main_rating')
@@ -42,9 +44,10 @@ export const upsertRating = async (
           module_id: moduleId,
           criteria_key: key,
           course_id: courseId,
+          lesson_id: lessonId,
         },
       ],
-      { onConflict: 'user_id,module_id,criteria_key,course_id' },
+      { onConflict: 'user_id,module_id,criteria_key,course_id, lesson_id' },
     )
     .select();
 
