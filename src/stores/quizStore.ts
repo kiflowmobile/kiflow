@@ -15,9 +15,9 @@ interface QuizStore {
   quizProgress: Record<string, QuizData>;
   setQuizAnswer: (quizId: string, selectedAnswer: number, correctAnswer: number) => void;
   loadFromLocalStorage: () => void;
-  saveToLocalStorage: () => void;
+  // saveToLocalStorage: () => void;
   syncQuizToDB: () => Promise<void>;
-  clearQuizProgress: () => void;
+  // clearQuizProgress: () => void;
   syncQuizFromDBToLocalStorage: () => void
   
   getModuleScore: (courseId: string, moduleId: string) => Promise<number>;
@@ -44,13 +44,13 @@ export const useQuizStore = create<QuizStore>((set, get) => ({
     }
   },
 
-  saveToLocalStorage: () => {
-    const data = get().quizProgress;
-    localStorage.setItem('quizProgress', JSON.stringify(data));
-  },
+  // saveToLocalStorage: () => {
+  //   const data = get().quizProgress;
+  //   localStorage.setItem('quizProgress', JSON.stringify(data));
+  // },
 
   syncQuizToDB: async () => {
-    console.log('syncQuizToDB')
+    // console.log('syncQuizToDB')
     const { user } = getAuthStore().getState();
     if(!user) return
     try {
@@ -84,6 +84,7 @@ export const useQuizStore = create<QuizStore>((set, get) => ({
           console.warn(`⚠️ Invalid quiz entry for slide ${slideId}`, data);
           continue;
         }
+
         rows.push({
           user_id: user.id,
           slide_id: slideId,
@@ -97,8 +98,7 @@ export const useQuizStore = create<QuizStore>((set, get) => ({
     if (rows.length === 0) {
         // console.log('ℹ️ No valid quiz rows to sync');
         return;
-    }
-  
+    }  
     const { error } = await supabase.from('quiz_answers').upsert(rows, { onConflict: 'user_id,slide_id' });;
     if (error) throw error;
 
@@ -106,7 +106,6 @@ export const useQuizStore = create<QuizStore>((set, get) => ({
       console.error('❌ Failed to sync quiz progress:', err);
     }
   },
-
 
   syncQuizFromDBToLocalStorage: async () => {
     try {
@@ -162,10 +161,10 @@ export const useQuizStore = create<QuizStore>((set, get) => ({
     }
   },
 
-  clearQuizProgress: () => {
-    set({ quizProgress: {} });
-    localStorage.removeItem('quizProgress');
-  },
+  // clearQuizProgress: () => {
+  //   set({ quizProgress: {} });
+  //   localStorage.removeItem('quizProgress');
+  // },
 
   getModuleScore: async (courseId: string, moduleId: string) => {
     const key = `quiz-progress-${courseId}`;

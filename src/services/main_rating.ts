@@ -144,3 +144,13 @@ export const getUserSkillsSummary = async (userId: string, moduleId: string) => 
 
   return { data: summary, error: null };
 };
+
+
+export const deleteUsersCourseReting = async (userId: string, courseId: string) => {
+  const {error } = await supabase
+    .from('main_rating')
+    .delete()
+    .eq('user_id', userId)
+    .eq('course_id', courseId);
+  if (error) throw new Error(error.message);
+}

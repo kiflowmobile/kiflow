@@ -40,7 +40,7 @@ interface MainRatingState {
   fetchUserAverage: (userId: string) => Promise<void>;
   fetchUserRatings: (userId: string) => Promise<void>; 
 
-  clear: () => void;
+  // clear: () => void;
 }
 
 export const useMainRatingStore = create<MainRatingState>((set) => ({
@@ -137,5 +137,5 @@ export const useMainRatingStore = create<MainRatingState>((set) => ({
     }
   },
 
-  clear: () => set({ average: null, ratings: [], skills: [], error: null }),
+  // clear: () => set({ average: null, ratings: [], skills: [], error: null }),
 }));

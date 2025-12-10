@@ -13,7 +13,7 @@
     "allowSyntheticDefaultImports": true,
     "moduleResolution": "nodenext",
     "module": "nodenext",
-    "types": ["react", "react-native"]
+    "types": ["react", "react-native", "jest", "node"]
   },
   "include": [
     "**/*.ts",

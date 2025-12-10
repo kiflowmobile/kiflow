@@ -14,6 +14,11 @@ import { useAnalyticsStore } from '@/src/stores/analyticsStore';
 import { Colors } from '@/src/constants/Colors';
 import { TEXT_VARIANTS } from '@/src/constants/Fonts';
 import ArrowRight from '@/src/assets/images/arrow-right.svg';
+import { clearUserLocalData } from '@/src/utils/asyncStorege';
+import { quizService } from '@/src/services/quizService';
+import { deleteUserCourseSummary } from '@/src/services/course_summaries';
+import { chatService } from '@/src/services/chat_history';
+import { deleteUsersCourseReting } from '@/src/services/main_rating';
 
 interface CourseCardProps {
   course: Course;
@@ -81,23 +86,21 @@ const handleResetProgress = async (e?: any) => {
   if (e && e.stopPropagation) {
     e.stopPropagation();
   }
-  if (!user) return;
+  if (!user || !course) return;
   try {
-    resetCourseProgress(course.id)
+    await clearUserLocalData({ keepProgress: true })
+    await quizService.deleteByCourse(user.id, course.id)
+    await resetCourseProgress(course.id)
+    await deleteUserCourseSummary(user.id, course.id)
+    console.log(user.id, course.id)
+    await chatService.deleteChatHistory(user.id, course.id)
+    await deleteUsersCourseReting(user.id, course.id)
 
-    const storageQuizeKey = `quiz-progress-${course.id}`;
-    await AsyncStorage.removeItem(storageQuizeKey);
-    const storageChatKey = `course-chat-${course.id}`;
-    await AsyncStorage.removeItem(storageChatKey);
-    
   } catch (err) {
     console.error('Error resetting course progress:', err);
   }
 };
 
-
-
-console.log("courseProgress", courseProgress)
 
 
 return (
@@ -122,7 +125,7 @@ return (
         )}
       </View>
 
-      {isDeveloper && courseProgress > 0 && (
+      {/* {isDeveloper && courseProgress > 0 && ( */}
         <TouchableOpacity style={styles.resetButton} onPress={handleResetProgress}>
           <Svg
             width={24}
@@ -138,7 +141,7 @@ return (
             <Path d="M4 13a8.1 8.1 0 0 0 15.5 2m.5 4v-4h-4" />
           </Svg>
         </TouchableOpacity>
-      )}
+      {/* )} */}
     </View>
 
     <View style={styles.content}>
