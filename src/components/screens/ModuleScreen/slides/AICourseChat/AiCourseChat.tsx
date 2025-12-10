@@ -58,7 +58,6 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId, setScrollEn
   const [lastUserAnswer, setLastUserAnswer] = useState('');
   useEffect(() => {
     if (!setScrollEnabled || !isActive) return;
-    // Allow scrolling only when caseState is 'completed'
     setScrollEnabled(caseState === 'completed');
     return () => {
       setScrollEnabled(true);
