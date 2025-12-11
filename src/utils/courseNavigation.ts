@@ -30,7 +30,6 @@ export const navigateToCourse = async (
       if (errorModule) throw errorModule;
 
       const moduleId = dataModule?.module_id;
-      console.log('moduleId', moduleId);
     }
 
 

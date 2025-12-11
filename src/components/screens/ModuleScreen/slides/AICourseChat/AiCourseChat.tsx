@@ -200,9 +200,7 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId, setScrollEn
   // consolidated prompt/chat loading handled by the effect above
 
   const handleSend = async () => {
-    console.log('answered', isLocked);
-    console.log('Messages', messages);
-    console.log('userMessageCount', userMessageCount);
+
     analyticsStore.trackEvent('course_screen__submit__click', {
       courseIdStr,
       slideId,
@@ -221,7 +219,6 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId, setScrollEn
     //рахуємо кількість користувальских відповідей
     const newCount = userMessageCount + 1;
     setUserMessageCount(newCount);
-    console.log('userMessageCount', userMessageCount);
 
     if (newCount >= 3) {
       setIsLocked(true);

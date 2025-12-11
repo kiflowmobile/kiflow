@@ -92,7 +92,6 @@ const handleResetProgress = async (e?: any) => {
     await quizService.deleteByCourse(user.id, course.id)
     await resetCourseProgress(course.id)
     await deleteUserCourseSummary(user.id, course.id)
-    console.log(user.id, course.id)
     await chatService.deleteChatHistory(user.id, course.id)
     await deleteUsersCourseReting(user.id, course.id)
 

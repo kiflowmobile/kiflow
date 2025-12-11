@@ -50,7 +50,6 @@ export const useQuizStore = create<QuizStore>((set, get) => ({
   // },
 
   syncQuizToDB: async () => {
-    // console.log('syncQuizToDB')
     const { user } = getAuthStore().getState();
     if(!user) return
     try {
