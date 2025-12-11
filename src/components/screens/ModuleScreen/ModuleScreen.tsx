@@ -69,7 +69,6 @@ export default function ModuleScreen() {
   const router = useRouter();
   const { user } = useAuthStore();
 
-
   useEffect(() => {
     if (!moduleId) return;
     fetchLessonByModule(moduleId).catch((err) => console.error(err));
@@ -110,6 +109,12 @@ export default function ModuleScreen() {
   }, []);
 
   const showPagination = useMemo(() => slides.length > 1, [slides.length]);
+
+  const isCurrentDashboard = useMemo(() => {
+    if (!currentSlideId) return false;
+    const current = slides.find((s) => s.id === currentSlideId);
+    return current?.slide_type === 'dashboard';
+  }, [slides, currentSlideId]);
 
   const updateUrl = (id: string) => {
     router.setParams({ slideId: id });
@@ -359,7 +364,6 @@ export default function ModuleScreen() {
     });
   }, [moduleId, slides.length, slideId]);
 
-
   if (error || errorModule)
     return (
       <View style={styles.errorContainer}>
@@ -376,8 +380,6 @@ export default function ModuleScreen() {
       </View>
     );
 
-    
-
   if (isLoading || isLoadingModule)
     return (
       <View style={styles.loader}>
@@ -391,8 +393,6 @@ export default function ModuleScreen() {
         <Text style={styles.noSlidesText}>Слайди не знайдено</Text>
       </View>
     );
-
- 
 
   return (
     <View style={{ flex: 1 }}>
@@ -427,7 +427,7 @@ export default function ModuleScreen() {
         ))}
       </Animated.ScrollView>
 
-      {showPagination && slides.length > 0 && (
+      {showPagination && slides.length > 0 && !isCurrentDashboard && (
         <LessonProgressBars
           slides={slides}
           lessons={lessons}

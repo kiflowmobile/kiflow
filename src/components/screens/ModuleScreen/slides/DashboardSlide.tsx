@@ -1,228 +1,237 @@
-import SkillsChart from '@/src/components/ui/SkillsChart';
-import { shadow } from '@/src/components/ui/styles/shadow';
-import { useAuthStore, useModulesStore } from '@/src/stores';
+import { useAuthStore } from '@/src/stores';
 import { useMainRatingStore } from '@/src/stores/mainRatingStore';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import React, { useEffect, useMemo, useState } from 'react';
-import { Platform, StyleSheet, Text, View, ScrollView} from 'react-native';
+import SkillRow from '@/src/components/screens/Statistics/SkillRow';
+import Button from '@/src/components/ui/button';
+import React, { useEffect, useState } from 'react';
+import { StyleSheet, Text, View, ScrollView } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 
 interface DashboardSlideProps {
   title: string;
-  courseId: string
+  courseId: string;
+  lessonId: string;
+  onComplete?: () => void;
 }
 
-const calculateQuizRating = (quizData: Record<string, { selectedAnswer: number; correctAnswer: number }>) => {
-  const entries = Object.values(quizData);
-  const total = entries.length;
-  if (total === 0) return 0;
-
-  const correct = entries.filter(q => q.selectedAnswer === q.correctAnswer).length;
-  const rating = (correct / total) * 5;
-
-  return Number(rating.toFixed(1)); 
-};
-
-const DashboardSlide: React.FC<DashboardSlideProps> = ({ courseId, title }) => {
+const DashboardSlide: React.FC<DashboardSlideProps> = ({
+  courseId,
+  title,
+  lessonId,
+  onComplete,
+}) => {
   const { user } = useAuthStore();
-  const currentModuleId = useModulesStore.getState().currentModule?.id;
 
-  const {
-    average,
-    skills,
-    fetchAverage,
-    fetchSkills,
-  } = useMainRatingStore();
-  const [quizRatings, setQuizRatings] = useState<number | null>(null);
+  const { fetchAverageByLesson, fetchSkillsByLesson } = useMainRatingStore();
+
+  const [average, setAverage] = useState<number | null>(null);
+  const [skills, setSkills] = useState<any[]>([]);
+
+  // no quiz data shown here — keep the component focused on lesson ratings
 
   useEffect(() => {
-    const loadQuizRatings = async () => {
-      try {
-        const stored = await AsyncStorage.getItem(`quiz-progress-${courseId}`);
-        if (!stored) return;
-        const parsed = JSON.parse(stored);
+    if (!user || !lessonId) return;
 
-        
-  
-        const quizScore = calculateQuizRating(parsed);
-        setQuizRatings(quizScore);
-      } catch (err) {
-        console.error('Error loading quiz ratings:', err);
+    const load = async () => {
+      try {
+        const avg = await fetchAverageByLesson(user.id, lessonId);
+        const lessonSkills = await fetchSkillsByLesson(user.id, lessonId);
+        setAverage(avg ?? null);
+        setSkills(lessonSkills || []);
+      } catch (e) {
+        console.error('DashboardSlide load error', e);
       }
     };
-  
-    if (courseId) loadQuizRatings();
-  }, [courseId]);
 
-  useEffect(() => {
-    if (!user || !currentModuleId) return;
-
-    fetchAverage(user.id, currentModuleId);
-    fetchSkills(user.id, currentModuleId);
-  }, [user, currentModuleId]);
-
-  const combinedAverage = useMemo(() => {
-    if (quizRatings !== null && average !== null) {
-      const avg = (quizRatings + Number(average.toFixed(1))) / 2;
-      return `${avg.toFixed(1)}/5`;
-    }
-    return '...';
-  }, [quizRatings, average]);
-
+    load();
+  }, [user, lessonId, fetchAverageByLesson, fetchSkillsByLesson]);
 
   return (
     <View style={styles.screen}>
-      <View style={styles.card}>
-      <ScrollView contentContainerStyle={{ paddingBottom: 16 }}>
-        <View style={styles.iconWrapper}>
-          <Svg
-            width={40}
-            height={40}
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="#7c3aed"
-            strokeWidth={1.5}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <Path d="M10 3.2a9 9 0 1 0 10.8 10.8a1 1 0 0 0 -1 -1h-3.8a4.1 4.1 0 1 1 -5 -5v-4a.9 .9 0 0 0 -1 -.8" />
-            <Path d="M15 3.5a9 9 0 0 1 5.5 5.5h-4.5a9 9 0 0 0 -1 -1v-4.5" />
-          </Svg>
+      <View style={styles.headerArea}>
+        <View style={styles.headerTop}>
+          <View style={styles.checkCircle}>
+            <Svg width={20} height={20} viewBox="0 0 24 24" fill="none">
+              <Path
+                d="M5 13l4 4L19 7"
+                stroke="#fff"
+                strokeWidth={2}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </Svg>
+          </View>
+          <Text style={styles.headerTitle}>Lesson completed!</Text>
         </View>
+      </View>
 
-        <Text style={styles.title}>{title}</Text>
-        <Text style={styles.subtitle}>
-          Ця сторінка відображає твою персональну статистику
-        </Text>
+      <ScrollView contentContainerStyle={styles.content}>
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>Your results</Text>
 
-        <View style={styles.statsCard}>
-          <Text style={styles.statsTitle}>Статистика</Text>
-          <View style={styles.statsRow}>
-
-
-            {average !== null && (
-              <View style={[styles.statBox, { backgroundColor: '#dcfce7' }]}>
-                <Text style={styles.statLabel}>Середній бал</Text>
-                <Text style={[styles.statValue, { color: '#15803d' }]}>
-                  {average.toFixed(1)} /5
-                </Text>
-              </View>
-            )}
-            <View style={[styles.statBox, { backgroundColor: '#ede9fe' }]}>
-              <Text style={styles.statLabel}>Модулі quiz</Text>
-              <Text style={[styles.statValue, { color: '#7c3aed' }]}>
-                {quizRatings ? quizRatings + '/5': '...' }
-              </Text>
+          <View style={styles.centerBlock}>
+            <View style={styles.blob}>
+              <Text style={styles.blobValue}>{average !== null ? average.toFixed(1) : '...'}</Text>
             </View>
-            <View style={[styles.statBox, { backgroundColor: '#dbeafe' }]}>
-              <Text style={styles.statLabel}>Середній бал</Text>
-              <Text style={[styles.statValue, { color: '#2563eb' }]}>
-                {combinedAverage}
-              </Text>
-            </View>
+            <Text style={styles.blobLabel}>Average score</Text>
+          </View>
+
+          <View style={styles.skillsBlock}>
+            <Text style={styles.skillsHeading}>Skills level</Text>
+            {(skills || []).map((s: any) => (
+              <SkillRow
+                key={s.criterion_id ?? s.criterion_key ?? s.key}
+                skill={{
+                  criterion_id: s.criterion_id ?? s.criterion_key ?? s.key,
+                  criterion_name: s.criterion_name ?? s.name ?? s.key,
+                  average_score: s.average_score ?? 0,
+                }}
+              />
+            ))}
           </View>
         </View>
-        <SkillsChart skills={skills} average={average} />
-        </ScrollView>
-      </View>
+
+        <Button
+          title="Next lesson"
+          onPress={() => onComplete && onComplete()}
+          variant="dark"
+          size="md"
+          accessibilityLabel="Next lesson"
+        />
+      </ScrollView>
     </View>
   );
 };
-
 
 export default DashboardSlide;
 
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    padding: 16,
+    backgroundColor: '#f1f5f9',
+  },
+  headerArea: {
+    backgroundColor: '#32a02b',
+    paddingBottom: 18,
+    borderBottomLeftRadius: 8,
+    borderBottomRightRadius: 8,
+  },
+  headerTop: {
+    alignItems: 'center',
+    paddingTop: 22,
+    paddingBottom: 8,
+  },
+  checkCircle: {
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#ffffff',
+    marginBottom: 8,
   },
-  card: {
-    borderRadius: 20,
-    padding: 16,
-    backgroundColor: '#ffffff',
-    ...shadow,
-  },
-  iconWrapper: {
-    alignSelf: 'center',
-    backgroundColor: '#f3e8ff',
-    padding: 12,
-    borderRadius: 50,
-    marginBottom: 12,
-  },
-  title: {
+  headerTitle: {
+    color: '#fff',
     fontSize: 22,
-    fontWeight: '800',
-    textAlign: 'center',
-    color: '#0f172a',
-    marginBottom: 4,
-  },
-  subtitle: {
-    fontSize: 16,
-    textAlign: 'center',
-    color: '#475569',
-    marginBottom: 16,
-  },
-  statsCard: {
-    backgroundColor: '#f9fafb',
-    borderRadius: 16,
-    padding: 16,
-    marginTop: 12,
-  },
-  statsTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#0f172a',
-    marginBottom: 12,
-  },
-  statsRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    gap: 8,
-  },
-  statBox: {
-    flex: 1,
-    borderRadius: 12,
-    padding: 12,
-    alignItems: 'center',
-  },
-  statLabel: {
-    fontSize: 13,
-    color: '#475569',
-    marginBottom: 4,
-  },
-  statValue: {
-    fontSize: 18,
     fontWeight: '700',
   },
-  skillsCard: {
-    backgroundColor: '#f9fafb',
-    borderRadius: 16,
+  content: {
     padding: 16,
-    marginTop: 16,
+    paddingTop: 20,
   },
-  chartPlaceholder: {
-    height: 200,
+  card: {
+    backgroundColor: '#fff',
     borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#cbd5e1',
-    borderStyle: 'dashed',
+    padding: 16,
+    ...{
+      shadowColor: '#000',
+      shadowOpacity: 0.06,
+      shadowRadius: 8,
+      shadowOffset: { width: 0, height: 4 },
+      elevation: 3,
+    },
+  },
+  cardTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#0f172a',
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  centerBlock: {
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  blob: {
+    backgroundColor: '#e6ecff',
+    width: 76,
+    height: 76,
+    borderRadius: 24,
     alignItems: 'center',
     justifyContent: 'center',
+    marginBottom: 8,
   },
-  chartPlaceholderText: {
+  blobValue: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: '#0f172a',
+  },
+  blobLabel: {
     color: '#64748b',
-    textAlign: 'center',
+    fontSize: 13,
   },
-  noScoresText: {
-    fontSize: 16,
-    color: '#9ca3af', // сірий відтінок
-    textAlign: 'center',
+  skillsBlock: {
+    marginTop: 8,
+  },
+  skillsHeading: {
+    fontSize: 15,
+    fontWeight: '700',
+    marginBottom: 8,
+  },
+  skillRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  skillLeft: {
+    flex: 1,
+    paddingRight: 8,
+  },
+  skillName: {
+    fontSize: 14,
+    color: '#0f172a',
+  },
+  skillRight: {
+    width: 140,
+    alignItems: 'flex-end',
+  },
+  skillScore: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#0f172a',
+    marginBottom: 6,
+  },
+  progressBar: {
+    flexDirection: 'row',
+    width: '100%',
+    justifyContent: 'flex-end',
+  },
+  progressSegment: {
+    width: 22,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#2563eb',
+    marginLeft: 6,
+  },
+  nextBtn: {
     marginTop: 20,
-    fontStyle: 'italic',
+    backgroundColor: '#000',
+    paddingVertical: 14,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  nextBtnText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '700',
   },
 });
-

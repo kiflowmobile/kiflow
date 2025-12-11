@@ -34,13 +34,6 @@ interface AICourseChatProps {
   lessonsId: string
 }
 
-const AICourseChat: React.FC<AICourseChatProps> = ({
-  title,
-  slideId,
-  setScrollEnabled,
-  isActive,
-  onComplete,
-}) => {
 const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId, setScrollEnabled, isActive, onComplete, lessonsId }) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
@@ -486,5 +479,4 @@ const styles = StyleSheet.create({
     color: '#475569',
     textAlign: 'center',
   },
-});
 });

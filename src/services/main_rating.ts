@@ -9,8 +9,22 @@ export const fetchRatings = async (userId: string, moduleId: string) => {
     .eq('module_id', moduleId);
 };
 
+// оценки по уроку
+export const fetchRatingsByLesson = async (userId: string, lessonId: string) => {
+  return await supabase
+    .from('main_rating')
+    .select('criteria_key, rating')
+    .eq('user_id', userId)
+    .eq('lesson_id', lessonId);
+};
+
 // конкретна оцінка
-export const fetchRating = async (userId: string, moduleId: string, key: string, lessonId: string) => {
+export const fetchRating = async (
+  userId: string,
+  moduleId: string,
+  key: string,
+  lessonId: string,
+) => {
   return await supabase
     .from('main_rating')
     .select('rating')
@@ -28,7 +42,7 @@ export const upsertRating = async (
   moduleId: string,
   key: string,
   courseId: string,
-  lessonId: string
+  lessonId: string,
 ) => {
   const value = Number(rating);
   if (!Number.isFinite(value)) throw new Error('Rating is not a number');
@@ -148,12 +162,65 @@ export const getUserSkillsSummary = async (userId: string, moduleId: string) => 
   return { data: summary, error: null };
 };
 
+/**
+ * Зріз навичок за уроком (lesson)
+ * повертає масив { criterion_key, criterion_name, average_score }
+ */
+export const getUserSkillsSummaryByLesson = async (userId: string, lessonId: string) => {
+  const { data: ratings, error: ratingsError } = await fetchRatingsByLesson(userId, lessonId);
+
+  if (ratingsError) {
+    return { data: null, error: ratingsError };
+  }
+
+  if (!ratings || ratings.length === 0) {
+    return { data: [], error: null };
+  }
+
+  const keys = Array.from(new Set(ratings.map((r) => r.criteria_key).filter(Boolean)));
+
+  const { data: criterias, error: criteriasError } = await fetchCriteriasByKeys(keys);
+
+  if (criteriasError) {
+    return { data: null, error: criteriasError };
+  }
+
+  const nameByKey = new Map<string, string>();
+  (criterias ?? []).forEach((c: any) => {
+    nameByKey.set(c.key, c.name);
+  });
+
+  const grouped: Record<
+    string,
+    {
+      sum: number;
+      count: number;
+    }
+  > = {};
+
+  ratings.forEach((item: any) => {
+    if (!item.criteria_key) return;
+    if (!grouped[item.criteria_key]) {
+      grouped[item.criteria_key] = { sum: 0, count: 0 };
+    }
+    grouped[item.criteria_key].sum += item.rating ?? 0;
+    grouped[item.criteria_key].count += 1;
+  });
+
+  const summary = Object.entries(grouped).map(([key, { sum, count }]) => ({
+    criterion_key: key,
+    criterion_name: nameByKey.get(key) ?? key,
+    average_score: count > 0 ? sum / count : 0,
+  }));
+
+  return { data: summary, error: null };
+};
 
 export const deleteUsersCourseReting = async (userId: string, courseId: string) => {
-  const {error } = await supabase
+  const { error } = await supabase
     .from('main_rating')
     .delete()
     .eq('user_id', userId)
     .eq('course_id', courseId);
   if (error) throw new Error(error.message);
-}
+};

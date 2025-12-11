@@ -20,7 +20,7 @@ interface CourseSlideProps {
   setScrollEnabled?: (enabled: boolean) => void;
   isMuted?: boolean;
   toggleMute?: () => void;
-  lessonsId: string
+  lessonsId: string;
 }
 
 const ModuleSlide: React.FC<CourseSlideProps> = ({
@@ -32,7 +32,7 @@ const ModuleSlide: React.FC<CourseSlideProps> = ({
   setScrollEnabled,
   isMuted,
   toggleMute,
-  lessonsId
+  lessonsId,
 }) => {
   const { slides, isLoading, error } = useSlidesStore();
   const { modules } = useModulesStore();
@@ -66,24 +66,24 @@ const ModuleSlide: React.FC<CourseSlideProps> = ({
             const idx = modules.findIndex((m) => m.id === moduleIdFromSlide);
             return idx >= 0 ? idx + 1 : moduleIdStr ? Number(moduleIdStr) || 1 : 1;
           })();
-      
+
       const lessonIdFromSlide = (slideData as any).lesson_id;
-      const lessonObj = lessonIdFromSlide 
+      const lessonObj = lessonIdFromSlide
         ? lessons.find((l) => l.id === lessonIdFromSlide) || null
         : null;
-      
-      const lessonNumber = lessonObj 
-        ? lessonObj.lesson_order 
-        : slideData.slide_order ?? 1;
-      
+
+      const lessonNumber = lessonObj ? lessonObj.lesson_order : slideData.slide_order ?? 1;
+
       const moduleLessons = lessons.filter((l) => l.module_id === moduleIdFromSlide);
       const totalLessons = moduleLessons.length;
-      
+
       return (
         <TextSlide
           title={slideData.slide_title}
           data={slideData.slide_data ?? ''}
-          subtitle={`Module ${moduleOrdinal} / Lesson ${lessonNumber}${totalLessons > 0 ? ` of ${totalLessons}` : ''}`}
+          subtitle={`Module ${moduleOrdinal} / Lesson ${lessonNumber}${
+            totalLessons > 0 ? ` of ${totalLessons}` : ''
+          }`}
         />
       );
     case 'video': {
@@ -93,9 +93,9 @@ const ModuleSlide: React.FC<CourseSlideProps> = ({
         <>
           {isActive &&
             (hasVideo ? (
-              <VideoPlayer 
-                uri={uri ?? undefined} 
-                mux={mux ?? undefined} 
+              <VideoPlayer
+                uri={uri ?? undefined}
+                mux={mux ?? undefined}
                 isActive={isActive}
                 isMuted={isMuted}
                 toggleMute={toggleMute}
@@ -139,7 +139,22 @@ const ModuleSlide: React.FC<CourseSlideProps> = ({
         />
       );
     case 'dashboard':
-      return <DashboardSlide courseId={courseIdStr} title={slideData.slide_title} />;
+      const lessonIdFromDashboard = (slideData as any).lesson_id;
+      const finalLessonId = lessonIdFromDashboard || lessonsId;
+      console.log('[ModuleSlide] Dashboard lessonId:', {
+        lessonIdFromDashboard,
+        lessonsId,
+        finalLessonId,
+        slideId: slideData.id,
+      });
+      return (
+        <DashboardSlide
+          courseId={courseIdStr}
+          title={slideData.slide_title}
+          lessonId={finalLessonId}
+          onComplete={onComplete}
+        />
+      );
     default:
       return (
         <MediaPlaceholder message={`Слайд типу "${slideData.slide_type}" ще не підтримується`} />

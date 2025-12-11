@@ -20,7 +20,10 @@ export const navigateToCourse = async (
     let moduleId: string | undefined;
 
 
-    if (lastSlideId) {
+    // Synthetic slide IDs (e.g., dashboard-* without UUID) break Supabase filters.
+    const isUuid = !!lastSlideId && /^[0-9a-fA-F-]{36}$/.test(lastSlideId);
+
+    if (lastSlideId && isUuid) {
       const { data, error } = await getLessonIdBySlideId(lastSlideId);
       if (error) throw error;
 
