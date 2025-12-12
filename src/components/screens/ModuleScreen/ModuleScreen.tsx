@@ -396,7 +396,7 @@ export default function ModuleScreen() {
 
   return (
     <View style={{ flex: 1 }}>
-      <Animated.ScrollView
+      {/* <Animated.ScrollView
         ref={scrollViewRef}
         showsVerticalScrollIndicator={false}
         onScroll={onScroll}
@@ -425,7 +425,7 @@ export default function ModuleScreen() {
             />
           </View>
         ))}
-      </Animated.ScrollView>
+      </Animated.ScrollView> */}
 
       {showPagination && slides.length > 0 && (
         <LessonProgressBars
