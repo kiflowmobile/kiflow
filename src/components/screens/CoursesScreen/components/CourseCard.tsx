@@ -142,7 +142,6 @@ return (
     </View>
 
     <View style={styles.content}>
-      {/* Progress bar for in-progress courses */}
       {isInProgress && <ProgressBar percent={courseProgress} height={8} />}
 
       <Text style={styles.title}>{course.title}</Text>
