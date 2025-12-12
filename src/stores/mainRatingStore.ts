@@ -4,6 +4,8 @@ import {
   fetchCriteriasByKeys,
   fetchRating,
   fetchRatings,
+  fetchRatingsByLesson,
+  getUserSkillsSummaryByLesson,
   upsertRating,
 } from '../services/main_rating';
 
@@ -23,23 +25,25 @@ interface SkillSummaryItem {
 
 interface MainRatingState {
   average: number | null;
-  ratings: RatingItem[]; 
+  ratings: RatingItem[];
   skills: SkillSummaryItem[];
   isLoading: boolean;
   error: string | null;
 
   fetchAverage: (userId: string, moduleId: string) => Promise<void>;
   fetchSkills: (userId: string, moduleId: string) => Promise<void>;
+  fetchAverageByLesson: (userId: string, lessonId: string) => Promise<number | null>;
+  fetchSkillsByLesson: (userId: string, lessonId: string) => Promise<SkillSummaryItem[]>;
   saveRating: (
     userId: string,
     rating: number,
     moduleId: string,
     key: string,
     courseId: string,
-    lessonId: string
+    lessonId: string,
   ) => Promise<void>;
   fetchUserAverage: (userId: string) => Promise<void>;
-  fetchUserRatings: (userId: string) => Promise<void>; 
+  fetchUserRatings: (userId: string) => Promise<void>;
 }
 
 export const useMainRatingStore = create<MainRatingState>((set) => ({
@@ -90,9 +94,57 @@ export const useMainRatingStore = create<MainRatingState>((set) => ({
     }
   },
 
+  fetchAverageByLesson: async (userId, lessonId) => {
+    try {
+      const { data, error } = await fetchRatingsByLesson(userId, lessonId);
+      if (error) {
+        console.error('[mainRatingStore] Error fetching ratings by lesson:', error);
+        throw error;
+      }
+      if (!data || data.length === 0) {
+        return null;
+      }
+
+      const total = data.reduce((sum, item) => sum + (item.rating || 0), 0);
+      const avg = total / data.length;
+      return avg;
+    } catch (err: any) {
+      console.error('[mainRatingStore] Error fetching average by lesson:', err);
+      return null;
+    }
+  },
+
+  fetchSkillsByLesson: async (userId, lessonId) => {
+    try {
+      const { data, error } = await getUserSkillsSummaryByLesson(userId, lessonId);
+      if (error) {
+        console.error('[mainRatingStore] Error fetching skills by lesson:', error);
+        throw error;
+      }
+      if (!data) {
+        return [];
+      }
+
+      const result = data.map((item: any) => ({
+        criterion_id: item.criterion_key,
+        criterion_name: item.criterion_name,
+        average_score: item.average_score,
+      }));
+      return result;
+    } catch (err: any) {
+      console.error('[mainRatingStore] Error fetching skills by lesson:', err);
+      return [];
+    }
+  },
+
   saveRating: async (userId, rating, moduleId, key, courseId, lessonId) => {
     try {
-      const { data: existing, error: fetchError } = await fetchRating(userId, moduleId, key, lessonId);
+      const { data: existing, error: fetchError } = await fetchRating(
+        userId,
+        moduleId,
+        key,
+        lessonId,
+      );
       if (fetchError && fetchError.code !== 'PGRST116') throw fetchError;
 
       const normalized = typeof rating === 'string' ? parseInt(rating, 10) : rating;

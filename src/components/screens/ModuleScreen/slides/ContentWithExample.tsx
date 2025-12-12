@@ -150,7 +150,7 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   mainPoint: {
-    ...TEXT_VARIANTS.body1,
+    ...TEXT_VARIANTS.title2,
     marginBottom: 8,
     color: '#111',
     lineHeight: 22,

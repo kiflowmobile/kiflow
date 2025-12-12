@@ -2,9 +2,9 @@ import React, { useMemo } from 'react';
 import { StyleSheet, View, Pressable } from 'react-native';
 import { Slide } from '@/src/constants/types/slides';
 import { Lessons } from '@/src/constants/types/lesson';
-import { useRouter } from 'expo-router';
 import { Colors } from '@/src/constants/Colors';
 import CloseSvg from '@/src/assets/images/close.svg';
+import { useRouter } from 'expo-router';
 import VolumeOnSvg from '@/src/assets/images/volume-on.svg';
 import VolumeOffSvg from '@/src/assets/images/volume-off.svg';
 
@@ -79,32 +79,28 @@ function LessonProgressBars({
   }, [slides, lessons, currentSlideId, currentSlideIndex]);
 
   if (!currentLessonData) return null;
-
   const currentSlideType =
     (slides && slides[currentSlideIndex] && (slides[currentSlideIndex] as any).slide_type) || null;
 
-  // Treat 'content' slides as intro screens for styling (transparent background, white close icon)
-  const isTransparentScreen = currentSlideType === 'video' || currentSlideType === 'text';
+  // Treat certain slide types as intro/transparent screens for styling (transparent background, white close icon)
+  const isTransparentScreen =
+    currentSlideType === 'video' || currentSlideType === 'text' || currentSlideType === 'dashboard';
 
   return (
     <View style={[styles.root, isTransparentScreen && styles.rootTransparent]}>
       <View style={styles.leftRow}>
-        <CloseSvg
-          width={24}
-          height={24}
-          onPress={handleClose}
-          color={isTransparentScreen ? '#FFFFFF' : Colors.black}
-        />
+        <Pressable onPress={handleClose} >
+          <CloseSvg width={24} height={24} color={isTransparentScreen ? '#FFFFFF' : Colors.black} />
+        </Pressable>
       </View>
 
-      {currentSlideType !== 'text' && (
+      {currentSlideType !== 'text' && currentSlideType !== 'dashboard' && (
         <View style={styles.centerRow}>
           <View style={styles.scrollRow}>
             <View style={[styles.lessonGroup, styles.lessonCurrentGroup]}>
               {currentLessonData.slideStates
                 .filter((_: any, idx: number) => idx > 0)
                 .map((s: any, idx: number, filteredArray: any[]) => {
-                  const last = idx === filteredArray.length - 1;
                   const isVideo = currentSlideType === 'video';
                   return (
                     <View
