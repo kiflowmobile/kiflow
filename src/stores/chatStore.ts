@@ -17,6 +17,7 @@ interface ChatStore {
 
 export const useChatStore = create<ChatStore>(() => ({
   syncChatFromLocalStorageToDB: async () => {
+    console.log('useChatStore')
     const { user } = getAuthStore().getState();
 
     if (!user) return;

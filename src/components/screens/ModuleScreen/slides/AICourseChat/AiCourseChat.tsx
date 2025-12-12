@@ -1,7 +1,6 @@
 import { KeyboardAvoidingView, Platform, ScrollView, TextInput, StyleSheet } from 'react-native';
 import { usePromptsStore } from '@/src/services/slidePrompt';
 import { useAuthStore, useCriteriaStore, useMainRatingStore, useSlidesStore } from '@/src/stores';
-
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { askGemini } from './askGemini';
 import { getCurrentUserCode } from '@/src/services/users';
@@ -12,7 +11,6 @@ import ChatInput from './components/ChatInput';
 import CaseOverlay from './components/CaseOverlay';
 import CaseFooter from './components/CaseFooter';
 import { formatAIResponseForChat } from './formatAIResponseForChat';
-// text variants imported where needed in smaller components
 import { useLocalSearchParams } from 'expo-router';
 import { useState, useRef, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -65,7 +63,6 @@ const AICourseChat: React.FC<AICourseChatProps> = ({
   const [lastUserAnswer, setLastUserAnswer] = useState('');
   useEffect(() => {
     if (!setScrollEnabled || !isActive) return;
-    // Allow scrolling when there's a result (answer from AI) or when completed
     setScrollEnabled(caseState === 'result' || caseState === 'completed');
     return () => {
       setScrollEnabled(true);
@@ -73,7 +70,6 @@ const AICourseChat: React.FC<AICourseChatProps> = ({
   }, [setScrollEnabled, caseState, isActive]);
 
   useEffect(() => {
-    // Don't block scrolling if there's a result or completed
     if (!setScrollEnabled || !isActive || caseState === 'result' || caseState === 'completed')
       return;
 

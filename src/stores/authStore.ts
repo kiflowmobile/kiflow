@@ -5,7 +5,8 @@ import { create } from 'zustand';
 import { useUserProgressStore } from './userProgressStore';
 import { useQuizStore } from './quizStore';
 import { useChatStore } from './chatStore';
-import { clearUserLocalData } from '../utils/asyncStorege';
+import { clearUserLocalData } from '@/src/utils/asyncStorage';
+
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAnalyticsStore } from './analyticsStore';
 
@@ -22,7 +23,7 @@ const analyticsStore = useAnalyticsStore.getState();
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, firstName?: string, lastName?: string) => Promise<void>;
   signOut: () => Promise<void>;
-  signInWithGoogle: () => Promise<void>;
+  // signInWithGoogle: () => Promise<void>;
   checkSession: () => Promise<void>;
   clearError: () => void;
   getUserRole: () => Promise<string | null>;
@@ -172,47 +173,47 @@ export const useAuthStore = create<AuthState>()(
       }
     },
 
-    signInWithGoogle: async () => {
-      set({ isLoading: true, error: null });
-      try {
-        await supabase.auth.signOut();
-        const { error } = await supabase.auth.signInWithOAuth({
-          provider: 'google',
-        });
+    // signInWithGoogle: async () => {
+    //   set({ isLoading: true, error: null });
+    //   try {
+    //     await supabase.auth.signOut();
+    //     const { error } = await supabase.auth.signInWithOAuth({
+    //       provider: 'google',
+    //     });
 
-        if (error) throw error;
-        const checkSession = async () => {
-          const { data: sessionData } = await supabase.auth.getSession();
-          return sessionData?.session;
-        };
-        let session = null;
-        let attempts = 0;
-        const maxAttempts = 5;
+    //     if (error) throw error;
+    //     const checkSession = async () => {
+    //       const { data: sessionData } = await supabase.auth.getSession();
+    //       return sessionData?.session;
+    //     };
+    //     let session = null;
+    //     let attempts = 0;
+    //     const maxAttempts = 5;
 
-        while (!session && attempts < maxAttempts) {
-          session = await checkSession();
-          if (!session) {
-            await new Promise((resolve) => setTimeout(resolve, 1000));
-            attempts++;
-          }
-        }
+    //     while (!session && attempts < maxAttempts) {
+    //       session = await checkSession();
+    //       if (!session) {
+    //         await new Promise((resolve) => setTimeout(resolve, 1000));
+    //         attempts++;
+    //       }
+    //     }
 
-        const isGuest = !session || !session.user || session.user.is_anonymous;
-        set({
-          user: session?.user || null,
-          session,
-          isGuest,
-          isLoading: false,
-        });
-      } catch (error: any) {
-        console.error('Error signing in with Google:', error);
-        set({
-          error: error.message || 'Google sign in failed',
-          isLoading: false,
-        });
-        throw error;
-      }
-    },
+    //     const isGuest = !session || !session.user || session.user.is_anonymous;
+    //     set({
+    //       user: session?.user || null,
+    //       session,
+    //       isGuest,
+    //       isLoading: false,
+    //     });
+    //   } catch (error: any) {
+    //     console.error('Error signing in with Google:', error);
+    //     set({
+    //       error: error.message || 'Google sign in failed',
+    //       isLoading: false,
+    //     });
+    //     throw error;
+    //   }
+    // },
 
     checkSession: async () => {
       set({ isLoading: true, error: null });
