@@ -110,11 +110,7 @@ export default function ModuleScreen() {
 
   const showPagination = useMemo(() => slides.length > 1, [slides.length]);
 
-  const isCurrentDashboard = useMemo(() => {
-    if (!currentSlideId) return false;
-    const current = slides.find((s) => s.id === currentSlideId);
-    return current?.slide_type === 'dashboard';
-  }, [slides, currentSlideId]);
+  // Navigation header (LessonProgressBars) will decide styling per-slide; don't need isCurrentDashboard here
 
   const updateUrl = (id: string) => {
     router.setParams({ slideId: id });
@@ -244,18 +240,7 @@ export default function ModuleScreen() {
 
         const uniqueSkills = dedupeClientSkills(skills);
 
-        console.log('[ModuleScreen] sendLastSlideEmail payload will be:', {
-          userId: user.id,
-          userEmail: user.email,
-          courseId,
-          moduleId,
-          averageScore: average,
-          skillsCountRaw: Array.isArray(skills) ? skills.length : 0,
-          skillsCountUnique: uniqueSkills.length,
-          moduleTitle: resolvedModuleTitle,
-          courseTitle: resolvedCourseTitle,
-          slideId: currentSlide.id,
-        });
+        // debug logs removed
 
         const emailData = {
           userId: user.id,
@@ -319,7 +304,7 @@ export default function ModuleScreen() {
   });
 
   const goToNextSlide = async () => {
-    console.log('[ModuleScreen] goToNextSlide called, currentSlideId=', currentSlideId);
+    // debug logs removed
     const currentIndex = slides.findIndex((s) => s.id === currentSlideId);
     if (currentIndex < 0) return;
 
@@ -427,7 +412,7 @@ export default function ModuleScreen() {
         ))}
       </Animated.ScrollView>
 
-      {showPagination && slides.length > 0 && !isCurrentDashboard && (
+      {showPagination && slides.length > 0 && (
         <LessonProgressBars
           slides={slides}
           lessons={lessons}

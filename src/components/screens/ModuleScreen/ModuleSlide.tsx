@@ -141,12 +141,7 @@ const ModuleSlide: React.FC<CourseSlideProps> = ({
     case 'dashboard':
       const lessonIdFromDashboard = (slideData as any).lesson_id;
       const finalLessonId = lessonIdFromDashboard || lessonsId;
-      console.log('[ModuleSlide] Dashboard lessonId:', {
-        lessonIdFromDashboard,
-        lessonsId,
-        finalLessonId,
-        slideId: slideData.id,
-      });
+      // debug logs removed
       return (
         <DashboardSlide
           courseId={courseIdStr}

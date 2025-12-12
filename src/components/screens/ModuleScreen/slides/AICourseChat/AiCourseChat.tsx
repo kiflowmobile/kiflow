@@ -31,10 +31,17 @@ interface AICourseChatProps {
   setScrollEnabled?: (enabled: boolean) => void;
   isActive?: boolean;
   onComplete?: () => void;
-  lessonsId: string
+  lessonsId: string;
 }
 
-const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId, setScrollEnabled, isActive, onComplete, lessonsId }) => {
+const AICourseChat: React.FC<AICourseChatProps> = ({
+  title,
+  slideId,
+  setScrollEnabled,
+  isActive,
+  onComplete,
+  lessonsId,
+}) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
@@ -60,7 +67,6 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId, setScrollEn
     if (!setScrollEnabled || !isActive) return;
     // Allow scrolling when there's a result (answer from AI) or when completed
     setScrollEnabled(caseState === 'result' || caseState === 'completed');
-    setScrollEnabled(caseState === 'completed');
     return () => {
       setScrollEnabled(true);
     };
@@ -194,9 +200,7 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId, setScrollEn
   // consolidated prompt/chat loading handled by the effect above
 
   const handleSend = async () => {
-    console.log('answered', isLocked);
-    console.log('Messages', messages);
-    console.log('userMessageCount', userMessageCount);
+    // debug logs removed
     analyticsStore.trackEvent('course_screen__submit__click', {
       courseIdStr,
       slideId,
@@ -213,7 +217,7 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId, setScrollEn
 
     const newCount = userMessageCount + 1;
     setUserMessageCount(newCount);
-    console.log('userMessageCount', userMessageCount);
+    // debug logs removed
 
     if (newCount >= 3) {
       setIsLocked(true);
@@ -257,11 +261,18 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId, setScrollEn
         tokens: aiResponse?.usage?.totalTokens || 0,
       });
 
-        if (user && aiResponse.rating?.criteriaScores && moduleId && lessonsId) {
+      if (user && aiResponse.rating?.criteriaScores && moduleId && lessonsId) {
         const criteriaScores = aiResponse.rating.criteriaScores;
         for (const [criteriaKey, score] of Object.entries(criteriaScores)) {
           try {
-            await saveRating(user.id, score as number, moduleIdStr, criteriaKey, courseIdStr, lessonsId);
+            await saveRating(
+              user.id,
+              score as number,
+              moduleIdStr,
+              criteriaKey,
+              courseIdStr,
+              lessonsId,
+            );
           } catch (err) {
             console.warn(`Failed to save rating for ${criteriaKey}:`, err);
           }

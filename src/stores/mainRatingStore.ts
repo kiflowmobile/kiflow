@@ -25,7 +25,7 @@ interface SkillSummaryItem {
 
 interface MainRatingState {
   average: number | null;
-  ratings: RatingItem[]; 
+  ratings: RatingItem[];
   skills: SkillSummaryItem[];
   isLoading: boolean;
   error: string | null;
@@ -40,10 +40,10 @@ interface MainRatingState {
     moduleId: string,
     key: string,
     courseId: string,
-    lessonId: string
+    lessonId: string,
   ) => Promise<void>;
   fetchUserAverage: (userId: string) => Promise<void>;
-  fetchUserRatings: (userId: string) => Promise<void>; 
+  fetchUserRatings: (userId: string) => Promise<void>;
 }
 
 export const useMainRatingStore = create<MainRatingState>((set) => ({
@@ -96,23 +96,17 @@ export const useMainRatingStore = create<MainRatingState>((set) => ({
 
   fetchAverageByLesson: async (userId, lessonId) => {
     try {
-      console.log('[mainRatingStore] fetchAverageByLesson:', { userId, lessonId });
       const { data, error } = await fetchRatingsByLesson(userId, lessonId);
       if (error) {
         console.error('[mainRatingStore] Error fetching ratings by lesson:', error);
         throw error;
       }
-
-      console.log('[mainRatingStore] Ratings data:', { count: data?.length, data });
-
       if (!data || data.length === 0) {
-        console.log('[mainRatingStore] No ratings found for lesson');
         return null;
       }
 
       const total = data.reduce((sum, item) => sum + (item.rating || 0), 0);
       const avg = total / data.length;
-      console.log('[mainRatingStore] Calculated average:', avg);
       return avg;
     } catch (err: any) {
       console.error('[mainRatingStore] Error fetching average by lesson:', err);
@@ -122,17 +116,12 @@ export const useMainRatingStore = create<MainRatingState>((set) => ({
 
   fetchSkillsByLesson: async (userId, lessonId) => {
     try {
-      console.log('[mainRatingStore] fetchSkillsByLesson:', { userId, lessonId });
       const { data, error } = await getUserSkillsSummaryByLesson(userId, lessonId);
       if (error) {
         console.error('[mainRatingStore] Error fetching skills by lesson:', error);
         throw error;
       }
-
-      console.log('[mainRatingStore] Skills data:', { count: data?.length, data });
-
       if (!data) {
-        console.log('[mainRatingStore] No skills found for lesson');
         return [];
       }
 
@@ -141,7 +130,6 @@ export const useMainRatingStore = create<MainRatingState>((set) => ({
         criterion_name: item.criterion_name,
         average_score: item.average_score,
       }));
-      console.log('[mainRatingStore] Mapped skills:', result);
       return result;
     } catch (err: any) {
       console.error('[mainRatingStore] Error fetching skills by lesson:', err);
@@ -151,7 +139,12 @@ export const useMainRatingStore = create<MainRatingState>((set) => ({
 
   saveRating: async (userId, rating, moduleId, key, courseId, lessonId) => {
     try {
-      const { data: existing, error: fetchError } = await fetchRating(userId, moduleId, key, lessonId);
+      const { data: existing, error: fetchError } = await fetchRating(
+        userId,
+        moduleId,
+        key,
+        lessonId,
+      );
       if (fetchError && fetchError.code !== 'PGRST116') throw fetchError;
 
       const normalized = typeof rating === 'string' ? parseInt(rating, 10) : rating;

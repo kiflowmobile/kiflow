@@ -1,10 +1,12 @@
+import React, { useEffect, useState } from 'react';
+import { StyleSheet, Text, View, ScrollView, Image } from 'react-native';
 import { useAuthStore } from '@/src/stores';
 import { useMainRatingStore } from '@/src/stores/mainRatingStore';
 import SkillRow from '@/src/components/screens/Statistics/SkillRow';
 import Button from '@/src/components/ui/button';
-import React, { useEffect, useState } from 'react';
-import { StyleSheet, Text, View, ScrollView } from 'react-native';
-import Svg, { Path } from 'react-native-svg';
+import { Colors } from '@/src/constants/Colors';
+import { TEXT_VARIANTS } from '@/src/constants/Fonts';
+import DoneLesson from '@/src/assets/images/done-lesson.svg';
 
 interface DashboardSlideProps {
   title: string;
@@ -20,13 +22,12 @@ const DashboardSlide: React.FC<DashboardSlideProps> = ({
   onComplete,
 }) => {
   const { user } = useAuthStore();
+  // close handled by LessonProgressBars (pagination)
 
   const { fetchAverageByLesson, fetchSkillsByLesson } = useMainRatingStore();
 
   const [average, setAverage] = useState<number | null>(null);
   const [skills, setSkills] = useState<any[]>([]);
-
-  // no quiz data shown here — keep the component focused on lesson ratings
 
   useEffect(() => {
     if (!user || !lessonId) return;
@@ -45,20 +46,19 @@ const DashboardSlide: React.FC<DashboardSlideProps> = ({
     load();
   }, [user, lessonId, fetchAverageByLesson, fetchSkillsByLesson]);
 
+  const averageText = average !== null ? average.toFixed(1) : '...';
+
   return (
     <View style={styles.screen}>
       <View style={styles.headerArea}>
-        <View style={styles.headerTop}>
-          <View style={styles.checkCircle}>
-            <Svg width={20} height={20} viewBox="0 0 24 24" fill="none">
-              <Path
-                d="M5 13l4 4L19 7"
-                stroke="#fff"
-                strokeWidth={2}
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </Svg>
+        <Image
+          source={require('@/src/assets/images/lessons-bg.png')}
+          style={styles.headerImage}
+          resizeMode="cover"
+        />
+        <View style={styles.headerTopOverlay} pointerEvents="none">
+          <View>
+            <DoneLesson width={40} height={40} />
           </View>
           <Text style={styles.headerTitle}>Lesson completed!</Text>
         </View>
@@ -69,9 +69,18 @@ const DashboardSlide: React.FC<DashboardSlideProps> = ({
           <Text style={styles.cardTitle}>Your results</Text>
 
           <View style={styles.centerBlock}>
-            <View style={styles.blob}>
-              <Text style={styles.blobValue}>{average !== null ? average.toFixed(1) : '...'}</Text>
+            {/* ✅ Average score bubble like your example */}
+            <View style={styles.scoreImageWrapper}>
+              <Image
+                source={require('@/src/assets/images/score-bubble-shape.png')}
+                style={styles.scoreBubbleImage}
+                resizeMode="contain"
+              />
+              <View style={styles.scoreOverlay} pointerEvents="none">
+                <Text style={styles.scoreText}>{averageText}</Text>
+              </View>
             </View>
+
             <Text style={styles.blobLabel}>Average score</Text>
           </View>
 
@@ -94,8 +103,9 @@ const DashboardSlide: React.FC<DashboardSlideProps> = ({
           title="Next lesson"
           onPress={() => onComplete && onComplete()}
           variant="dark"
-          size="md"
+          size="lg"
           accessibilityLabel="Next lesson"
+          style={styles.nextBtn}
         />
       </ScrollView>
     </View>
@@ -107,78 +117,83 @@ export default DashboardSlide;
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: '#f1f5f9',
+    backgroundColor: Colors.bg,
   },
   headerArea: {
-    backgroundColor: '#32a02b',
-    paddingBottom: 18,
-    borderBottomLeftRadius: 8,
-    borderBottomRightRadius: 8,
+    width: '100%',
+    position: 'relative',
+    height: 200,
+    overflow: 'hidden',
   },
-  headerTop: {
-    alignItems: 'center',
-    paddingTop: 22,
-    paddingBottom: 8,
+  headerImage: {
+    width: '100%',
+    height: '100%',
   },
-  checkCircle: {
-    backgroundColor: 'rgba(255,255,255,0.15)',
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+  headerTopOverlay: {
+    position: 'absolute',
+    top: 72,
+    left: 0,
+    right: 0,
     alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 8,
   },
   headerTitle: {
     color: '#fff',
-    fontSize: 22,
-    fontWeight: '700',
+    ...TEXT_VARIANTS.largeTitle,
   },
+
   content: {
-    padding: 16,
+    paddingHorizontal: 16,
     paddingTop: 20,
   },
   card: {
     backgroundColor: '#fff',
-    borderRadius: 12,
+    borderRadius: 16,
+    marginTop: 16,
     padding: 16,
-    ...{
-      shadowColor: '#000',
-      shadowOpacity: 0.06,
-      shadowRadius: 8,
-      shadowOffset: { width: 0, height: 4 },
-      elevation: 3,
-    },
   },
   cardTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#0f172a',
+    ...TEXT_VARIANTS.title2,
     marginBottom: 12,
     textAlign: 'center',
   },
+
   centerBlock: {
     alignItems: 'center',
     marginBottom: 12,
   },
-  blob: {
-    backgroundColor: '#e6ecff',
-    width: 76,
-    height: 76,
-    borderRadius: 24,
+
+  // ✅ Bubble styles
+  scoreImageWrapper: {
+    width: 60,
+    height: 60,
+    position: 'relative',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 8,
+    marginBottom: 6,
   },
-  blobValue: {
-    fontSize: 22,
-    fontWeight: '700',
+  scoreBubbleImage: {
+    width: '100%',
+    height: '100%',
+  },
+  scoreOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  scoreText: {
+    ...TEXT_VARIANTS.title1,
     color: '#0f172a',
   },
+
   blobLabel: {
-    color: '#64748b',
-    fontSize: 13,
+    ...TEXT_VARIANTS.body2,
+    color: '#525252',
   },
+
   skillsBlock: {
     marginTop: 8,
   },
@@ -187,51 +202,8 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     marginBottom: 8,
   },
-  skillRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  skillLeft: {
-    flex: 1,
-    paddingRight: 8,
-  },
-  skillName: {
-    fontSize: 14,
-    color: '#0f172a',
-  },
-  skillRight: {
-    width: 140,
-    alignItems: 'flex-end',
-  },
-  skillScore: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: '#0f172a',
-    marginBottom: 6,
-  },
-  progressBar: {
-    flexDirection: 'row',
-    width: '100%',
-    justifyContent: 'flex-end',
-  },
-  progressSegment: {
-    width: 22,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: '#2563eb',
-    marginLeft: 6,
-  },
+
   nextBtn: {
-    marginTop: 20,
-    backgroundColor: '#000',
-    paddingVertical: 14,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  nextBtnText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '700',
+    marginTop: 37,
   },
 });
