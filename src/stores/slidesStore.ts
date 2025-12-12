@@ -1,5 +1,5 @@
 import { supabase } from '@/src/config/supabaseClient';
-import { Slide } from '@/src/constants/types/slides';
+import { Slide, DashboardSlide } from '@/src/constants/types/slides';
 import { create } from 'zustand';
 import { Lessons } from '../constants/types/lesson';
 
@@ -54,13 +54,76 @@ export const useSlidesStore = create<SlidesState>()((set, get) => ({
         .in('lesson_id', lessonIds)
         .order('slide_order', { ascending: true });
 
-        set({
-          slides:data ?? [],
-          isLoading: false
-        })
+      if (error) throw error;
+
+      const slides = data ?? [];
+      
+      // Сортируем уроки по lesson_order
+      const sortedLessons = [...lessons].sort((a, b) => a.lesson_order - b.lesson_order);
+      
+      // Группируем слайды по урокам
+      const slidesByLesson = new Map<string, Slide[]>();
+      slides.forEach((slide) => {
+        const lessonId = (slide as any).lesson_id;
+        if (!lessonId) return;
+        if (!slidesByLesson.has(lessonId)) {
+          slidesByLesson.set(lessonId, []);
+        }
+        slidesByLesson.get(lessonId)!.push(slide as Slide);
+      });
+
+      // Для каждого урока проверяем, есть ли дашборд в конце, и добавляем если нет
+      const finalSlides: Slide[] = [];
+      sortedLessons.forEach((lesson) => {
+        const lessonSlides = slidesByLesson.get(lesson.id) || [];
+        
+        // Сортируем слайды урока по порядку
+        const sortedLessonSlides = [...lessonSlides].sort((a, b) => a.slide_order - b.slide_order);
+        
+        // Проверяем, есть ли дашборд в конце урока
+        const lastSlide = sortedLessonSlides[sortedLessonSlides.length - 1];
+        const hasDashboardAtEnd = lastSlide?.slide_type === 'dashboard';
+        
+        // Добавляем все слайды урока
+        finalSlides.push(...sortedLessonSlides);
+        
+        // Если дашборда нет в конце, добавляем его
+        if (!hasDashboardAtEnd) {
+          const maxSlideOrder = sortedLessonSlides.length > 0 
+            ? Math.max(...sortedLessonSlides.map(s => s.slide_order))
+            : 0;
+          
+          const dashboardSlide: DashboardSlide = {
+            id: `dashboard-${lesson.id}`,
+            module_id: lesson.module_id,
+            slide_order: maxSlideOrder + 1,
+            slide_type: 'dashboard',
+            slide_title: 'Статистика уроку',
+            lesson_id: lesson.id,
+          } as DashboardSlide;
+          
+          finalSlides.push(dashboardSlide);
+        }
+      });
+
+      // Сортируем все слайды по lesson_id и slide_order
+      finalSlides.sort((a, b) => {
+        const lessonA = sortedLessons.findIndex(l => l.id === (a as any).lesson_id);
+        const lessonB = sortedLessons.findIndex(l => l.id === (b as any).lesson_id);
+        if (lessonA !== lessonB) {
+          return lessonA - lessonB;
+        }
+        return a.slide_order - b.slide_order;
+      });
+
+      set({
+        slides: finalSlides,
+        isLoading: false
+      })
 
     }catch(err){
       console.log(err)
+      set({ isLoading: false, error: err instanceof Error ? err.message : 'Unknown error' });
     }
   },
   setCurrentSlideIndex: (index: number) => {
