@@ -47,8 +47,6 @@ const CourseCard: React.FC<CourseCardProps> = ({ course }) => {
   const isInProgress = courseProgress > 0 && courseProgress < 100;
   const isNotStarted = courseProgress === 0;
 
-
-
   useEffect(() => {
     if (user) {
       fetchUserProgress(user.id);
@@ -124,8 +122,8 @@ return (
         )}
       </View>
 
-      {/* {isDeveloper && courseProgress > 0 && ( */}
-        <TouchableOpacity style={styles.resetButton} onPress={handleResetProgress}>
+      {isDeveloper && courseProgress > 0 && (
+        <TouchableOpacity style={styles.resetButton} onPress={handleResetProgress}   testID="reset-button">
           <Svg
             width={24}
             height={24}
@@ -140,7 +138,7 @@ return (
             <Path d="M4 13a8.1 8.1 0 0 0 15.5 2m.5 4v-4h-4" />
           </Svg>
         </TouchableOpacity>
-      {/* )} */}
+       )} 
     </View>
 
     <View style={styles.content}>
