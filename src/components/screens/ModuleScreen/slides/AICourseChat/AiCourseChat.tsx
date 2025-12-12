@@ -1,7 +1,6 @@
 import { KeyboardAvoidingView, Platform, ScrollView, TextInput, StyleSheet } from 'react-native';
 import { usePromptsStore } from '@/src/services/slidePrompt';
 import { useAuthStore, useCriteriaStore, useMainRatingStore, useSlidesStore } from '@/src/stores';
-
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { askGemini } from './askGemini';
 import { getCurrentUserCode } from '@/src/services/users';
@@ -12,7 +11,6 @@ import ChatInput from './components/ChatInput';
 import CaseOverlay from './components/CaseOverlay';
 import CaseFooter from './components/CaseFooter';
 import { formatAIResponseForChat } from './formatAIResponseForChat';
-// text variants imported where needed in smaller components
 import { useLocalSearchParams } from 'expo-router';
 import { useState, useRef, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -34,13 +32,6 @@ interface AICourseChatProps {
   lessonsId: string
 }
 
-const AICourseChat: React.FC<AICourseChatProps> = ({
-  title,
-  slideId,
-  setScrollEnabled,
-  isActive,
-  onComplete,
-}) => {
 const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId, setScrollEnabled, isActive, onComplete, lessonsId }) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
@@ -65,7 +56,6 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId, setScrollEn
   const [lastUserAnswer, setLastUserAnswer] = useState('');
   useEffect(() => {
     if (!setScrollEnabled || !isActive) return;
-    // Allow scrolling when there's a result (answer from AI) or when completed
     setScrollEnabled(caseState === 'result' || caseState === 'completed');
     setScrollEnabled(caseState === 'completed');
     return () => {
@@ -74,7 +64,6 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId, setScrollEn
   }, [setScrollEnabled, caseState, isActive]);
 
   useEffect(() => {
-    // Don't block scrolling if there's a result or completed
     if (!setScrollEnabled || !isActive || caseState === 'result' || caseState === 'completed')
       return;
 
@@ -486,5 +475,4 @@ const styles = StyleSheet.create({
     color: '#475569',
     textAlign: 'center',
   },
-});
 });
