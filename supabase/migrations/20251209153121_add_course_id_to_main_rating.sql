@@ -17,3 +17,33 @@ on public.chat_history
 for insert
 to authenticated
 with check (auth.uid() = user_id);
+
+
+-- /// створення звʼязків між таблицями 
+
+ALTER TABLE public.main_rating
+ADD CONSTRAINT main_rating_user_id_fkey
+FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE;
+
+-- ALTER TABLE public.chat_history
+-- ADD CONSTRAINT chat_history_user_id_fkey
+-- FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE;
+
+ALTER TABLE public.quiz_answers
+ADD CONSTRAINT quiz_answers_user_id_fkey
+FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE;
+
+ALTER TABLE public.user_course_summaries
+ADD CONSTRAINT user_course_summaries_user_id_fkey
+FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE;
+
+
+
+alter table public.criterias
+add constraint criterias_course_id_fkey
+foreign key (course_id)
+references public.courses(id)
+on delete cascade;
+
+
+
