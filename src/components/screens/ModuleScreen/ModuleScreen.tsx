@@ -19,6 +19,7 @@ import {
 } from 'react-native';
 import Animated, { useAnimatedScrollHandler, runOnJS } from 'react-native-reanimated';
 import ModuleSlide from './ModuleSlide';
+import FinalSlide from './FinalSlide';
 import { useSaveProgressOnLeave } from '@/src/hooks/useSaveProgressOnExit';
 import LessonProgressBars from './components/LessonProgressBars';
 import { useAnalyticsStore } from '@/src/stores/analyticsStore';
@@ -156,7 +157,18 @@ export default function ModuleScreen() {
 
   const handleSlideChange = useCallback(
     async (index: number) => {
-      if (index < 0 || index >= slides.length) return;
+      if (index < 0) return;
+
+      // If scrolled to final slide (index === slides.length), mark as final and don't try to save progress
+      if (index === slides.length) {
+        setCurrentSlideId('final-slide');
+        setCurrentSlideIndex(index);
+        // clear slideId param in URL
+        router.setParams({ slideId: undefined });
+        return;
+      }
+
+      if (index >= slides.length) return;
 
       setCurrentSlideId(slides[index].id);
       setCurrentSlideIndex(index);
@@ -169,7 +181,7 @@ export default function ModuleScreen() {
         lastSavedIndexRef.current = index;
       }
     },
-    [moduleId, courseId, user?.id, slides],
+    [moduleId, courseId, user?.id, slides, router],
   );
 
   const { average, skills, fetchAverage, fetchSkills } = useMainRatingStore();
@@ -309,7 +321,8 @@ export default function ModuleScreen() {
     if (currentIndex < 0) return;
 
     const nextIndex = currentIndex + 1;
-    if (nextIndex >= slides.length) return;
+    // allow navigating to the final slide which is at index === slides.length
+    if (nextIndex > slides.length) return;
 
     scrollViewRef.current?.scrollTo({ y: nextIndex * pageH, animated: true });
     await handleSlideChange(nextIndex);
@@ -393,7 +406,7 @@ export default function ModuleScreen() {
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode="on-drag"
         scrollEnabled={scrollEnabled}
-        contentContainerStyle={{ minHeight: pageH * Math.max(slides.length, 1) }}
+        contentContainerStyle={{ minHeight: pageH * Math.max(slides.length + 1, 1) }}
       >
         {slides.map((slide, i) => (
           <View key={slide.id} style={{ width, height: pageH }}>
@@ -410,9 +423,13 @@ export default function ModuleScreen() {
             />
           </View>
         ))}
-      </Animated.ScrollView> */}
+        {/* Final course completion slide */}
+        <View key="final-slide" style={{ width, height: pageH }}>
+          <FinalSlide courseId={courseId} />
+        </View>
+      </Animated.ScrollView>
 
-      {showPagination && slides.length > 0 && (
+      {showPagination && slides.length > 0 && (currentSlideIndex ?? 0) < slides.length && (
         <LessonProgressBars
           slides={slides}
           lessons={lessons}
