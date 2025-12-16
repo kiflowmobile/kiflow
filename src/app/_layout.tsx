@@ -2,7 +2,7 @@ import 'react-native-reanimated';
 import { useAuthStore } from '@/src/stores/authStore';
 import { useFonts } from 'expo-font';
 import { Stack, useRouter, useRootNavigationState } from 'expo-router';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useUserProgressStore } from '../stores';
 import CustomHeader from '../components/ui/CustomHeader';
@@ -32,16 +32,17 @@ export default function RootLayout() {
     initFromLocal();
   }, [user, initFromLocal]);
 
+  const didRedirect = useRef(false);
+
   useEffect(() => {
+    if (didRedirect.current) return;
+
     if (loaded && !isLoading && isGuest === true && isNavigationReady) {
-      // Delay navigation to the next tick so the Root navigator has a chance to mount.
-      // This avoids "Attempted to navigate before mounting the Root Layout component".
-      const id = setTimeout(() => {
-        router.replace('/');
-      }, 0);
-      return () => clearTimeout(id);
+      didRedirect.current = true;
+      router.replace('/');
     }
-  }, [isGuest, isLoading, isNavigationReady, loaded, router]);
+  }, [isGuest, isLoading, isNavigationReady, loaded]);
+
 
   useEffect(() => {
     initAmplitude();
