@@ -394,7 +394,7 @@ export default function ModuleScreen() {
 
   return (
     <View style={{ flex: 1 }}>
-      {/* <Animated.ScrollView
+      <Animated.ScrollView
         ref={scrollViewRef}
         showsVerticalScrollIndicator={false}
         onScroll={onScroll}
