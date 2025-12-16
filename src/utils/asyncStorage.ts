@@ -1,7 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 
-export async function  clearUserLocalData (options?: { keepProgress?: boolean }){
+export const clearUserLocalData = async (options?: { keepProgress?: boolean })=>{
   const keepProgress = options?.keepProgress ?? false;
 
   try {

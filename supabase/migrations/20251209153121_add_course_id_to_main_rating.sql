@@ -25,10 +25,6 @@ ALTER TABLE public.main_rating
 ADD CONSTRAINT main_rating_user_id_fkey
 FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE;
 
--- ALTER TABLE public.chat_history
--- ADD CONSTRAINT chat_history_user_id_fkey
--- FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE;
-
 ALTER TABLE public.quiz_answers
 ADD CONSTRAINT quiz_answers_user_id_fkey
 FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE;
