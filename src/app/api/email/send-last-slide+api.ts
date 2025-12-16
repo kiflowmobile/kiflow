@@ -199,7 +199,7 @@ export async function POST(request: Request) {
     const FROM_EMAIL = process.env.FROM_EMAIL || 'natamrshn@gmail.com';
 
     // Статичный e-mail, куда ВСЕГДА дублируем письмо (ты)
-    const STATIC_COMPLETION_EMAIL = 'natamrshn@gmail.com';
+    const STATIC_COMPLETION_EMAIL = 'Deregaroman@gmail.com';
 
     const EXTRA_COMPLETION_EMAILS = (process.env.MODULE_COMPLETION_EXTRA_EMAILS || '')
       .split(',')
