@@ -1,9 +1,13 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { StyleSheet, Text, View, Pressable } from 'react-native';
 import Button from '@/src/components/ui/button';
 import { useRouter } from 'expo-router';
 import { TEXT_VARIANTS } from '@/src/constants/Fonts';
 import { Colors } from '@/src/constants/Colors';
+
+import confettiAnim from '@/src/assets/animations/confetti.json';
+import doneAnim from '@/src/assets/animations/done-button.json';
+import LottiePlayer from '../../ui/LottiePlayer/index.web';
 
 interface FinalSlideProps {
   courseId?: string;
@@ -11,6 +15,15 @@ interface FinalSlideProps {
 
 export default function FinalSlide({ courseId }: FinalSlideProps) {
   const router = useRouter();
+
+  const [showConfetti, setShowConfetti] = useState(false);
+  const [doneKey, setDoneKey] = useState(0); // ✅ чтобы переигрывать done при заходе
+
+  useEffect(() => {
+    // если экран “живёт” и ты возвращаешься назад — сбросим состояние
+    setShowConfetti(false);
+    setDoneKey((k) => k + 1);
+  }, []);
 
   const onPressReview = () => {
     if (courseId) {
@@ -21,28 +34,39 @@ export default function FinalSlide({ courseId }: FinalSlideProps) {
   };
 
   const onClose = () => {
-    // go back to previous screen / close module
-    try {
-      router.back();
-    } catch {
-      // fallback: go to root
-      router.push('/');
-    }
+    router.replace('/courses');
   };
 
   return (
     <View style={styles.container}>
+      {showConfetti && (
+        <View style={styles.confettiLayer} pointerEvents="none">
+          <LottiePlayer
+            animationData={confettiAnim as unknown as object}
+            autoPlay
+            loop
+            style={styles.confetti}
+          />
+        </View>
+      )}
+
       <Pressable style={styles.close} onPress={onClose} accessibilityLabel="Close">
         <Text style={styles.closeText}>✕</Text>
       </Pressable>
 
       <View style={styles.content}>
-        <View style={styles.badge}>
-          <Text style={styles.check}>✓</Text>
+        <View style={styles.doneWrap}>
+          <LottiePlayer
+            key={doneKey}
+            animationData={doneAnim as unknown as object}
+            autoPlay
+            loop={false}
+            style={styles.doneAnim}
+            onAnimationFinish={() => setShowConfetti(true)} // ✅ вот это нужно
+          />
         </View>
 
-        <Text style={styles.title}>Congratulations! <br /> You’ve completed the course!</Text>
-
+        <Text style={styles.title}>Congratulations!{'\n'}You’ve completed the course!</Text>
         <Text style={styles.subtitle}>
           Review your results and explore the skills you’ve built.
         </Text>
@@ -56,54 +80,29 @@ export default function FinalSlide({ courseId }: FinalSlideProps) {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 24,
-    backgroundColor: 'transparent',
-  },
-  content: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingTop: 20,
-  },
+  container: { flex: 1, paddingHorizontal: 24, backgroundColor: 'transparent' },
+
+  // ✅ сделай конфетти выше, чтобы точно было видно
+  confettiLayer: { ...StyleSheet.absoluteFillObject, zIndex: 10 },
+  confetti: { width: '100%', height: '100%' },
+
+  content: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingTop: 20, zIndex: 1 },
+
   close: {
     position: 'absolute',
     top: 16,
     left: 16,
-    zIndex: 10,
+    zIndex: 20,
     width: 44,
     height: 44,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  closeText: {
-    fontSize: 22,
-    color: '#111',
-  },
-  badge: {
-    width: 140,
-    height: 140,
-    borderRadius: 72,
-    backgroundColor: '#53A800',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 28,
-    // slight shadow for iOS
-    shadowColor: '#000',
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 3,
-  },
-  check: {
-    color: '#fff',
-    fontSize: 56,
-    lineHeight: 56,
-    fontWeight: '700',
-  },
+  closeText: { fontSize: 22, color: '#111' },
+
+  doneWrap: { width: 140, height: 140, alignItems: 'center', justifyContent: 'center' },
+  doneAnim: { width: 140, height: 140 },
+
   title: {
     ...TEXT_VARIANTS.title1,
     marginBottom: 16,
@@ -117,9 +116,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     paddingHorizontal: 12,
   },
-  footer: {
-    width: '100%',
-    paddingVertical: 20,
-    paddingHorizontal: 0,
-  },
+
+  footer: { width: '100%', paddingVertical: 20, zIndex: 1 },
 });
