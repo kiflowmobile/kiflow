@@ -15,6 +15,7 @@ import { Colors } from '@/src/constants/Colors';
 
 import LottieView from 'lottie-react-native';
 import micAnimation from '@/src/assets/animations/mic-button.json';
+import LottiePlayer from '@/src/components/ui/LottiePlayer/LottiePlayer.web';
 
 type Phase = 'idle' | 'recording' | 'processing' | 'done';
 
@@ -263,12 +264,13 @@ const ChatInput: React.FC<ChatInputProps> = ({
           >
             {/* ✅ Lottie под кнопкой */}
             <View style={styles.micBgLayer} pointerEvents="none">
-              <LottieView
-                ref={lottieRef}
-                source={micAnimation}
+              <LottiePlayer
+                animationData={micAnimation as unknown as object}
+                autoPlay
                 loop
-                autoPlay={false}
+                // задать явный размер и отключить pointer events внутри плеера
                 style={styles.lottie}
+                pointerEvents="none"
               />
             </View>
 
@@ -332,15 +334,17 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
 
+  // увеличенный фон для лотти — чтобы подсветка/эффекты выходили за границы кнопки
   micBgLayer: {
     position: 'absolute',
     left: '50%',
     top: '50%',
-    transform: [{ translateX: -22 }, { translateY: -22 }],
-    width: 44,
-    height: 44,
+    transform: [{ translateX: -44 }, { translateY: -44 }],
+    width: 88,
+    height: 88,
     alignItems: 'center',
     justifyContent: 'center',
+    zIndex: 0,
   },
 
   micButton: {
@@ -350,6 +354,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: '#5774CD',
+    zIndex: 1,
     ...Platform.select({
       ios: {
         shadowColor: '#5774CD',
