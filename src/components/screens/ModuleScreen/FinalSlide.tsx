@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { StyleSheet, Text, View, Pressable } from 'react-native';
 import Button from '@/src/components/ui/button';
 import { useRouter } from 'expo-router';
@@ -8,6 +8,9 @@ import { Colors } from '@/src/constants/Colors';
 import confettiAnim from '@/src/assets/animations/confetti.json';
 import doneAnim from '@/src/assets/animations/done-button.json';
 import LottiePlayer from '../../ui/LottiePlayer/index.web';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useAuthStore } from '@/src/stores';
+import { sendCourseCompletionEmailUtil } from '@/src/utils/courseCompletionEmail';
 
 interface FinalSlideProps {
   courseId?: string;
@@ -17,13 +20,31 @@ export default function FinalSlide({ courseId }: FinalSlideProps) {
   const router = useRouter();
 
   const [showConfetti, setShowConfetti] = useState(false);
-  const [doneKey, setDoneKey] = useState(0); // ✅ чтобы переигрывать done при заходе
+  const [doneKey, setDoneKey] = useState(0); 
+  const sentRef = useRef(false);
+
+  const { user } = useAuthStore();
 
   useEffect(() => {
-    // если экран “живёт” и ты возвращаешься назад — сбросим состояние
     setShowConfetti(false);
     setDoneKey((k) => k + 1);
-  }, []);
+    (async () => {
+      try {
+        if (!courseId || !user?.id) return;
+
+        const key = `course_completion_email_sent_${user.id}_${courseId}`;
+        const already = await AsyncStorage.getItem(key);
+        if (already) return;
+        if (sentRef.current) return;
+        sentRef.current = true;
+
+        await sendCourseCompletionEmailUtil(courseId, user);
+        await AsyncStorage.setItem(key, '1');
+      } catch (e) {
+        console.warn('[FinalSlide] Failed to send course completion email', e);
+      }
+    })();
+  }, [courseId, user]);
 
   const onPressReview = () => {
     if (courseId) {
@@ -82,7 +103,6 @@ export default function FinalSlide({ courseId }: FinalSlideProps) {
 const styles = StyleSheet.create({
   container: { flex: 1, paddingHorizontal: 24, backgroundColor: 'transparent' },
 
-  // ✅ сделай конфетти выше, чтобы точно было видно
   confettiLayer: { ...StyleSheet.absoluteFillObject, zIndex: 10 },
   confetti: { width: '100%', height: '100%' },
 
