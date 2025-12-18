@@ -5,13 +5,13 @@ import { useChatStore } from "../stores/chatStore";
 import { useFocusEffect, useNavigation } from "expo-router";
 
 export const useSaveProgressOnLeave = () => {
-  console.log('useSaveProgressOnLeave')
   const syncProgressToDB = useUserProgressStore(state => state.syncProgressToDB);
   const syncQuizToDB = useQuizStore(state => state.syncQuizToDB);
   const syncChatFromLocalStorageToDB = useChatStore(state => state.syncChatFromLocalStorageToDB);
 
   useFocusEffect(
     useCallback(() => {
+      console.log('useSaveProgressOnLeave')
       return () => {
         syncProgressToDB();
         syncQuizToDB();

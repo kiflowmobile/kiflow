@@ -257,6 +257,9 @@ const AICourseChat: React.FC<AICourseChatProps> = ({
         tokens: aiResponse?.usage?.totalTokens || 0,
       });
 
+
+      console.log("aiResponse", aiResponse)
+
       if (user && aiResponse.rating?.criteriaScores && moduleId && lessonsId) {
         const criteriaScores = aiResponse.rating.criteriaScores;
         for (const [criteriaKey, score] of Object.entries(criteriaScores)) {

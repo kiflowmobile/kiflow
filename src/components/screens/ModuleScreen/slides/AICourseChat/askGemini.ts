@@ -93,6 +93,8 @@ export async function askGemini(
       body: JSON.stringify(body),
     });
 
+    console.log("response", response)
+
     if (!response.ok) {
       const errText = await response.text();
       throw new Error(`Gemini error ${response.status}: ${errText}`);
