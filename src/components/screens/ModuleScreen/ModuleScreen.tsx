@@ -111,13 +111,14 @@ export default function ModuleScreen() {
 
   const showPagination = useMemo(() => slides.length > 1, [slides.length]);
 
-  // Navigation header (LessonProgressBars) will decide styling per-slide; don't need isCurrentDashboard here
-
   const updateUrl = (id: string) => {
     router.setParams({ slideId: id });
   };
 
   const { setModuleProgressSafe } = useUserProgressStore();
+  const courseProgress = useUserProgressStore((s) =>
+    courseId ? s.getCourseProgress(courseId as string) : 0,
+  );
   const lastScrollIndexRef = useRef<number>(-1);
   const lastSavedIndexRef = useRef<number>(-1);
 
@@ -321,8 +322,9 @@ export default function ModuleScreen() {
     if (currentIndex < 0) return;
 
     const nextIndex = currentIndex + 1;
-    // allow navigating to the final slide which is at index === slides.length
-    if (nextIndex > slides.length) return;
+    // allow navigating to the final slide only when the whole course is completed
+    const maxAllowedIndex = courseProgress >= 100 ? slides.length : slides.length - 1;
+    if (nextIndex > maxAllowedIndex) return;
 
     scrollViewRef.current?.scrollTo({ y: nextIndex * pageH, animated: true });
     await handleSlideChange(nextIndex);
@@ -406,7 +408,9 @@ export default function ModuleScreen() {
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode="on-drag"
         scrollEnabled={scrollEnabled}
-        contentContainerStyle={{ minHeight: pageH * Math.max(slides.length + 1, 1) }}
+        contentContainerStyle={{
+          minHeight: pageH * Math.max(slides.length + (courseProgress >= 100 ? 1 : 0), 1),
+        }}
       >
         {slides.map((slide, i) => (
           <View key={slide.id} style={{ width, height: pageH }}>
@@ -423,10 +427,12 @@ export default function ModuleScreen() {
             />
           </View>
         ))}
-        {/* Final course completion slide */}
-        <View key="final-slide" style={{ width, height: pageH }}>
-          <FinalSlide courseId={courseId} />
-        </View>
+        {/* Final course completion slide: render only when whole course is completed */}
+        {courseProgress >= 100 && (
+          <View key="final-slide" style={{ width, height: pageH }}>
+            <FinalSlide courseId={courseId} />
+          </View>
+        )}
       </Animated.ScrollView>
 
       {showPagination && slides.length > 0 && (currentSlideIndex ?? 0) < slides.length && (

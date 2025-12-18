@@ -2,7 +2,6 @@ import { create } from 'zustand';
 import { useSlidesStore } from './slidesStore';
 import { useModulesStore } from './modulesStore';
 import { loadProgressLocal, saveProgressLocal } from '../utils/progressAsyncStorage';
-import { sendCourseCompletionEmailUtil } from '../utils/courseCompletionEmail';
 import { UserCourseSummary } from '../constants/types/progress';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase } from '../config/supabaseClient';
@@ -78,7 +77,7 @@ export const useUserProgressStore = create<UserProgressStore>((set, get) => ({
   },
 
   fetchUserProgress: async (userId: string) => {
-//     set({ isLoading: true, error: null });
+    //     set({ isLoading: true, error: null });
     try {
       const localData = await loadProgressLocal(userId);
       set({ courses: localData ?? [] });
@@ -124,8 +123,8 @@ export const useUserProgressStore = create<UserProgressStore>((set, get) => ({
 
     const sanitizedLastSlideId = lastSlideId ?? null;
 
-    const prevCourse = get().courses.find((c) => c.course_id === courseId);
-    const prevProgress = prevCourse?.progress ?? 0;
+    // prevProgress intentionally removed — course completion email
+    // will be triggered from the final slide UI component.
 
     set((state) => {
       const updatedCourses = [...state.courses];
@@ -211,21 +210,12 @@ export const useUserProgressStore = create<UserProgressStore>((set, get) => ({
       return { courses: persistCourses(updatedCourses) };
     });
 
-    try {
-      const newCourse = get().courses.find((c) => c.course_id === courseId);
-      const newProgress = newCourse?.progress ?? 0;
-
-      if (prevProgress < 100 && newProgress === 100) {
-        const user = getAuthStore().getState().user;
-        if (user?.id) {
-          sendCourseCompletionEmailUtil(courseId, user).catch((e) => {
-            console.warn('Failed to send course completion email', e);
-          });
-        }
-      }
-    } catch (e) {
-      console.warn('Error while attempting to send course completion email', e);
-    }
+    // NOTE: course completion email is now triggered from the UI when
+    // the dedicated final slide is shown to the user. This prevents
+    // sending the email at the moment the progress reaches 100% in
+    // the store (for example when the last module slide is reached).
+    // Keeping this logic here previously caused the email to be sent
+    // before the user actually saw the final-course slide.
   },
 
   getModuleProgress: (courseId: string, moduleId: string) => {
