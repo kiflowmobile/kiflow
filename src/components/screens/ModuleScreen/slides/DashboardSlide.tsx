@@ -22,7 +22,6 @@ const DashboardSlide: React.FC<DashboardSlideProps> = ({
   onComplete,
 }) => {
   const { user } = useAuthStore();
-  // close handled by LessonProgressBars (pagination)
 
   const { fetchAverageByLesson, fetchSkillsByLesson } = useMainRatingStore();
 
@@ -98,7 +97,9 @@ const DashboardSlide: React.FC<DashboardSlideProps> = ({
             ))}
           </View>
         </View>
+      </ScrollView>
 
+      <View style={styles.footer} pointerEvents="box-none">
         <Button
           title="Next lesson"
           onPress={() => onComplete && onComplete()}
@@ -107,7 +108,7 @@ const DashboardSlide: React.FC<DashboardSlideProps> = ({
           accessibilityLabel="Next lesson"
           style={styles.nextBtn}
         />
-      </ScrollView>
+      </View>
     </View>
   );
 };
@@ -144,6 +145,7 @@ const styles = StyleSheet.create({
   content: {
     paddingHorizontal: 16,
     paddingTop: 20,
+    paddingBottom: 120,
   },
   card: {
     backgroundColor: '#fff',
@@ -162,7 +164,6 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
 
-  // ✅ Bubble styles
   scoreImageWrapper: {
     width: 60,
     height: 60,
@@ -204,6 +205,13 @@ const styles = StyleSheet.create({
   },
 
   nextBtn: {
-    marginTop: 37,
+    width: '100%',
+  },
+  footer: {
+    position: 'absolute',
+    left: 16,
+    right: 16,
+    bottom: 16,
+    zIndex: 20,
   },
 });
