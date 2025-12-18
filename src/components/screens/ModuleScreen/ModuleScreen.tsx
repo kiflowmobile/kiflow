@@ -29,7 +29,6 @@ import { useLessonsStore } from '@/src/stores/lessonsStore';
 
 const analyticsStore = useAnalyticsStore.getState();
 
-// <<<<<<< HEAD
 function dedupeClientSkills(rawSkills: any[] | undefined) {
   if (!Array.isArray(rawSkills)) return [];
 

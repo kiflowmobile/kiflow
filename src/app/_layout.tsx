@@ -1,7 +1,7 @@
 import 'react-native-reanimated';
 import { useAuthStore } from '@/src/stores/authStore';
 import { useFonts } from 'expo-font';
-import { Stack, useRouter, useRootNavigationState } from 'expo-router';
+import { Stack, useRouter, useRootNavigationState, usePathname } from 'expo-router';
 import { useEffect, useRef } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useUserProgressStore } from '../stores';
@@ -34,14 +34,23 @@ export default function RootLayout() {
 
   const didRedirect = useRef(false);
 
-  useEffect(() => {
-    if (didRedirect.current) return;
 
-    if (loaded && !isLoading && isGuest === true && isNavigationReady) {
-      didRedirect.current = true;
-      router.replace('/');
-    }
-  }, [isGuest, isLoading, isNavigationReady, loaded]);
+  const pathname = usePathname();
+  
+  // useEffect(() => {
+  //   if (!loaded || isLoading || !isNavigationReady) return;
+  
+  //   if (isGuest === true) {
+  //     const publicRoutes = ['/', '/auth/login', '/auth/registration'];
+  
+  //     const isPublic = publicRoutes.includes(pathname);
+  
+  //     if (!isPublic) {
+  //       router.replace('/');
+  //     }
+  //   }
+  // }, [isGuest, isLoading, loaded, isNavigationReady, pathname]);
+  
 
 
   useEffect(() => {

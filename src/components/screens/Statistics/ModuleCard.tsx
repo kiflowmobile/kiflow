@@ -26,6 +26,8 @@ const ModuleCard: React.FC<Props> = ({
   const status = percent >= 100 ? 'Completed' : percent > 0 ? 'In progress' : 'Not started';
   const hasStarted = status !== 'Not started';
 
+  console.log('skills',skills)
+
   return (
     <View key={module.id} style={[styles.moduleCard]}>
       <View style={styles.moduleHeaderRow}>
@@ -55,13 +57,13 @@ const ModuleCard: React.FC<Props> = ({
 
           <Text style={styles.skillsTitle}>Skills level</Text>
 
-          {loadingSkills ? (
+          {/* {loadingSkills ? (
             <Text style={styles.chartPlaceholderText}>Завантаження навичок...</Text>
           ) : skills?.length ? (
             skills.map((s) => <SkillRow key={s.criterion_id} skill={s} />)
           ) : (
             <Text style={styles.chartPlaceholderText}>Немає даних</Text>
-          )}
+          )} */}
         </>
       )}
     </View>

@@ -45,5 +45,12 @@ foreign key (course_id)
 references public.courses(id)
 on delete cascade;
 
+-- //змінюємо ключи для таблиці main_rating бо додали lesson_id
+
+ALTER TABLE main_rating DROP CONSTRAINT main_rating_unique;
+ALTER TABLE main_rating DROP CONSTRAINT unique_user_module_criteria;
 
 
+ALTER TABLE main_rating
+ADD CONSTRAINT main_rating_unique
+UNIQUE (user_id, module_id, lesson_id, criteria_key);
