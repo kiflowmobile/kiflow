@@ -15,6 +15,51 @@ interface Props {
   totalSlides: number;
 }
 
+type CriterionInput = {
+  criterion_id: string;
+  criterion_name: string;
+  average_score: number;
+};
+
+type CriterionAggregated = {
+  criterion_id: string;
+  criterion_name: string;
+  average_score: number;
+};
+
+
+function aggregateCriteria(data: CriterionInput[]): CriterionAggregated[] {
+  const map: Record<
+    string,
+    {
+      criterion_id: string;
+      criterion_name: string;
+      total: number;
+      count: number;
+    }
+  > = {};
+
+  data.forEach(({ criterion_id, criterion_name, average_score }) => {
+    if (!map[criterion_id]) {
+      map[criterion_id] = {
+        criterion_id,
+        criterion_name,
+        total: 0,
+        count: 0,
+      };
+    }
+
+    map[criterion_id].total += average_score;
+    map[criterion_id].count += 1;
+  });
+
+  return Object.values(map).map(({ total, count, ...rest }) => ({
+    ...rest,
+    average_score: Math.round((total / count) * 10) / 10,
+  }));
+}
+
+
 const ModuleCard: React.FC<Props> = ({
   module,
   skills,
@@ -25,8 +70,6 @@ const ModuleCard: React.FC<Props> = ({
 }) => {
   const status = percent >= 100 ? 'Completed' : percent > 0 ? 'In progress' : 'Not started';
   const hasStarted = status !== 'Not started';
-
-  console.log('skills',skills)
 
   return (
     <View key={module.id} style={[styles.moduleCard]}>
@@ -57,13 +100,13 @@ const ModuleCard: React.FC<Props> = ({
 
           <Text style={styles.skillsTitle}>Skills level</Text>
 
-          {/* {loadingSkills ? (
+          {loadingSkills ? (
             <Text style={styles.chartPlaceholderText}>Завантаження навичок...</Text>
-          ) : skills?.length ? (
-            skills.map((s) => <SkillRow key={s.criterion_id} skill={s} />)
+          ) : aggregateCriteria(skills)?.length ? (
+            aggregateCriteria(skills).map((s) => <SkillRow key={s.criterion_id} skill={s} />)
           ) : (
             <Text style={styles.chartPlaceholderText}>Немає даних</Text>
-          )} */}
+          )}
         </>
       )}
     </View>
