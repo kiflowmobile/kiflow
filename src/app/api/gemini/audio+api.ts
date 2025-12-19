@@ -5,56 +5,47 @@ const MODEL_NAME = 'gemini-2.0-flash-001';
 
 const genAI = API_KEY ? new GoogleGenerativeAI(API_KEY) : null;
 
+function stripDataUrl(b64: string) {
+  return b64.replace(/^data:.*;base64,/, '');
+}
+
 export async function POST(request: Request) {
   try {
-    // Ensure API is configured
     if (!genAI || !API_KEY) {
-      return Response.json(
-        { error: 'Gemini API не ініціалізовано. Перевірте налаштування сервера.' },
-        { status: 500 },
-      );
+      return Response.json({ error: 'Gemini API не налаштовано.' }, { status: 500 });
     }
 
-    // Parse request body
     const body = await request.json();
-    const { audioData, prompt = '' } = body;
+    const { audioData, mimeType = 'audio/webm', prompt = '', debug = false } = body ?? {};
 
-    if (!audioData) {
-      return Response.json(
-        { error: 'Неправильний формат запиту. Очікуються аудіо дані.' },
-        { status: 400 },
-      );
+    if (typeof audioData !== 'string') {
+      return Response.json({ error: 'Очікується audioData (base64 string).' }, { status: 400 });
     }
+
+    const base64 = stripDataUrl(audioData);
 
     const model = genAI.getGenerativeModel({ model: MODEL_NAME });
 
-    const parts = [
-      { text: 'поверни мені наступне повідомлення дослівно' },
-      {
-        inlineData: {
-          data: audioData,
-          mimeType: 'audio/webm',
-        },
-      },
-    ];
+    const instruction = [
+      'Ти сервіс транскрибації.',
+      'Поверни ТІЛЬКИ дослівну транскрипцію аудіо.',
+      'Не перекладай. Не виправляй. Не додавай пояснень.',
+      'Нерозбірливе позначай як [inaudible].',
+    ].join('\n');
 
-    if (prompt) {
-      parts.push({ text: prompt });
-    }
+    const parts: any[] = [{ text: instruction }, { inlineData: { data: base64, mimeType } }];
+
+    if (prompt) parts.push({ text: `Контекст: ${prompt}` });
 
     const result = await model.generateContent({
       contents: [{ role: 'user', parts }],
+      generationConfig: { temperature: 0, topP: 1 },
     });
 
-    const response = await result.response;
-    const text = response.text();
+    const text = result.response.text() ?? '';
 
-    return Response.json({
-      text: text || '',
-      response: result,
-    });
+    return Response.json(debug ? { text, mimeType } : { text });
   } catch (error) {
-    console.error('Помилка відправки аудіо на Gemini API:', error);
     return Response.json(
       {
         error: 'Помилка при обробці аудіо через Gemini API',
