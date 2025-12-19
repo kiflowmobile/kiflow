@@ -109,7 +109,6 @@ export default function StatisticsScreen() {
     }
   }, [user?.id, fetchCourses, fetchAllCriterias, fetchUserRatings]);
 
-  // Aggregate real lesson counts per course using lessons service + user progress
   useEffect(() => {
     if (!modules.length || !courses.length) return;
 
@@ -256,7 +255,6 @@ export default function StatisticsScreen() {
                   </View>
                 </View>
 
-                {/* Course-level summary using ModuleCard component */}
                 {(() => {
                   const courseProgressEntry = useUserProgressStore
                     .getState()

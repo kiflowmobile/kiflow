@@ -37,19 +37,19 @@ export default function RootLayout() {
 
   const pathname = usePathname();
   
-  // useEffect(() => {
-  //   if (!loaded || isLoading || !isNavigationReady) return;
+  useEffect(() => {
+    if (!loaded || isLoading || !isNavigationReady) return;
   
-  //   if (isGuest === true) {
-  //     const publicRoutes = ['/', '/auth/login', '/auth/registration'];
+    if (isGuest === true) {
+      const publicRoutes = ['/', '/auth/login', '/auth/registration'];
   
-  //     const isPublic = publicRoutes.includes(pathname);
+      const isPublic = publicRoutes.includes(pathname);
   
-  //     if (!isPublic) {
-  //       router.replace('/');
-  //     }
-  //   }
-  // }, [isGuest, isLoading, loaded, isNavigationReady, pathname]);
+      if (!isPublic) {
+        router.replace('/');
+      }
+    }
+  }, [isGuest, isLoading, loaded, isNavigationReady, pathname]);
   
 
 
