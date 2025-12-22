@@ -64,6 +64,7 @@ export default function ModuleScreen() {
 
   const { lessons, isLoadingModule, errorModule, fetchLessonByModule } = useLessonsStore();
   const { slides, isLoading, error, fetchSlidesByLessons, clearError } = useSlidesStore();
+  const { fetchModulesByCourse } = useModulesStore();
   const scrollViewRef = useRef<Animated.ScrollView>(null);
   const { width, height } = useWindowDimensions();
   const router = useRouter();
@@ -73,6 +74,11 @@ export default function ModuleScreen() {
     if (!moduleId) return;
     fetchLessonByModule(moduleId).catch((err) => console.error(err));
   }, [moduleId]);
+
+  useEffect(() => {
+    if (!courseId) return;
+    fetchModulesByCourse(courseId).catch((err) => console.error(err));
+  }, [courseId, fetchModulesByCourse]);
 
   useEffect(() => {
     if (lessons.length === 0) return;
