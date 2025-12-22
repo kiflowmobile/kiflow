@@ -17,6 +17,36 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAnalyticsStore } from '@/src/stores/analyticsStore';
 import { Colors } from '@/src/constants/Colors';
 
+
+export function formatComment(comment: {
+  overall: string;
+  criteria: Record<string, number>;
+  feedback: string;
+  strengths: string[];
+  improvements: string[];
+  next_step: string;
+}) {
+  return (
+    `📊 ЗАГАЛЬНА ОЦІНКА: ${comment.overall}\n\n` +
+
+    `🎯 ОЦІНКА ПО КРИТЕРІЯХ:\n` +
+    Object.entries(comment.criteria)
+      .map(([key, value]) => `• ${key}: ${value}`)
+      .join('\n') +
+
+    `\n\n💡 ФІДБЕК:\n${comment.feedback}\n\n` +
+
+    `✅ СИЛЬНІ СТОРОНИ:\n` +
+    comment.strengths.map((s) => `• ${s}`).join('\n') +
+
+    `\n\n🔧 ЩО ПОКРАЩИТИ:\n` +
+    comment.improvements.map((i) => `• ${i}`).join('\n') +
+
+    `\n\n🚀 НАСТУПНИЙ КРОК:\n${comment.next_step}`
+  );
+}
+
+
 interface Message {
   id: string;
   role: 'user' | 'ai';
@@ -258,7 +288,6 @@ const AICourseChat: React.FC<AICourseChatProps> = ({
       });
 
 
-      console.log("aiResponse", aiResponse)
 
       if (user && aiResponse.rating?.criteriaScores && moduleId && lessonsId) {
         const criteriaScores = aiResponse.rating.criteriaScores;
@@ -278,7 +307,7 @@ const AICourseChat: React.FC<AICourseChatProps> = ({
         }
       }
 
-      const chatText = formatAIResponseForChat(aiResponse);
+      const chatText = formatComment(aiResponse.rating.comment);
       const aiMsg: Message = {
         id: Date.now().toString(),
         role: 'ai',

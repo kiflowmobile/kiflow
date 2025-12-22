@@ -62,6 +62,7 @@ export async function askGemini(
       console.warn('Warning: failed to fetch company by id', err);
     }
   }
+
   const body = {
     contents: [
       {
@@ -92,8 +93,6 @@ export async function askGemini(
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
     });
-
-    console.log("response", response)
 
     if (!response.ok) {
       const errText = await response.text();

@@ -138,7 +138,6 @@ export const useMainRatingStore = create<MainRatingState>((set) => ({
   },
 
   saveRating: async (userId, rating, moduleId, key, courseId, lessonId) => {
-    console.log('saveRating')
     try {
       const { data: existing, error: fetchError } = await fetchRating(
         userId,
