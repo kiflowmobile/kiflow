@@ -1,16 +1,19 @@
 import { SafeAreaView } from '@/src/components/ui/safe-area-view';
 import { useCourseStore } from '@/src/stores';
-import { ScrollView, StyleSheet, View, Text, Image, TouchableOpacity } from 'react-native';
+import { ScrollView, StyleSheet, View, Text, Image, TouchableOpacity, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import CourseCard from './components/CourseCard';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useAnalyticsStore } from '@/src/stores/analyticsStore';
 import { Colors } from '@/src/constants/Colors';
+import Button from '../../ui/button';
 
 const CoursesScreen = () => {
   const { courses, isLoading, error, fetchCourses, clearError } = useCourseStore();
   const analyticsStore = useAnalyticsStore.getState();
   const router = useRouter();
+  const [loading, setLoading] = useState(false);
+
 
   useEffect(() => {
     fetchCourses().catch((err) => {
@@ -22,6 +25,8 @@ const CoursesScreen = () => {
   useEffect(() => {
     analyticsStore.trackEvent('courses_screen__load');
   }, [analyticsStore]);
+
+
 
   return (
     <SafeAreaView style={styles.container}>

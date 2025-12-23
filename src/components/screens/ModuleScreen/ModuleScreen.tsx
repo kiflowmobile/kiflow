@@ -61,7 +61,8 @@ export default function ModuleScreen() {
     courseId?: string;
     slideId?: string;
   }>();
-
+  
+  const { modules,currentModule, setCurrentModule,} = useModulesStore(); 
   const { lessons, isLoadingModule, errorModule, fetchLessonByModule } = useLessonsStore();
   const { slides, isLoading, error, fetchSlidesByLessons, clearError } = useSlidesStore();
   const { fetchModulesByCourse } = useModulesStore();
@@ -165,11 +166,9 @@ export default function ModuleScreen() {
     async (index: number) => {
       if (index < 0) return;
 
-      // If scrolled to final slide (index === slides.length), mark as final and don't try to save progress
       if (index === slides.length) {
         setCurrentSlideId('final-slide');
         setCurrentSlideIndex(index);
-        // clear slideId param in URL
         router.setParams({ slideId: undefined });
         return;
       }
@@ -321,6 +320,7 @@ export default function ModuleScreen() {
     },
   });
 
+
   const goToNextSlide = async () => {
     // debug logs removed
     const currentIndex = slides.findIndex((s) => s.id === currentSlideId);
@@ -334,6 +334,10 @@ export default function ModuleScreen() {
     scrollViewRef.current?.scrollTo({ y: nextIndex * pageH, animated: true });
     await handleSlideChange(nextIndex);
   };
+
+  const currentIndex = slides.findIndex(s => s.id === currentSlideId);
+
+  const hasNextSlide = currentIndex + 1 === slides.length
 
   useEffect(() => {
     if (slideId && scrollViewRef.current && slides.length > 0) {
@@ -398,7 +402,6 @@ export default function ModuleScreen() {
         <Text style={styles.noSlidesText}>Слайди не знайдено</Text>
       </View>
     );
-
   return (
     <View style={{ flex: 1 }}>
       <Animated.ScrollView
@@ -429,6 +432,7 @@ export default function ModuleScreen() {
               isMuted={isMuted}
               toggleMute={toggleMute}
               lessonsId={slide.lesson_id}
+              hasNextSlide={hasNextSlide}
             />
           </View>
         ))}

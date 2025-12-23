@@ -7,12 +7,14 @@ import Button from '@/src/components/ui/button';
 import { Colors } from '@/src/constants/Colors';
 import { TEXT_VARIANTS } from '@/src/constants/Fonts';
 import DoneLesson from '@/src/assets/images/done-lesson.svg';
+import { useLocalSearchParams } from 'expo-router';
 
 interface DashboardSlideProps {
   title: string;
   courseId: string;
   lessonId: string;
   onComplete?: () => void;
+  hasNextSlide: boolean
 }
 
 const DashboardSlide: React.FC<DashboardSlideProps> = ({
@@ -20,32 +22,40 @@ const DashboardSlide: React.FC<DashboardSlideProps> = ({
   title,
   lessonId,
   onComplete,
+  hasNextSlide
 }) => {
   const { user } = useAuthStore();
 
   const { fetchAverageByLesson, fetchSkillsByLesson } = useMainRatingStore();
+  const {slideId,  moduleId } = useLocalSearchParams();
 
   const [average, setAverage] = useState<number | null>(null);
   const [skills, setSkills] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false)
 
   useEffect(() => {
     if (!user || !lessonId) return;
 
     const load = async () => {
       try {
+        setLoading(true)
         const avg = await fetchAverageByLesson(user.id, lessonId);
         const lessonSkills = await fetchSkillsByLesson(user.id, lessonId);
         setAverage(avg ?? null);
         setSkills(lessonSkills || []);
       } catch (e) {
         console.error('DashboardSlide load error', e);
+      }finally{
+        setLoading(false)
+
       }
     };
 
     load();
-  }, [user, lessonId, fetchAverageByLesson, fetchSkillsByLesson]);
+  }, [user, lessonId, fetchAverageByLesson, fetchSkillsByLesson, slideId]);
 
   const averageText = average !== null ? average.toFixed(1) : '...';
+
 
   return (
     <View style={styles.screen}>
@@ -66,7 +76,7 @@ const DashboardSlide: React.FC<DashboardSlideProps> = ({
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.card}>
           <Text style={styles.cardTitle}>Your results</Text>
-
+          {! loading &&
           <View style={styles.centerBlock}>
             {/* ✅ Average score bubble like your example */}
             <View style={styles.scoreImageWrapper}>
@@ -79,10 +89,10 @@ const DashboardSlide: React.FC<DashboardSlideProps> = ({
                 <Text style={styles.scoreText}>{averageText}</Text>
               </View>
             </View>
-
+       
             <Text style={styles.blobLabel}>Average score</Text>
           </View>
-
+   }
           <View style={styles.skillsBlock}>
             <Text style={styles.skillsHeading}>Skills level</Text>
             {(skills || []).map((s: any) => (
@@ -100,6 +110,7 @@ const DashboardSlide: React.FC<DashboardSlideProps> = ({
       </ScrollView>
 
       <View style={styles.footer} pointerEvents="box-none">
+        {!hasNextSlide &&
         <Button
           title="Next lesson"
           onPress={() => onComplete && onComplete()}
@@ -108,6 +119,7 @@ const DashboardSlide: React.FC<DashboardSlideProps> = ({
           accessibilityLabel="Next lesson"
           style={styles.nextBtn}
         />
+        }
       </View>
     </View>
   );

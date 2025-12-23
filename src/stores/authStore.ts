@@ -23,7 +23,6 @@ const analyticsStore = useAnalyticsStore.getState();
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, firstName?: string, lastName?: string) => Promise<void>;
   signOut: () => Promise<void>;
-  // signInWithGoogle: () => Promise<void>;
   checkSession: () => Promise<void>;
   clearError: () => void;
   getUserRole: () => Promise<string | null>;
@@ -102,6 +101,8 @@ export const useAuthStore = create<AuthState>()(
         if (error) throw error;
 
         if (!data.user) throw new Error('User not created');
+
+        await clearUserLocalData();
 
         await upsertUserProfile(data.user.id, {
           email: data.user.email || email,

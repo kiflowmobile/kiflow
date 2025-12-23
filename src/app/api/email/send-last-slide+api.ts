@@ -276,30 +276,62 @@ export async function POST(request: Request) {
         : `<p>Дані про навички відсутні.</p>`;
 
     const userHtml = `
-      <div style="font-family: -apple-system, Roboto, 'Segoe UI', Arial, sans-serif; color: #111; line-height:1.4;">
-        <h2 style="color:#1f6feb;">${escapeHtml(
-          userName ? `Вітаємо, ${userName}!` : 'Вітаємо!',
-        )}</h2>
-
-        <h3 style="margin-top:18px;">1) Середній бал</h3>
-        <p style="font-size:16px;">${
-          userStats.averageScore != null
-            ? `<strong>${escapeHtml(userStats.averageScore)}/5</strong>`
-            : 'Середній бал ще не розрахований'
-        }</p>
-
-        <h3 style="margin-top:12px;">2) Розподіл за навичками</h3>
-        ${skillsHtml}
-
-        <h3 style="margin-top:12px;">3) Оцінка за квіз</h3>
-        <p style="font-size:16px;">${
-          quizScore != null ? `<strong>${escapeHtml(quizScore)}/5</strong>` : 'Немає даних про квіз'
-        }</p>
-
-        <hr style="border:none; border-top:1px solid #eee; margin:18px 0;" />
-        <p style="font-size:13px; color:#666;">Це автоматичне повідомлення від команди Kiflow.</p>
+    <div style="
+      font-family: -apple-system, Roboto, 'Segoe UI', Arial, sans-serif;
+      color: #111;
+      line-height:1.5;
+      background-color:#f9f9f9;
+      padding:20px;
+    ">
+      <div style="
+        max-width:600px;
+        margin:0 auto;
+        background:#fff;
+        padding:24px;
+        border-radius:12px;
+        box-shadow:0 2px 8px rgba(0,0,0,0.1);
+      ">
+        <h2 style="color:#1f6feb; margin-bottom:16px;">
+          ${escapeHtml(userName ? `Вітаємо, ${userName}!` : 'Вітаємо!')}
+        </h2>
+  
+        <h3 style="margin-top:18px; color:#333;">1) Середній бал</h3>
+        <p style="font-size:16px; margin:6px 0;">
+          ${userStats.averageScore != null
+            ? `<strong style="color:#1f6feb;">${escapeHtml(userStats.averageScore)}/5</strong>`
+            : 'Середній бал ще не розрахований'}
+        </p>
+  
+        <h3 style="margin-top:18px; color:#333;">2) Розподіл за навичками</h3>
+        ${skillsHtml
+          ? `<ul style="padding-left:18px; margin:6px 0;">
+          
+              ${userStats.skills&&userStats.skills
+                .map(skill => {
+                  const scores =
+                    skill.individualScores && skill.individualScores.length > 0
+                      ? ` <small style="color:#666;">(оцінки: ${skill.individualScores.join(', ')})</small>`
+                      : '';
+                  return `<li style="margin-bottom:4px;"><strong style="color:#1f6feb;">${escapeHtml(
+                    skill.name
+                  )}</strong>: ${escapeHtml(skill.score)}/5${scores}</li>`;
+                })
+                .join('')}
+            </ul>`
+          : `<p style="color:#666;">Дані про навички відсутні.</p>`}
+  
+        <h3 style="margin-top:18px; color:#333;">3) Оцінка за квіз</h3>
+        <p style="font-size:16px; margin:6px 0;">
+          ${quizScore != null ? `<strong style="color:#1f6feb;">${escapeHtml(quizScore)}/5</strong>` : 'Немає даних про квіз'}
+        </p>
+  
+        <hr style="border:none; border-top:1px solid #eee; margin:24px 0;" />
+        <p style="font-size:13px; color:#666; text-align:center;">
+          Це автоматичне повідомлення від команди Kiflow.
+        </p>
       </div>
-    `;
+    </div>
+  `;
 
     if (SMTP_HOST && SMTP_PORT && SMTP_USER && SMTP_PASS) {
       try {

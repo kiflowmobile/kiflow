@@ -21,6 +21,7 @@ interface CourseSlideProps {
   isMuted?: boolean;
   toggleMute?: () => void;
   lessonsId: string;
+  hasNextSlide: boolean
 }
 
 const ModuleSlide: React.FC<CourseSlideProps> = ({
@@ -33,6 +34,7 @@ const ModuleSlide: React.FC<CourseSlideProps> = ({
   isMuted,
   toggleMute,
   lessonsId,
+  hasNextSlide
 }) => {
   const { slides, isLoading, error } = useSlidesStore();
   const { modules, isLoading: isLoadingModules } = useModulesStore();
@@ -182,13 +184,13 @@ const ModuleSlide: React.FC<CourseSlideProps> = ({
     case 'dashboard':
       const lessonIdFromDashboard = (slideData as any).lesson_id;
       const finalLessonId = lessonIdFromDashboard || lessonsId;
-      // debug logs removed
       return (
         <DashboardSlide
           courseId={courseIdStr}
           title={slideData.slide_title}
           lessonId={finalLessonId}
           onComplete={onComplete}
+          hasNextSlide={hasNextSlide}
         />
       );
     default:

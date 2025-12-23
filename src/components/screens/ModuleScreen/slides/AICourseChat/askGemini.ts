@@ -124,7 +124,6 @@ export async function askGemini(
       }
     }
 
-    // ✅ додаємо модель і usage (токени)
     const usage = {
       totalTokens: data?.usageMetadata?.totalTokenCount || 0,
     };
