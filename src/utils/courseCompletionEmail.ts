@@ -1,5 +1,5 @@
 import { sendCourseCompletionEmail } from '@/src/services/emailService';
-import { useMainRatingStore } from '@/src/stores/mainRatingStore';
+import { useMainRatingStore } from '@/src/stores/userSkillRatingsStore';
 import { useModulesStore } from '@/src/stores/modulesStore';
 import { useCourseStore } from '@/src/stores/courseStore';
 import { useQuizStore } from '@/src/stores/quizStore';

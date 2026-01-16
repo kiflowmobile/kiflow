@@ -27,7 +27,6 @@ export default function ProfileScreen() {
   const analyticsStore = useAnalyticsStore.getState();
 
   const [formData, setFormData] = useState<UserUpdateData>({
-    full_name: '',
     email: '',
     avatar_url: '',
     first_name: '',
@@ -72,7 +71,6 @@ export default function ProfileScreen() {
       if (data) {
         setUser(data);
         setFormData({
-          full_name: data.full_name || '',
           email: data.email || '',
           avatar_url: data.avatar_url || '',
           first_name: data.first_name || '',
@@ -93,7 +91,6 @@ export default function ProfileScreen() {
       setUpdating(true);
 
       const updateData = {
-        full_name: formData.full_name,
         avatar_url: formData.avatar_url,
         first_name: formData.first_name,
         last_name: formData.last_name,
@@ -123,7 +120,6 @@ export default function ProfileScreen() {
     if (user) {
       setFormData((prev) => ({
         ...prev,
-        full_name: user.full_name || '',
         avatar_url: user.avatar_url || '',
         first_name: user.first_name || '',
         last_name: user.last_name || '',
@@ -193,7 +189,7 @@ export default function ProfileScreen() {
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
         <View style={styles.content}>
           <AvatarSection
-            fullName={formData.full_name || user?.full_name || ''}
+            fullName={`${formData.first_name || user?.first_name || ''} ${formData.last_name || user?.last_name || ''}`.trim()}
             email={user?.email ?? undefined}
             startedAt={user?.created_at ?? null}
             onEditPress={handleEdit}

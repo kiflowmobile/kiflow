@@ -1,7 +1,7 @@
 import SkillsChart from '@/src/components/ui/SkillsChart';
 import { shadow } from '@/src/components/ui/styles/shadow';
 import { useAuthStore, useModulesStore } from '@/src/stores';
-import { useMainRatingStore } from '@/src/stores/mainRatingStore';
+import { useMainRatingStore } from '@/src/stores/userSkillRatingsStore';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { useEffect, useMemo, useState } from 'react';
 import { Platform, StyleSheet, Text, View, ScrollView} from 'react-native';

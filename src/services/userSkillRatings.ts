@@ -3,7 +3,7 @@ import { supabase } from '../config/supabaseClient';
 // таблиця оцінок
 export const fetchRatings = async (userId: string, moduleId: string) => {
   return await supabase
-    .from('main_rating')
+    .from('user_skill_ratings')
     .select('criteria_key, rating')
     .eq('user_id', userId)
     .eq('module_id', moduleId);
@@ -12,7 +12,7 @@ export const fetchRatings = async (userId: string, moduleId: string) => {
 // конкретна оцінка
 export const fetchRating = async (userId: string, moduleId: string, key: string) => {
   return await supabase
-    .from('main_rating')
+    .from('user_skill_ratings')
     .select('rating')
     .eq('user_id', userId)
     .eq('criteria_key', key)
@@ -26,14 +26,13 @@ export const upsertRating = async (
   rating: number,
   moduleId: string,
   key: string,
-  courseId: string,
 ) => {
   const value = Number(rating);
   if (!Number.isFinite(value)) throw new Error('Rating is not a number');
-  if (!userId || !moduleId || !key || !courseId) throw new Error('Missing ids');
+  if (!userId || !moduleId || !key) throw new Error('Missing ids');
 
   const { data, error } = await supabase
-    .from('main_rating')
+    .from('user_skill_ratings')
     .upsert(
       [
         {
@@ -41,10 +40,9 @@ export const upsertRating = async (
           rating: value,
           module_id: moduleId,
           criteria_key: key,
-          course_id: courseId,
         },
       ],
-      { onConflict: 'user_id,module_id,criteria_key,course_id' },
+      { onConflict: 'user_id,module_id,criteria_key' },
     )
     .select();
 
@@ -55,14 +53,14 @@ export const upsertRating = async (
 // всі оцінки користувача без обмеження по модулю
 export const fetchAllRatings = async (userId: string) => {
   return await supabase
-    .from('main_rating')
+    .from('user_skill_ratings')
     .select('id, user_id, module_id, criteria_key, rating')
     .eq('user_id', userId);
 };
 
 // таблиця критеріїв
-export const fetchCriteriasByKeys = async (keys: string[]) => {
-  return await supabase.from('criterias').select('key, name').in('key', keys);
+export const fetchCriteriaByKeys = async (keys: string[]) => {
+  return await supabase.from('criteria').select('key, name').in('key', keys);
 };
 
 /**
@@ -107,14 +105,14 @@ export const getUserSkillsSummary = async (userId: string, moduleId: string) => 
 
   const keys = Array.from(new Set(ratings.map((r) => r.criteria_key).filter(Boolean)));
 
-  const { data: criterias, error: criteriasError } = await fetchCriteriasByKeys(keys);
+  const { data: criteria, error: criteriaError } = await fetchCriteriaByKeys(keys);
 
-  if (criteriasError) {
-    return { data: null, error: criteriasError };
+  if (criteriaError) {
+    return { data: null, error: criteriaError };
   }
 
   const nameByKey = new Map<string, string>();
-  (criterias ?? []).forEach((c: any) => {
+  (criteria ?? []).forEach((c: any) => {
     nameByKey.set(c.key, c.name);
   });
 

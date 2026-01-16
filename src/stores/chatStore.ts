@@ -31,15 +31,14 @@ export const useChatStore = create<ChatStore>(() => ({
       const keyValues = await AsyncStorage.multiGet(chatKeys);
       const rowsToUpsert: {
         user_id: string;
-        course_id: string;
         slide_id: string;
-        messages: ChatMessage[];
+        interaction_type: string;
+        data: { messages: ChatMessage[] };
       }[] = [];
 
       for (const [key, value] of keyValues) {
         if (!value) continue;
 
-        const courseId = key.replace('course-chat-', '');
         let parsed;
         try {
           parsed = JSON.parse(value);
@@ -51,9 +50,9 @@ export const useChatStore = create<ChatStore>(() => ({
         for (const [slide_id, messages] of Object.entries(parsed)) {
           rowsToUpsert.push({
             user_id: user.id,
-            course_id: courseId,
             slide_id,
-            messages: messages as ChatMessage[],
+            interaction_type: 'ai_chat',
+            data: { messages: messages as ChatMessage[] },
           });
         }
       }
@@ -64,8 +63,8 @@ export const useChatStore = create<ChatStore>(() => ({
       }
 
       const { error } = await supabase
-        .from('chat_history')
-        .upsert(rowsToUpsert, { onConflict: 'user_id, slide_id' });
+        .from('user_slide_interactions')
+        .upsert(rowsToUpsert, { onConflict: 'user_id,slide_id,interaction_type' });
 
       if (error) throw error;
 
@@ -73,7 +72,7 @@ export const useChatStore = create<ChatStore>(() => ({
       console.error('❌ Failed to sync chat data from local storage:', err);
     }
 
-    
+
   },
 
   syncChatFromDBToLocalStorage: async () => {
@@ -82,22 +81,32 @@ export const useChatStore = create<ChatStore>(() => ({
         if (!user) return;
 
         const { data, error } = await supabase
-        .from('chat_history')
-        .select('slide_id, course_id, messages')
-        .eq('user_id', user.id);
+        .from('user_slide_interactions')
+        .select(`
+          slide_id,
+          data,
+          slides!inner(
+            lessons!inner(
+              modules!inner(course_id)
+            )
+          )
+        `)
+        .eq('user_id', user.id)
+        .eq('interaction_type', 'ai_chat');
 
         if (error) throw error;
         if (!data || data.length === 0) return;
 
         const groupedByCourse: Record<string, Record<string, any[]>> = {};
         for (const row of data) {
-          const { course_id, slide_id, messages } = row;
-    
-          if (!groupedByCourse[course_id]) {
-            groupedByCourse[course_id] = {};
+          const courseId = (row.slides as any)?.lessons?.modules?.course_id;
+          if (!courseId) continue;
+
+          if (!groupedByCourse[courseId]) {
+            groupedByCourse[courseId] = {};
           }
-    
-          groupedByCourse[course_id][slide_id] = messages;
+
+          groupedByCourse[courseId][row.slide_id] = row.data?.messages || [];
         }
 
 
@@ -108,7 +117,7 @@ export const useChatStore = create<ChatStore>(() => ({
             ]
           );
           await AsyncStorage.multiSet(multiSetData);
-      
+
     }catch(err) {
         console.error('❌ Failed to sync chat message data from DB:', err);
     }

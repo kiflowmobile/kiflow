@@ -217,7 +217,7 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
         const criteriaScores = aiResponse.rating.criteriaScores;
         for (const [criteriaKey, score] of Object.entries(criteriaScores)) {
           try {
-            await saveRating(user.id, score as number, moduleIdStr, criteriaKey, courseIdStr);
+            await saveRating(user.id, score as number, moduleIdStr, criteriaKey);
           } catch (err) {
             console.warn(`Failed to save rating for ${criteriaKey}:`, err);
           }

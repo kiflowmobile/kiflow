@@ -1,11 +1,11 @@
 import { create } from 'zustand';
 import {
   fetchAllRatings,
-  fetchCriteriasByKeys,
+  fetchCriteriaByKeys,
   fetchRating,
   fetchRatings,
   upsertRating,
-} from '../services/main_rating';
+} from '../services/userSkillRatings';
 
 interface RatingItem {
   id: string;
@@ -21,9 +21,9 @@ interface SkillSummaryItem {
   average_score: number;
 }
 
-interface MainRatingState {
+interface UserSkillRatingsState {
   average: number | null;
-  ratings: RatingItem[]; 
+  ratings: RatingItem[];
   skills: SkillSummaryItem[];
   isLoading: boolean;
   error: string | null;
@@ -35,15 +35,14 @@ interface MainRatingState {
     rating: number,
     moduleId: string,
     key: string,
-    courseId: string,
   ) => Promise<void>;
   fetchUserAverage: (userId: string) => Promise<void>;
-  fetchUserRatings: (userId: string) => Promise<void>; 
+  fetchUserRatings: (userId: string) => Promise<void>;
 
   clear: () => void;
 }
 
-export const useMainRatingStore = create<MainRatingState>((set) => ({
+export const useUserSkillRatingsStore = create<UserSkillRatingsState>((set) => ({
   average: null,
   ratings: [],
   skills: [],
@@ -72,12 +71,12 @@ export const useMainRatingStore = create<MainRatingState>((set) => ({
       if (ratingsError) throw ratingsError;
 
       const keys = ratings?.map((r: any) => r.criteria_key) ?? [];
-      const { data: criterias, error: criteriasError } = await fetchCriteriasByKeys(keys);
-      if (criteriasError) throw criteriasError;
+      const { data: criteria, error: criteriaError } = await fetchCriteriaByKeys(keys);
+      if (criteriaError) throw criteriaError;
 
       const skills: SkillSummaryItem[] =
         ratings?.map((r: any) => {
-          const criterion = criterias?.find((c) => c.key === r.criteria_key);
+          const criterion = criteria?.find((c) => c.key === r.criteria_key);
           return {
             criterion_id: r.criteria_key,
             criterion_name: criterion?.name || r.criteria_key,
@@ -91,7 +90,7 @@ export const useMainRatingStore = create<MainRatingState>((set) => ({
     }
   },
 
-  saveRating: async (userId, rating, moduleId, key, courseId) => {
+  saveRating: async (userId, rating, moduleId, key) => {
     try {
       const { data: existing, error: fetchError } = await fetchRating(userId, moduleId, key);
       if (fetchError && fetchError.code !== 'PGRST116') throw fetchError;
@@ -99,10 +98,10 @@ export const useMainRatingStore = create<MainRatingState>((set) => ({
       const normalized = typeof rating === 'string' ? parseInt(rating, 10) : rating;
       const final = existing ? (existing.rating + normalized) / 2 : normalized;
 
-      await upsertRating(userId, final, moduleId, key, courseId);
+      await upsertRating(userId, final, moduleId, key);
 
-      await useMainRatingStore.getState().fetchAverage(userId, moduleId);
-      await useMainRatingStore.getState().fetchSkills(userId, moduleId);
+      await useUserSkillRatingsStore.getState().fetchAverage(userId, moduleId);
+      await useUserSkillRatingsStore.getState().fetchSkills(userId, moduleId);
     } catch (err: any) {
       set({ error: err.message });
     }
@@ -139,3 +138,6 @@ export const useMainRatingStore = create<MainRatingState>((set) => ({
 
   clear: () => set({ average: null, ratings: [], skills: [], error: null }),
 }));
+
+// Backwards compatibility alias
+export const useMainRatingStore = useUserSkillRatingsStore;

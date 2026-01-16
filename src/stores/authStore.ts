@@ -104,7 +104,6 @@ export const useAuthStore = create<AuthState>()(
 
         await upsertUserProfile(data.user.id, {
           email: data.user.email || email,
-          full_name: firstName && lastName ? `${firstName} ${lastName}` : null,
           first_name: firstName || undefined,
           last_name: lastName || undefined,
         });
