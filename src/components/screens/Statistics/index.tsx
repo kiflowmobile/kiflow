@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useCourseStore } from '@/src/stores/courseStore';
-import { useCriteriaStore } from '@/src/stores/criterias';
-import { useMainRatingStore } from '@/src/stores/mainRatingStore';
+import { useCriteriaStore } from '@/src/stores/criteriaStore';
+import { useMainRatingStore } from '@/src/stores/userSkillRatingsStore';
 import { useAuthStore, useModulesStore, useUserProgressStore } from '@/src/stores';
 import { useQuizStore } from '@/src/stores/quizStore';
 import { useRouter } from 'expo-router';

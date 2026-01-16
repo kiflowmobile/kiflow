@@ -1,5 +1,5 @@
 import nodemailer from 'nodemailer';
-import { fetchCriteriasByKeys } from '@/src/services/main_rating';
+import { fetchCriteriaByKeys } from '@/src/services/userSkillRatings';
 
 interface ClientSkill {
   criterion_id?: string;
@@ -170,7 +170,7 @@ export async function POST(request: Request) {
       try {
         const keys = Array.from(new Set(userStats.skills.map((s) => s.key).filter(Boolean)));
         if (keys.length > 0) {
-          const { data: criterias, error: criteriasError } = await fetchCriteriasByKeys(
+          const { data: criterias, error: criteriasError } = await fetchCriteriaByKeys(
             keys as string[],
           );
           if (!criteriasError && criterias && Array.isArray(criterias) && criterias.length > 0) {

@@ -19,7 +19,7 @@ interface QuizStore {
   syncQuizToDB: () => Promise<void>;
   clearQuizProgress: () => void;
   syncQuizFromDBToLocalStorage: () => void
-  
+
   getModuleScore: (courseId: string, moduleId: string) => Promise<number>;
   getCourseScore: (courseId: string) => Promise<number>;
   getTotalScore: () => Promise<number>;
@@ -87,9 +87,12 @@ export const useQuizStore = create<QuizStore>((set, get) => ({
         rows.push({
           user_id: user.id,
           slide_id: slideId,
-          selected_answer: selectedAnswer,
-          correct_answer: correctAnswer,
-          course_id: courseId
+          course_id: courseId,
+          interaction_type: 'quiz',
+          data: {
+            selected_answer: selectedAnswer,
+            correct_answer: correctAnswer
+          }
         });
       }
     }
@@ -98,8 +101,10 @@ export const useQuizStore = create<QuizStore>((set, get) => ({
         // console.log('ℹ️ No valid quiz rows to sync');
         return;
     }
-  
-    const { error } = await supabase.from('quiz_answers').upsert(rows, { onConflict: 'user_id,slide_id' });;
+
+    const { error } = await supabase
+      .from('user_slide_interactions')
+      .upsert(rows, { onConflict: 'user_id,slide_id,interaction_type' });
     if (error) throw error;
 
     } catch (err) {
@@ -113,33 +118,34 @@ export const useQuizStore = create<QuizStore>((set, get) => ({
       const { user } = getAuthStore().getState();
       if (!user) return;
         const { data, error } = await supabase
-        .from('quiz_answers')
-        .select('slide_id, selected_answer, correct_answer, course_id')
-        .eq('user_id', user.id);
-  
+        .from('user_slide_interactions')
+        .select('slide_id, course_id, data')
+        .eq('user_id', user.id)
+        .eq('interaction_type', 'quiz');
+
       if (error) throw error;
       if (!data || data.length === 0) return;
-  
+
       const groupedByCourse: Record<
         string,
         Record<string, { selectedAnswer: number; correctAnswer: number }>
       > = {};
-  
+
       for (const item of data) {
         const key = `quiz-progress-${item.course_id}`;
         if (!groupedByCourse[key]) groupedByCourse[key] = {};
         groupedByCourse[key][item.slide_id] = {
-          selectedAnswer: item.selected_answer,
-          correctAnswer: item.correct_answer,
+          selectedAnswer: item.data?.selected_answer,
+          correctAnswer: item.data?.correct_answer,
         };
       }
         const allKeys = await AsyncStorage.getAllKeys();
-  
+
       const pairs: [string, string][] = [];
-  
+
       for (const [key, newData] of Object.entries(groupedByCourse)) {
         let mergedData = { ...newData };
-  
+
         if (allKeys.includes(key)) {
           const existingValue = await AsyncStorage.getItem(key);
           if (existingValue) {
@@ -150,10 +156,10 @@ export const useQuizStore = create<QuizStore>((set, get) => ({
             }
           }
         }
-  
+
         pairs.push([key, JSON.stringify(mergedData)]);
       }
-  
+
       if (pairs.length > 0) {
         await AsyncStorage.multiSet(pairs);
       }
@@ -171,7 +177,7 @@ export const useQuizStore = create<QuizStore>((set, get) => ({
     const key = `quiz-progress-${courseId}`;
     const value = await AsyncStorage.getItem(key);
     if (!value) return 0;
-  
+
     const data = Object.values(JSON.parse(value)) as QuizData[];
 
     const correct = data.filter(

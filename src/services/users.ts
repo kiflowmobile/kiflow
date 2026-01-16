@@ -104,7 +104,8 @@ export const upsertUserProfile = async (
 };
 
 /**
- * Получает current_code текущего пользователя
+ * Gets the current user's company code by querying company_members
+ * Returns the most recently joined company's code
  */
 export const getCurrentUserCode = async (): Promise<{ code: string | null; error: any }> => {
   try {
@@ -112,14 +113,31 @@ export const getCurrentUserCode = async (): Promise<{ code: string | null; error
     if (!user) {
       return { code: null, error: 'Користувач не автентифікований' };
     }
+
+    // Get the user's most recent company membership with company code
     const { data, error } = await supabase
-      .from('users')
-      .select('current_code')
-      .eq('id', user.id)
+      .from('company_members')
+      .select(`
+        company_id,
+        joined_via_code,
+        companies (code)
+      `)
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+      .limit(1)
       .single();
-    return { code: data?.current_code ?? null, error };
+
+    if (error && error.code !== 'PGRST116') {
+      // PGRST116 = no rows returned, which is fine
+      return { code: null, error };
+    }
+
+    // Return joined_via_code if available, otherwise get from company
+    const code = data?.joined_via_code || (data?.companies as any)?.code || null;
+    return { code, error: null };
   } catch (err) {
-    console.error('Error fetching current_code:', err);
+    console.error('Error fetching user company code:', err);
     return { code: null, error: err };
   }
 };
+

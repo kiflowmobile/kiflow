@@ -33,7 +33,8 @@ export const useChatStore = create<ChatStore>(() => ({
         user_id: string;
         course_id: string;
         slide_id: string;
-        messages: ChatMessage[];
+        interaction_type: string;
+        data: { messages: ChatMessage[] };
       }[] = [];
 
       for (const [key, value] of keyValues) {
@@ -53,7 +54,8 @@ export const useChatStore = create<ChatStore>(() => ({
             user_id: user.id,
             course_id: courseId,
             slide_id,
-            messages: messages as ChatMessage[],
+            interaction_type: 'ai_chat',
+            data: { messages: messages as ChatMessage[] },
           });
         }
       }
@@ -64,8 +66,8 @@ export const useChatStore = create<ChatStore>(() => ({
       }
 
       const { error } = await supabase
-        .from('chat_history')
-        .upsert(rowsToUpsert, { onConflict: 'user_id, slide_id' });
+        .from('user_slide_interactions')
+        .upsert(rowsToUpsert, { onConflict: 'user_id,slide_id,interaction_type' });
 
       if (error) throw error;
 
@@ -73,7 +75,7 @@ export const useChatStore = create<ChatStore>(() => ({
       console.error('❌ Failed to sync chat data from local storage:', err);
     }
 
-    
+
   },
 
   syncChatFromDBToLocalStorage: async () => {
@@ -82,22 +84,23 @@ export const useChatStore = create<ChatStore>(() => ({
         if (!user) return;
 
         const { data, error } = await supabase
-        .from('chat_history')
-        .select('slide_id, course_id, messages')
-        .eq('user_id', user.id);
+        .from('user_slide_interactions')
+        .select('slide_id, course_id, data')
+        .eq('user_id', user.id)
+        .eq('interaction_type', 'ai_chat');
 
         if (error) throw error;
         if (!data || data.length === 0) return;
 
         const groupedByCourse: Record<string, Record<string, any[]>> = {};
         for (const row of data) {
-          const { course_id, slide_id, messages } = row;
-    
+          const { course_id, slide_id, data: interactionData } = row;
+
           if (!groupedByCourse[course_id]) {
             groupedByCourse[course_id] = {};
           }
-    
-          groupedByCourse[course_id][slide_id] = messages;
+
+          groupedByCourse[course_id][slide_id] = interactionData?.messages || [];
         }
 
 
@@ -108,7 +111,7 @@ export const useChatStore = create<ChatStore>(() => ({
             ]
           );
           await AsyncStorage.multiSet(multiSetData);
-      
+
     }catch(err) {
         console.error('❌ Failed to sync chat message data from DB:', err);
     }

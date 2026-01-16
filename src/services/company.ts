@@ -175,17 +175,6 @@ export const joinCompanyByCode = async (
       return { success: false, error: addError };
     }
 
-    // Оновлюємо поле current_code у таблиці users
-    const { error: updateError } = await supabase
-      .from('users')
-      .update({ current_code: code })
-      .eq('id', user.id);
-
-    if (updateError) {
-      return { success: false, error: updateError };
-    }
-
-
     return { success: true, company };
   } catch (err) {
     console.error('Error joining company by code:', err);
