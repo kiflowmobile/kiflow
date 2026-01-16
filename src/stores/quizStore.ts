@@ -74,7 +74,6 @@ export const useQuizStore = create<QuizStore>((set, get) => ({
         console.warn(`❌ Failed to parse quiz data for key ${key}`, err);
         continue;
       }
-      const courseId = key.replace("quiz-progress-", "");
       for (const [slideId, data] of Object.entries(parsed)) {
         const { selectedAnswer, correctAnswer } = data as any;
         if (
@@ -87,7 +86,6 @@ export const useQuizStore = create<QuizStore>((set, get) => ({
         rows.push({
           user_id: user.id,
           slide_id: slideId,
-          course_id: courseId,
           interaction_type: 'quiz',
           data: {
             selected_answer: selectedAnswer,
@@ -119,7 +117,15 @@ export const useQuizStore = create<QuizStore>((set, get) => ({
       if (!user) return;
         const { data, error } = await supabase
         .from('user_slide_interactions')
-        .select('slide_id, course_id, data')
+        .select(`
+          slide_id,
+          data,
+          slides!inner(
+            lessons!inner(
+              modules!inner(course_id)
+            )
+          )
+        `)
         .eq('user_id', user.id)
         .eq('interaction_type', 'quiz');
 
@@ -132,7 +138,9 @@ export const useQuizStore = create<QuizStore>((set, get) => ({
       > = {};
 
       for (const item of data) {
-        const key = `quiz-progress-${item.course_id}`;
+        const courseId = (item.slides as any)?.lessons?.modules?.course_id;
+        if (!courseId) continue;
+        const key = `quiz-progress-${courseId}`;
         if (!groupedByCourse[key]) groupedByCourse[key] = {};
         groupedByCourse[key][item.slide_id] = {
           selectedAnswer: item.data?.selected_answer,

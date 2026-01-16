@@ -31,7 +31,6 @@ export const useChatStore = create<ChatStore>(() => ({
       const keyValues = await AsyncStorage.multiGet(chatKeys);
       const rowsToUpsert: {
         user_id: string;
-        course_id: string;
         slide_id: string;
         interaction_type: string;
         data: { messages: ChatMessage[] };
@@ -40,7 +39,6 @@ export const useChatStore = create<ChatStore>(() => ({
       for (const [key, value] of keyValues) {
         if (!value) continue;
 
-        const courseId = key.replace('course-chat-', '');
         let parsed;
         try {
           parsed = JSON.parse(value);
@@ -52,7 +50,6 @@ export const useChatStore = create<ChatStore>(() => ({
         for (const [slide_id, messages] of Object.entries(parsed)) {
           rowsToUpsert.push({
             user_id: user.id,
-            course_id: courseId,
             slide_id,
             interaction_type: 'ai_chat',
             data: { messages: messages as ChatMessage[] },
@@ -85,7 +82,15 @@ export const useChatStore = create<ChatStore>(() => ({
 
         const { data, error } = await supabase
         .from('user_slide_interactions')
-        .select('slide_id, course_id, data')
+        .select(`
+          slide_id,
+          data,
+          slides!inner(
+            lessons!inner(
+              modules!inner(course_id)
+            )
+          )
+        `)
         .eq('user_id', user.id)
         .eq('interaction_type', 'ai_chat');
 
@@ -94,13 +99,14 @@ export const useChatStore = create<ChatStore>(() => ({
 
         const groupedByCourse: Record<string, Record<string, any[]>> = {};
         for (const row of data) {
-          const { course_id, slide_id, data: interactionData } = row;
+          const courseId = (row.slides as any)?.lessons?.modules?.course_id;
+          if (!courseId) continue;
 
-          if (!groupedByCourse[course_id]) {
-            groupedByCourse[course_id] = {};
+          if (!groupedByCourse[courseId]) {
+            groupedByCourse[courseId] = {};
           }
 
-          groupedByCourse[course_id][slide_id] = interactionData?.messages || [];
+          groupedByCourse[courseId][row.slide_id] = row.data?.messages || [];
         }
 
 

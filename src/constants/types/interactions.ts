@@ -21,8 +21,6 @@ export interface UserSlideInteraction {
   id: string;
   user_id: string;
   slide_id: string;
-  course_id?: string;
-  module_id?: string;
   interaction_type: InteractionType;
   data: QuizInteractionData | AiChatInteractionData;
   created_at: string;
