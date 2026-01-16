@@ -87,12 +87,13 @@ CREATE POLICY "user_slide_interactions_delete_own"
   USING (auth.uid() = user_id);
 
 -- 3.5 Migrate data from quiz_answers
+-- Note: module_id is set to NULL if the module doesn't exist (orphaned data)
 INSERT INTO public.user_slide_interactions (user_id, slide_id, course_id, module_id, interaction_type, data, created_at)
 SELECT
   qa.user_id,
   qa.slide_id,
-  qa.course_id,
-  qa.module_id,
+  CASE WHEN EXISTS (SELECT 1 FROM public.courses c WHERE c.id = qa.course_id) THEN qa.course_id ELSE NULL END,
+  CASE WHEN EXISTS (SELECT 1 FROM public.modules m WHERE m.id = qa.module_id) THEN qa.module_id ELSE NULL END,
   'quiz' as interaction_type,
   jsonb_build_object(
     'selected_answer', qa.selected_answer,
@@ -109,7 +110,7 @@ INSERT INTO public.user_slide_interactions (user_id, slide_id, course_id, module
 SELECT
   ch.user_id,
   ch.slide_id,
-  ch.course_id,
+  CASE WHEN EXISTS (SELECT 1 FROM public.courses c WHERE c.id = ch.course_id) THEN ch.course_id ELSE NULL END,
   NULL as module_id,  -- chat_history doesn't have module_id
   'ai_chat' as interaction_type,
   jsonb_build_object('messages', COALESCE(ch.messages, '[]'::jsonb)) as data,

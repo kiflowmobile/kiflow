@@ -102,14 +102,27 @@ ALTER TABLE public.user_skill_ratings
 ALTER TABLE public.user_skill_ratings
   ALTER COLUMN module_id DROP DEFAULT;
 
--- 5.2 Make columns NOT NULL (they should never be null)
+-- 5.2 Delete orphaned records before adding FK constraints
+-- Records with user_id not in users table
+DELETE FROM public.user_skill_ratings
+WHERE user_id NOT IN (SELECT id FROM public.users);
+
+-- Records with module_id not in modules table
+DELETE FROM public.user_skill_ratings
+WHERE module_id NOT IN (SELECT id FROM public.modules);
+
+-- Records with NULL user_id or module_id
+DELETE FROM public.user_skill_ratings
+WHERE user_id IS NULL OR module_id IS NULL;
+
+-- 5.3 Make columns NOT NULL (they should never be null)
 ALTER TABLE public.user_skill_ratings
   ALTER COLUMN user_id SET NOT NULL;
 
 ALTER TABLE public.user_skill_ratings
   ALTER COLUMN module_id SET NOT NULL;
 
--- 5.3 Add foreign key constraints if they don't exist
+-- 5.4 Add foreign key constraints if they don't exist
 DO $$
 BEGIN
   IF NOT EXISTS (
