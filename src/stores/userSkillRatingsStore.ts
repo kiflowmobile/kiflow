@@ -35,7 +35,6 @@ interface UserSkillRatingsState {
     rating: number,
     moduleId: string,
     key: string,
-    courseId: string,
   ) => Promise<void>;
   fetchUserAverage: (userId: string) => Promise<void>;
   fetchUserRatings: (userId: string) => Promise<void>;
@@ -91,7 +90,7 @@ export const useUserSkillRatingsStore = create<UserSkillRatingsState>((set) => (
     }
   },
 
-  saveRating: async (userId, rating, moduleId, key, courseId) => {
+  saveRating: async (userId, rating, moduleId, key) => {
     try {
       const { data: existing, error: fetchError } = await fetchRating(userId, moduleId, key);
       if (fetchError && fetchError.code !== 'PGRST116') throw fetchError;
@@ -99,7 +98,7 @@ export const useUserSkillRatingsStore = create<UserSkillRatingsState>((set) => (
       const normalized = typeof rating === 'string' ? parseInt(rating, 10) : rating;
       const final = existing ? (existing.rating + normalized) / 2 : normalized;
 
-      await upsertRating(userId, final, moduleId, key, courseId);
+      await upsertRating(userId, final, moduleId, key);
 
       await useUserSkillRatingsStore.getState().fetchAverage(userId, moduleId);
       await useUserSkillRatingsStore.getState().fetchSkills(userId, moduleId);

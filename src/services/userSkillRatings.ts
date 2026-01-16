@@ -26,11 +26,10 @@ export const upsertRating = async (
   rating: number,
   moduleId: string,
   key: string,
-  courseId: string,
 ) => {
   const value = Number(rating);
   if (!Number.isFinite(value)) throw new Error('Rating is not a number');
-  if (!userId || !moduleId || !key || !courseId) throw new Error('Missing ids');
+  if (!userId || !moduleId || !key) throw new Error('Missing ids');
 
   const { data, error } = await supabase
     .from('user_skill_ratings')
@@ -41,10 +40,9 @@ export const upsertRating = async (
           rating: value,
           module_id: moduleId,
           criteria_key: key,
-          course_id: courseId,
         },
       ],
-      { onConflict: 'user_id,module_id,criteria_key,course_id' },
+      { onConflict: 'user_id,module_id,criteria_key' },
     )
     .select();
 

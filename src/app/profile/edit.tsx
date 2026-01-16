@@ -58,11 +58,9 @@ export default function EditProfileScreen() {
   const handleSave = async () => {
     try {
       setSaving(true);
-      const full_name = `${formData.first_name ?? ''} ${formData.last_name ?? ''}`.trim();
       const updateData = {
         first_name: formData.first_name,
         last_name: formData.last_name,
-        full_name,
       };
 
       const { error } = await updateCurrentUserProfile(updateData);
