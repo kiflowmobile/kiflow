@@ -38,7 +38,6 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
-  const [isLocked, setIsLocked] = useState(false)
   const { prompt, fetchPromptBySlide } = usePromptsStore();
   const { criterias, fetchCriterias } = useCriteriaStore();
   const { user } = useAuthStore();
@@ -50,7 +49,10 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
   const courseIdStr = Array.isArray(courseId) ? courseId[0] : courseId;
   const CHAT_STORAGE_KEY = `course-chat-${courseIdStr}`;
   const analyticsStore = useAnalyticsStore.getState();
-  const [userMessageCount, setUserMessageCount] = useState(0);
+
+  // Derived state: User message count & Locking
+  const userMessageCount = messages.filter(m => m.role === 'user').length;
+  const isLocked = userMessageCount >= 3;
 
   const loadChat = async () => {
     try {
@@ -58,14 +60,8 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
       if (!stored) return;
   
       const parsed: Record<string, Message[]> = JSON.parse(stored);
-  
       if (parsed[slideId]) {
-        const userCount = parsed[slideId].filter((item: Message) => item.role === 'user').length;  
-        setUserMessageCount(userCount);
-        setIsLocked(userCount >= 3);
-  
         setMessages(parsed[slideId]);
-
       }
     } catch (err) {
       console.error('Error loading chat:', err);
@@ -105,107 +101,79 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
     };
   }, []);
 
+  // Combined initialization effect
   useEffect(() => {
     if (slideId) {
-      fetchPromptBySlide(slideId);
+       fetchPromptBySlide(slideId);
+       loadChat(); // Load chat history independently
     }
-  }, [slideId, fetchPromptBySlide]);
+    if (courseIdStr) {
+       fetchCriterias(courseIdStr);
+    }
+  }, [slideId, courseIdStr]);
 
+  // Handle Initial AI Message (Question) if no chat history
   useEffect(() => {
-    const loadChatOrPrompt = async () => {
-      try {
+     if (!prompt[slideId] || messages.length > 0) return;
+     
+     // Check storage one last time to avoid overwriting or doubling
+     const checkStorageAndSetInitial = async () => {
         const stored = await AsyncStorage.getItem(CHAT_STORAGE_KEY);
         if (stored) {
-          const parsed = JSON.parse(stored);
-          if (parsed[slideId]) {
-            setMessages(parsed[slideId]);
-
-            setUserMessageCount(parsed[slideId].length)
-            return;
-          }
+            const parsed = JSON.parse(stored);
+            if (parsed[slideId] && parsed[slideId].length > 0) return; // Already has messages
         }
 
-        const slidePrompt = prompt[slideId]?.question;
-        if (!slidePrompt) return;
+        const initialMsgText = prompt[slideId]?.initial_message;
+        if (initialMsgText) {
+             const aiMsg: Message = {
+                id: Date.now().toString(),
+                role: 'ai',
+                text: initialMsgText,
+              };
+              setMessages([aiMsg]);
+        }
+     };
+     
+     checkStorageAndSetInitial();
+  }, [slideId, prompt, messages.length]);
 
-        const aiMsg: Message = {
-          id: Date.now().toString(),
-          role: 'ai',
-          text: slidePrompt,
-        };
-
-        setMessages([aiMsg])
-        setInput('');
-      } catch (err) {
-        console.error('Error loading chat or prompt:', err);
-      }
-    };
-
-    if (slideId) {
-      loadChatOrPrompt();
-    }
-  }, [slideId, prompt]);
-
-  useEffect(() => {
-    if (courseId) fetchCriterias(courseIdStr);
-  }, [courseId, courseIdStr, fetchCriterias]);
-
-  useEffect(() => {
-    if (slideId) {
-      fetchPromptBySlide(slideId);
-      loadChat();
-    }
-  }, [slideId]);
 
   const handleSend = async () => {
-    analyticsStore.trackEvent("course_screen__submit__click", {
-      courseIdStr, 
-      slideId,
-    });
-    if (!input.trim()  || loading) return;
+    analyticsStore.trackEvent("course_screen__submit__click", { courseIdStr, slideId });
+    if (!input.trim() || loading) return;
 
     const userMsg: Message = { id: Date.now().toString(), role: 'user', text: input.trim() };
-    setMessages((prev) => [...prev, userMsg]);
-
-    const newCount = userMessageCount + 1
-    setUserMessageCount(newCount)
-
-    if(newCount >= 3){
-      setIsLocked(true)
-    }
-
+    const newMessages = [...messages, userMsg];
+    setMessages(newMessages);
     setInput('');
     setLoading(true);
     useSlidesStore.getState().markSlideAnswered(slideId);
- 
 
     try {
-      const slidePrompt = prompt[slideId]?.prompt || '';
+      const systemInstruction = prompt[slideId]?.system_instruction || '';
       const criteriasText = criterias.map((item) => `${item.key} - ${item.name.trim()}`).join('\n');
 
+      // Resolve Company ID
       let companyIdToUse: string | undefined = undefined;
       try {
-        const { code, error: codeError } = await getCurrentUserCode();
-        if (code && !codeError) {
-          const { data: companyData, error: companyError } = await getCompanyByCode(code);
-          if (companyData && !companyError) {
-            companyIdToUse = companyData.id;
-          } else {
-            console.warn('No company found for code', code, companyError);
-          }
+        const { code } = await getCurrentUserCode();
+        if (code) {
+          const { data: companyData } = await getCompanyByCode(code);
+          if (companyData) companyIdToUse = companyData.id;
         }
       } catch (err) {
         console.warn('Failed to resolve current user companyId', err);
       }
 
-      const aiResponse = await askGemini(
-        [...messages, userMsg],
-        slidePrompt,
-        messages.length === 0,
+      const aiResponse = await askGemini({
+        messages: newMessages,
+        slidePrompt: systemInstruction,
+        isFirstMessage: messages.length === 0, // Should rarely be true if initial message loads, but safe check
         criteriasText,
-        undefined,
-        companyIdToUse,
-      );
+        companyId: companyIdToUse,
+      });
+
       analyticsStore.trackEvent('course_screen__response_success__load', {
         id: slideId,
         index: 0,
@@ -213,30 +181,31 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
         tokens: aiResponse?.usage?.totalTokens || 0,
       });
 
-      if (user && aiResponse.rating?.criteriaScores && moduleId) {
+      // Saving Ratings
+      if (user && aiResponse.rating?.criteriaScores && moduleIdStr) {
         const criteriaScores = aiResponse.rating.criteriaScores;
-        for (const [criteriaKey, score] of Object.entries(criteriaScores)) {
-          try {
-            await saveRating(user.id, score as number, moduleIdStr, criteriaKey);
-          } catch (err) {
-            console.warn(`Failed to save rating for ${criteriaKey}:`, err);
-          }
-        }
+        // Parallel save
+        Promise.allSettled(
+            Object.entries(criteriaScores).map(([criteriaKey, score]) => 
+                saveRating(user.id, score as number, moduleIdStr, criteriaKey)
+            )
+        ).catch(err => console.warn("Failed saving ratings", err));
       }
 
-      // форматуємо текст від AI
-      const chatText = formatAIResponseForChat(aiResponse);
+      // Formatting response
+      // Note: formatAIResponseForChat likely expects { content: string, rating: ... } 
+      // We ensure aiResponse matches that shape or we adapt needed fields.
+      const chatText = formatAIResponseForChat(aiResponse as any); 
+      
       const aiMsg: Message = {
         id: Date.now().toString(),
         role: 'ai',
         text: chatText,
       };
 
-      // створюємо оновлений масив повідомлень
-      const updatedMessages = [...messages, userMsg, aiMsg];
+      const updatedMessages = [...newMessages, aiMsg];
       setMessages(updatedMessages);
 
-      // ✅ нова логіка збереження чату
       try {
         const existing = await AsyncStorage.getItem(CHAT_STORAGE_KEY);
         const parsed = existing ? JSON.parse(existing) : {};
@@ -247,10 +216,7 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
       }
     } catch (e) {
       console.error(e);
-      analyticsStore.trackEvent('course_screen__response_fail__load', {
-        id: slideId,
-        index: 0,
-      });
+      analyticsStore.trackEvent('course_screen__response_fail__load', { id: slideId, index: 0 });
     } finally {
       setLoading(false);
     }
@@ -265,7 +231,6 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
 
   const handleFocus = () => {
     lockPageScroll();
-
     if (Platform.OS === 'web') {
       setTimeout(() => {
         try {

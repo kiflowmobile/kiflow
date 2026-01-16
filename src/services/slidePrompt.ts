@@ -3,8 +3,8 @@ import { create } from 'zustand';
 
 interface Prompt {
   slide_id: string;
-  prompt: string;
-  question: string;
+  system_instruction: string;
+  initial_message: string;
 }
 
 interface PromptsState {
@@ -25,7 +25,7 @@ export const usePromptsStore = create<PromptsState>((set) => ({
     try {
       const { data, error } = await supabase
         .from('slide_ai_prompts')
-        .select('slide_id, prompt, question')
+        .select('slide_id, system_instruction, initial_message')
         .eq('slide_id', slideId)
         .single();
 
@@ -37,8 +37,8 @@ export const usePromptsStore = create<PromptsState>((set) => ({
             ...state.prompt,
             [slideId]: {
               slide_id: data.slide_id,
-              question: data.question,
-              prompt: data.prompt,
+              initial_message: data.initial_message,
+              system_instruction: data.system_instruction,
             },
           },
           isLoading: false,
