@@ -9,3 +9,6 @@ export { modulesApi } from './api/modulesApi';
 
 // Types
 export type { Module, ModuleState, ModuleActions, ModuleStore } from './types';
+
+// Screens
+export { ModulesScreen } from './components/modules-screen';
