@@ -1,1 +1,1 @@
-export { default } from '@/src/components/screens/RegistrationScreen';
+export { SignUpScreen } from '@/src/features/auth';

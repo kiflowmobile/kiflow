@@ -32,3 +32,4 @@ export type {
 
 // Screens
 export { LoginScreen } from './components/login-screen';
+export { SignUpScreen } from './components/sign-up-screen';
