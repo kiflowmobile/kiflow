@@ -14,7 +14,7 @@ type DropdownProps = {
   disabled?: boolean;
 };
 
-export default function Dropdown({ label, items, selected, onSelect, disabled }: DropdownProps) {
+export function Dropdown({ label, items, selected, onSelect, disabled }: DropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
 
   // 🔑 анімація висоти і прозорості

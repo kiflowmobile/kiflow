@@ -6,7 +6,7 @@ interface LogOutIconProps {
   color?: string;
 }
 
-export default function LogOutIcon({ size = 24, color = '#000000' }: LogOutIconProps) {
+export function LogOutIcon({ size = 24, color = '#000000' }: LogOutIconProps) {
   return (
     <Svg
       width={size}

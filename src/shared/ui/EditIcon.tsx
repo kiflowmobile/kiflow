@@ -6,7 +6,7 @@ interface EditIconProps {
   color?: string;
 }
 
-export default function EditIcon({ size = 24, color = '#000000' }: EditIconProps) {
+export function EditIcon({ size = 24, color = '#000000' }: EditIconProps) {
   return (
     <Svg
       width={size}

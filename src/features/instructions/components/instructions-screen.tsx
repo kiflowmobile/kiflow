@@ -1,22 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { Dimensions, StyleSheet, Text, ActivityIndicator, Alert } from 'react-native';
+import { Dimensions, Text, ActivityIndicator, Alert, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-// Імпорт UI-компонентів
-import { Box } from '@/src/components/ui/box';
-import { ScrollView } from '@/src/components/ui/scroll-view';
-import Button from '../../ui/button';
-import Dropdown from '../../ui/dropdown/Dropdown';
-import {
-  getAllCompanies,
-  updateCompanyServiceStandards,
-  getCompanyById,
-} from '@/src/services/company';
-import InstructionField from '../../ui/instruction-field/InstructionField';
+import { Box, ScrollView, Button, Dropdown } from '@/shared/ui';
+import { companyApi } from '@/features/company';
+import { InstructionField } from '@/src/features/instructions/components/instruction-field';
 
-// import { Header, InstructionField } from "./components";
-
-const MockAIInstructionsScreen = () => {
+export const InstructionsScreen = () => {
   const { width: SCREEN_WIDTH } = Dimensions.get('window');
   const [companies, setCompanies] = useState<{ id: string; name: string }[]>([]);
   const [loadingCompanies, setLoadingCompanies] = useState(false);
@@ -25,9 +15,8 @@ const MockAIInstructionsScreen = () => {
   useEffect(() => {
     const load = async () => {
       setLoadingCompanies(true);
-      const { data, error } = await getAllCompanies();
+      const { data, error } = await companyApi.getAllCompanies();
       if (data && !error) {
-        // Map to dropdown item shape
         const items = data.map((c) => ({ id: c.id, name: c.name }));
         setCompanies(items);
       } else {
@@ -40,7 +29,6 @@ const MockAIInstructionsScreen = () => {
   }, []);
 
   const handleSaveCompany = () => {
-    // Сохраняем три поля в service_standards в формате JSON
     if (!selectedCompany || selectedCompany === 'none') {
       Alert.alert('Помилка', 'Будь ласка, оберіть компанію перед збереженням.');
       return;
@@ -55,16 +43,20 @@ const MockAIInstructionsScreen = () => {
     (async () => {
       try {
         setSaving(true);
-        try {
-          const companyCheck = await getCompanyById(selectedCompany);
-        } catch (err) {
-          console.error('Error checking company before update:', err);
+        // Verify company exists
+        const { error: companyError } = await companyApi.getCompanyById(selectedCompany);
+
+        if (companyError) {
+          Alert.alert('Помилка', 'Компанію не знайдено.');
+          setSaving(false);
+          return;
         }
 
-        const result = await updateCompanyServiceStandards(selectedCompany, payload);
-        if (result.error) {
-          console.error('Failed to update company:', result.error);
-          const message = result.error?.message || JSON.stringify(result.error);
+        const { error } = await companyApi.updateCompanyServiceStandards(selectedCompany, payload);
+
+        if (error) {
+          console.error('Failed to update company:', error);
+          const message = error.message || 'Unknown error';
           Alert.alert('Помилка', `Не вдалося зберегти дані: ${message}`);
           setSaving(false);
           return;
@@ -73,7 +65,7 @@ const MockAIInstructionsScreen = () => {
         Alert.alert('Успіх', 'Дані збережено.');
       } catch (err) {
         console.error('Unexpected error while saving company:', err);
-        Alert.alert('Помилка', 'Сталася невідома помилка. Перевірте лог.');
+        Alert.alert('Помилка', 'Сталася невідома помилка.');
       } finally {
         setSaving(false);
       }
@@ -82,6 +74,7 @@ const MockAIInstructionsScreen = () => {
 
   const handleSaveCourse = () => {
     // TODO: Implement save course logic
+    Alert.alert('Info', 'Save Course logic not implemented yet.');
   };
 
   // Instruction fields state
@@ -90,23 +83,23 @@ const MockAIInstructionsScreen = () => {
   const [feedbackRulesValue, setFeedbackRulesValue] = useState('');
   const [saving, setSaving] = useState(false);
 
-  // Когда компании загружены — ищем первую с уже сохранёнными service_standards
-  // и автоматически выбираем её и подгружаем значения в поля.
+  // Auto-select first company with existing standards
   useEffect(() => {
     const pickExisting = async () => {
       if (!companies || companies.length === 0) return;
 
       for (const comp of companies) {
         try {
-          const { data: companyData, error } = await getCompanyById(comp.id);
+          const { data: companyData, error } = await companyApi.getCompanyById(comp.id);
           if (companyData && !error && companyData.service_standards) {
             setSelectedCompany(comp.id);
             const standards = companyData.service_standards;
+            // Parse if it's a string, otherwise use directly
             const parsed = typeof standards === 'string' ? JSON.parse(standards) : standards;
             setScriptsValue(parsed?.scripts ?? '');
             setServiceStandardsValue(parsed?.serviceStandards ?? '');
             setFeedbackRulesValue(parsed?.feedbackRules ?? '');
-            return;
+            return; // Found one, stop searching
           }
         } catch (err) {
           console.warn('Error checking company for existing standards', comp.id, err);
@@ -117,7 +110,6 @@ const MockAIInstructionsScreen = () => {
     pickExisting();
   }, [companies]);
 
-  // Обработчик выбора компании из Dropdown — загружает её service_standards (если есть)
   const handleSelectCompany = async (id: string) => {
     setSelectedCompany(id === 'none' ? null : id);
     if (!id || id === 'none') {
@@ -128,7 +120,7 @@ const MockAIInstructionsScreen = () => {
     }
 
     try {
-      const { data: companyData, error } = await getCompanyById(id);
+      const { data: companyData, error } = await companyApi.getCompanyById(id);
       if (companyData && !error && companyData.service_standards) {
         const standards = companyData.service_standards;
         const parsed = typeof standards === 'string' ? JSON.parse(standards) : standards;
@@ -157,16 +149,14 @@ const MockAIInstructionsScreen = () => {
         showsVerticalScrollIndicator={false}
       >
         <Box className="flex-1">
-          {/* Header */}
-          {/* <Header /> */}
+          {/* Main Container */}
+          <View className="w-full flex-1 p-4 bg-[#f9f9f9] rounded-lg">
+            {/* Company Section */}
+            <Text className="text-xl font-bold mt-5 mb-2.5 text-[#333]">Company</Text>
+            <Text className="mb-2 text-gray-600">Оберіть компанію</Text>
 
-          {/* Content */}
-          <ScrollView style={styles.container}>
-            {/* Company */}
-            <Text style={styles.sectionTitle}>Company</Text>
-            <Text style={{ marginBottom: 8 }}>Оберіть компанію</Text>
             {loadingCompanies ? (
-              <ActivityIndicator size="small" />
+              <ActivityIndicator size="small" className="my-4" />
             ) : (
               <Dropdown
                 label="Select Company"
@@ -200,18 +190,19 @@ const MockAIInstructionsScreen = () => {
               editable={true}
             />
 
-            {/* Save button */}
-            <Button
-              title={saving ? 'Saving...' : 'Save Company'}
-              onPress={handleSaveCompany}
-              variant="secondary"
-              size="lg"
-              style={styles.saveButton}
-              disabled={saving}
-            />
+            <View className="w-1/2 mt-8 self-center">
+              <Button
+                title={saving ? 'Saving...' : 'Save Company'}
+                onPress={handleSaveCompany}
+                variant="accent"
+                size="lg"
+                style={{ width: '100%' }}
+                disabled={saving}
+              />
+            </View>
 
-            {/* Course */}
-            <Text style={styles.sectionTitle}>Course</Text>
+            {/* Course Section */}
+            <Text className="text-xl font-bold mt-5 mb-2.5 text-[#333]">Course</Text>
             <Dropdown
               label="Dropdown - Course"
               items={[
@@ -230,39 +221,18 @@ const MockAIInstructionsScreen = () => {
               editable={true}
             />
 
-            <Button
-              title="Save Course"
-              onPress={handleSaveCourse}
-              variant="secondary"
-              size="lg"
-              style={styles.saveButton}
-            />
-          </ScrollView>
+            <View className="w-1/2 mt-8 self-center">
+              <Button
+                title="Save Course"
+                onPress={handleSaveCourse}
+                variant="accent"
+                size="lg"
+                style={{ width: '100%' }}
+              />
+            </View>
+          </View>
         </Box>
       </ScrollView>
     </SafeAreaView>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    width: '100%',
-    flex: 1,
-    padding: 16,
-    backgroundColor: '#f9f9f9',
-  },
-  sectionTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginTop: 20,
-    marginBottom: 10,
-    color: '#333',
-  },
-  saveButton: {
-    width: '50%',
-    marginTop: 30,
-    alignSelf: 'center',
-  },
-});
-
-export default MockAIInstructionsScreen;

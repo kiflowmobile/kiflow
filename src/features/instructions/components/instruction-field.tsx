@@ -1,7 +1,6 @@
 import React from 'react';
 import { Text } from 'react-native';
-import { Textarea, TextareaInput } from '@/src/components/ui/textarea';
-import { VStack } from '@/src/components/ui/vstack';
+import { Textarea, TextareaInput, VStack } from '@/shared/ui';
 
 interface InstructionFieldProps {
   title: string;
@@ -11,7 +10,7 @@ interface InstructionFieldProps {
   editable?: boolean;
 }
 
-const InstructionField = ({
+export const InstructionField = ({
   title,
   value,
   onChangeText,
@@ -36,5 +35,3 @@ const InstructionField = ({
     </VStack>
   );
 };
-
-export default InstructionField;

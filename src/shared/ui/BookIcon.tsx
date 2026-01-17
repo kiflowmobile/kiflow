@@ -5,7 +5,7 @@ interface BookIconProps {
   color?: string;
 }
 
-export default function BookIcon({ size = 24, color = '#000000' }: BookIconProps) {
+export function BookIcon({ size = 24, color = '#000000' }: BookIconProps) {
   return (
     <Svg
       width={size}

@@ -7,7 +7,7 @@ interface ProgressBarProps {
   height?: number;
 }
 
-const ProgressBar: React.FC<ProgressBarProps> = ({ percent, height = 8 }) => {
+export const ProgressBar: React.FC<ProgressBarProps> = ({ percent, height = 8 }) => {
   const clamped = Math.max(0, Math.min(100, Math.round(percent)));
 
   return (
@@ -20,8 +20,6 @@ const ProgressBar: React.FC<ProgressBarProps> = ({ percent, height = 8 }) => {
     </View>
   );
 };
-
-export default ProgressBar;
 
 const styles = StyleSheet.create({
   wrapper: {

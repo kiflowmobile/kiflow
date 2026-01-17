@@ -5,9 +5,9 @@ export { HStack } from './hstack';
 export { View } from './view';
 
 // Form components
-export { default as Button } from './button';
-export { default as Input } from './input';
-export { Textarea } from './textarea';
+export { Button } from './button';
+export { Input } from './input';
+export { Textarea, TextareaInput } from './textarea';
 export type { ButtonVariant, ButtonSize } from './button';
 export type { InputProps } from './input';
 
@@ -38,6 +38,3 @@ export { CustomHeader } from './CustomHeader';
 export { ThemedText } from './ThemedText';
 export { ThemedView } from './ThemedView';
 export { SkillsChart } from './SkillsChart';
-export { InstructionField } from './instruction-field/InstructionField';
-export { CourseProgress } from './course-progress';
-export { TabBarBackground } from './TabBarBackground';

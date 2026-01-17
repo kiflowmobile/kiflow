@@ -6,7 +6,7 @@ interface CloseIconProps {
   color?: string;
 }
 
-export default function CloseIcon({ size = 24, color = '#000000' }: CloseIconProps) {
+export function CloseIcon({ size = 24, color = '#000000' }: CloseIconProps) {
   return (
     <Svg
       width={size}
@@ -23,4 +23,3 @@ export default function CloseIcon({ size = 24, color = '#000000' }: CloseIconPro
     </Svg>
   );
 }
-

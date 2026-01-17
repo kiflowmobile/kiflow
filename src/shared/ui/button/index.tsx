@@ -181,7 +181,7 @@ const SIZE_STYLES: Record<ButtonSize, { container: ViewStyle; text: TextStyle }>
   },
 };
 
-const Button: React.FC<ButtonProps> = ({
+export const Button: React.FC<ButtonProps> = ({
   title,
   onPress,
   variant = 'dark',
@@ -233,7 +233,11 @@ const Button: React.FC<ButtonProps> = ({
   // Проверяем, есть ли flex в стиле
   const styleArray = Array.isArray(style) ? style : style ? [style] : [];
   const hasFlex = styleArray.some(
-    (s) => s && typeof s === 'object' && s !== null && ('flex' in s || 'flexGrow' in s || 'alignSelf' in s),
+    (s) =>
+      s &&
+      typeof s === 'object' &&
+      s !== null &&
+      ('flex' in s || 'flexGrow' in s || 'alignSelf' in s),
   );
 
   const pressableContent = (
@@ -337,5 +341,3 @@ const styles = StyleSheet.create({
     marginLeft: 8,
   },
 });
-
-export default Button;

@@ -13,7 +13,7 @@ import { initAmplitude } from '../amplitude';
 export default function RootLayout() {
   const { initFromLocal } = useUserProgressStore();
   const { user, isGuest, isLoading } = useAuthStore();
-  const router = useRouter(); 
+  const router = useRouter();
   const navigationState = useRootNavigationState();
   const isNavigationReady = Boolean(navigationState?.key);
 
@@ -78,7 +78,7 @@ export default function RootLayout() {
             }}
           />
 
-          <Stack.Screen name="instractions" />
+          <Stack.Screen name="instructions" />
         </Stack>
       </SafeAreaProvider>
     </GestureHandlerRootView>

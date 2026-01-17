@@ -27,10 +27,14 @@ export type InputProps = TextInputProps & {
   /** доп. стили для TextInput */
   inputStyle?: StyleProp<TextStyle>;
   hapticFeedback?: boolean;
-  renderCustomPlaceholder?: (state: { focused: boolean; hasError: boolean; disabled?: boolean }) => React.ReactNode;
+  renderCustomPlaceholder?: (state: {
+    focused: boolean;
+    hasError: boolean;
+    disabled?: boolean;
+  }) => React.ReactNode;
 };
 
-const Input = forwardRef<TextInput, InputProps>(
+export const Input = forwardRef<TextInput, InputProps>(
   (
     {
       errorMessage,
@@ -165,7 +169,7 @@ const Input = forwardRef<TextInput, InputProps>(
 
 const styles = StyleSheet.create({
   inputContainer: {
-    width:'100%',
+    width: '100%',
     height: 56,
     borderRadius: 8,
     backgroundColor: Colors.white,
@@ -221,5 +225,3 @@ const styles = StyleSheet.create({
 });
 
 Input.displayName = 'Input';
-
-export default Input;

@@ -10,10 +10,7 @@ type CustomHeaderProps = {
   title?: string;
 };
 
-export default function CustomHeader({
-  showBackButton = true,
-  title = 'Courses',
-}: CustomHeaderProps) {
+export function CustomHeader({ showBackButton = true, title = 'Courses' }: CustomHeaderProps) {
   const router = useRouter();
   const insets = useSafeAreaInsets();
 

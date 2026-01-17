@@ -6,7 +6,7 @@ interface CheckIconProps {
   color?: string;
 }
 
-export default function CheckIcon({ size = 24, color = '#000000' }: CheckIconProps) {
+export function CheckIcon({ size = 24, color = '#000000' }: CheckIconProps) {
   return (
     <Svg
       width={size}
@@ -22,4 +22,3 @@ export default function CheckIcon({ size = 24, color = '#000000' }: CheckIconPro
     </Svg>
   );
 }
-

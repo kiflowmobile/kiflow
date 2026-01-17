@@ -53,7 +53,7 @@ const Textarea = React.forwardRef<React.ComponentRef<typeof UITextarea>, ITextar
         context={{ size }}
       />
     );
-  }
+  },
 );
 
 type ITextareaInputProps = React.ComponentProps<typeof UITextarea.Input> &
@@ -62,7 +62,7 @@ type ITextareaInputProps = React.ComponentProps<typeof UITextarea.Input> &
     isReadOnly?: boolean;
   };
 
-  const TextareaInput = React.forwardRef<
+const TextareaInput = React.forwardRef<
   React.ComponentRef<typeof UITextarea.Input>,
   ITextareaInputProps & { isReadOnly?: boolean }
 >(function TextareaInput({ className, disabled, isReadOnly, ...props }, ref) {
@@ -82,7 +82,6 @@ type ITextareaInputProps = React.ComponentProps<typeof UITextarea.Input> &
     />
   );
 });
-
 
 Textarea.displayName = 'Textarea';
 TextareaInput.displayName = 'TextareaInput';
