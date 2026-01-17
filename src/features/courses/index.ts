@@ -19,3 +19,4 @@ export type {
 
 // Screens
 export { CourseCodeScreen } from './components/course-code-screen';
+export { CoursesScreen } from './components/courses-screen';
