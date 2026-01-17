@@ -1,18 +1,17 @@
-import { Colors } from '@/src/constants/Colors';
-import type { User, UserUpdateData } from '@/src/constants/types/user';
-import { getCurrentUserProfile, updateCurrentUserProfile } from '@/src/services/users';
-import { useAuthStore } from '@/src/stores/authStore';
+import { useAuthStore } from '@/features/auth';
+import { useAnalytics } from '@/features/analytics';
+import type { User, UserUpdateData } from '../types';
+import { profileApi } from '../api/profileApi';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { ScrollView, StyleSheet, Switch, View, Text } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import AvatarSection from './components/AvatarSection';
-import LoadingState from './components/LoadingState';
-import CompanyCode from './components/CompanyCode';
+import { ScrollView, Switch, View, Text } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useAnalyticsStore } from '@/src/stores/analyticsStore';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import AvatarSection from './avatar-section';
+import LoadingState from './loading-state';
+import CompanyCode from './company-code';
 
-export default function ProfileScreen() {
+export function ProfileScreen() {
   const router = useRouter();
   const { user: authUser, isGuest, signOut } = useAuthStore();
   const [user, setUser] = useState<User | null>(null);
@@ -24,7 +23,7 @@ export default function ProfileScreen() {
   const [devUnlocked, setDevUnlocked] = useState(false);
   const [avatarTapCount, setAvatarTapCount] = useState(0);
 
-  const analyticsStore = useAnalyticsStore.getState();
+  const analytics = useAnalytics();
 
   const [formData, setFormData] = useState<UserUpdateData>({
     email: '',
@@ -61,7 +60,7 @@ export default function ProfileScreen() {
   const loadUserProfile = async () => {
     try {
       setLoading(true);
-      const { data, error } = await getCurrentUserProfile();
+      const { data, error } = await profileApi.getCurrentUserProfile();
 
       if (error) {
         console.error('Error loading profile:', error);
@@ -85,7 +84,7 @@ export default function ProfileScreen() {
   };
 
   const handleSave = async () => {
-    analyticsStore.trackEvent('profile_screen__save__click');
+    analytics.trackEvent('profile_screen__save__click');
 
     try {
       setUpdating(true);
@@ -96,7 +95,7 @@ export default function ProfileScreen() {
         last_name: formData.last_name,
       };
 
-      const { data, error } = await updateCurrentUserProfile(updateData);
+      const { data, error } = await profileApi.updateCurrentUserProfile(updateData);
 
       if (error) {
         console.error('Error updating profile:', error);
@@ -115,7 +114,7 @@ export default function ProfileScreen() {
   };
 
   const handleCancel = () => {
-    analyticsStore.trackEvent('profile_screen__cancel__click');
+    analytics.trackEvent('profile_screen__cancel__click');
 
     if (user) {
       setFormData((prev) => ({
@@ -129,17 +128,17 @@ export default function ProfileScreen() {
   };
 
   const handleEdit = () => {
-    analyticsStore.trackEvent('profile_screen__edit__click');
+    analytics.trackEvent('profile_screen__edit__click');
     router.push('/profile/edit');
   };
 
   const handleCourseCodePress = () => {
-    analyticsStore.trackEvent('profile_screen__change_company__click');
+    analytics.trackEvent('profile_screen__change_company__click');
     router.push('/course-code');
   };
 
   const handleSignOut = async () => {
-    analyticsStore.trackEvent('profile_screen__sign_out__click');
+    analytics.trackEvent('profile_screen__sign_out__click');
 
     try {
       await signOut();
@@ -167,7 +166,7 @@ export default function ProfileScreen() {
       setDevUnlocked(true);
       setIsDeveloper(true);
 
-      analyticsStore.trackEvent?.('profile_screen__developer_mode_unlocked');
+      analytics.trackEvent('profile_screen__developer_mode_unlocked');
 
       try {
         await AsyncStorage.multiSet([
@@ -185,9 +184,9 @@ export default function ProfileScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
-        <View style={styles.content}>
+    <SafeAreaView className="flex-1 bg-surface">
+      <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: 32 }}>
+        <View className="px-4 gap-4">
           <AvatarSection
             fullName={`${formData.first_name || user?.first_name || ''} ${formData.last_name || user?.last_name || ''}`.trim()}
             email={user?.email ?? undefined}
@@ -204,15 +203,15 @@ export default function ProfileScreen() {
           <CompanyCode onPress={handleCourseCodePress} />
 
           {devUnlocked && (
-            <View style={styles.devRow}>
-              <Text style={styles.devLabel}>Developer Mode</Text>
+            <View className="flex-row items-center justify-between mt-4">
+              <Text className="text-base text-black font-primary">Developer Mode</Text>
               <Switch
                 value={isDeveloper}
                 onValueChange={toggleDeveloperMode}
                 trackColor={{ false: '#ededed', true: '#d7f5ff' }}
                 ios_backgroundColor="#ededed"
                 thumbColor={isDeveloper ? '#ffffff' : '#9e9e9e'}
-                style={styles.switch}
+                style={{ transform: [{ scaleX: 0.94 }, { scaleY: 0.94 }], marginLeft: 8 }}
               />
             </View>
           )}
@@ -221,37 +220,3 @@ export default function ProfileScreen() {
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.white,
-  },
-  scrollView: {
-    flex: 1,
-  },
-  scrollContent: {
-    flexGrow: 1,
-    paddingBottom: 32,
-  },
-  content: {
-    display: 'flex',
-    paddingInline: 16,
-    gap: 16,
-  },
-  devRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginTop: 16,
-  },
-  devLabel: {
-    fontSize: 16,
-    color: Colors.black,
-  },
-  switch: {
-    // slightly smaller switch to better match screenshot
-    transform: [{ scaleX: 0.94 }, { scaleY: 0.94 }],
-    marginLeft: 8,
-  },
-});
