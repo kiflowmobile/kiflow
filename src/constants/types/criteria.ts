@@ -1,10 +1,3 @@
-export interface Criteria {
-    module_id: string;
-    id: string;
-    course_id: string;
-    name: string;
-    key: string;
-    description: string;
-    average_score?: number; // додаємо опційне поле
-
-  }
+// Re-export from new location for backwards compatibility
+// TODO: Update imports to use @/src/features/statistics directly
+export type { Criteria } from '@/src/features/statistics';

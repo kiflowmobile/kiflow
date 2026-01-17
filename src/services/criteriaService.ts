@@ -1,21 +1,8 @@
-import { supabase } from '@/src/config/supabaseClient';
-import { Criteria } from '../constants/types/criteria';
+// Re-export from new location for backwards compatibility
+// TODO: Update imports to use @/src/features/statistics directly
+import { criteriaApi } from '@/src/features/statistics';
 
 export const criteriaService = {
-  getCriteriaByCourse: async (
-    courseId?: string
-  ): Promise<{ data: Criteria[] | null; error: any }> => {
-    let query = supabase.from('criteria').select('*');
-
-    if (courseId) {
-      query = query.eq('course_id', courseId);
-    }
-
-    return await query;
-  },
-
-  // Backwards compatibility alias
-  getCriteriasByCourse: async (courseId?: string) => {
-    return criteriaService.getCriteriaByCourse(courseId);
-  },
+  getCriteriaByCourse: criteriaApi.getCriteriaByCourse,
+  getCriteriasByCourse: criteriaApi.getCriteriaByCourse,
 };

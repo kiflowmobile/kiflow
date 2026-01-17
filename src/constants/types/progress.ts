@@ -1,14 +1,3 @@
-interface ModuleProgress {
-    module_id: string;
-    progress: number;
-    last_slide_id: string | null;
-  }
-  
-  
-export interface UserCourseSummary {
-    course_id: string;
-    progress: number;
-    last_slide_id?: string | null; 
-  
-    modules: ModuleProgress[];
-  }
+// Re-export from new location for backwards compatibility
+// TODO: Update imports to use @/src/features/progress directly
+export type { ModuleProgress, UserCourseSummary } from '@/src/features/progress';

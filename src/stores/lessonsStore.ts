@@ -1,33 +1,10 @@
-import { create } from "zustand";
-import { Lessons } from "../constants/types/lesson";
-import { fetchLessonsByModule } from "../services/lessons";
+// Re-export from new location for backwards compatibility
+// TODO: Update imports to use @/src/features/lessons directly
+import { useLessonsStore as _useLessonsStore } from '@/src/features/lessons';
 
-interface SlidesState {
-  lessons: Lessons[];
-  isLoadingModule: boolean;
-  errorModule: string | null;
-  fetchLessonByModule: (moduleId: string) => Promise<void>;
-}
+export const useLessonsStore = _useLessonsStore;
 
-export const useLessonsStore = create<SlidesState>()((set, get) => ({
-  lessons: [],
-  isLoadingModule: false,
-  errorModule: null,
-    fetchLessonByModule: async (moduleId: string) => {
-      try {
-        set({ isLoadingModule: true, errorModule: null });
-
-        const { data, error } = await fetchLessonsByModule(moduleId)
-        if (error) throw error;
-
-        set({
-        lessons: data,
-        isLoadingModule: false,
-      });
-
-      } catch (error: any) {
-        set({ errorModule: error.message || 'Failed to fetch slides', isLoadingModule: false });
-        throw error;
-      }
-  },
-}))
+// Legacy aliases - the new store uses slightly different property names:
+// - isLoadingModule -> isLoading
+// - errorModule -> error
+// - fetchLessonByModule -> fetchLessonsByModule

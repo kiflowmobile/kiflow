@@ -1,0 +1,105 @@
+import { supabase } from '@/src/shared/lib/supabase';
+import type { Lesson } from '../types';
+
+export interface ApiResponse<T> {
+  data: T | null;
+  error: Error | null;
+}
+
+export const lessonsApi = {
+  /**
+   * Get all lessons for a module, ordered by lesson_order
+   */
+  fetchLessonsByModule: async (
+    moduleId: string
+  ): Promise<ApiResponse<Lesson[]>> => {
+    const { data, error } = await supabase
+      .from('lessons')
+      .select('*')
+      .eq('module_id', moduleId)
+      .order('lesson_order', { ascending: true });
+
+    return { data: data || [], error };
+  },
+
+  /**
+   * Get a lesson by ID
+   */
+  getLessonById: async (lessonId: string): Promise<ApiResponse<Lesson>> => {
+    const { data, error } = await supabase
+      .from('lessons')
+      .select('*')
+      .eq('id', lessonId)
+      .single();
+
+    return { data, error };
+  },
+
+  /**
+   * Get lesson ID from a slide ID
+   */
+  getLessonIdBySlideId: async (
+    slideId: string
+  ): Promise<ApiResponse<{ lesson_id: string }>> => {
+    const { data, error } = await supabase
+      .from('slides')
+      .select('lesson_id')
+      .eq('id', slideId)
+      .single();
+
+    return { data, error };
+  },
+
+  /**
+   * Get lesson order from a slide ID
+   */
+  getLessonOrderBySlideId: async (
+    slideId: string
+  ): Promise<ApiResponse<{ lesson_order: number }>> => {
+    // First get the lesson_id from the slide
+    const slideRes = await supabase
+      .from('slides')
+      .select('lesson_id')
+      .eq('id', slideId)
+      .single();
+
+    if (slideRes.error || !slideRes.data) {
+      return { data: null, error: slideRes.error };
+    }
+
+    // Then get the lesson_order from the lesson
+    const { data, error } = await supabase
+      .from('lessons')
+      .select('lesson_order')
+      .eq('id', slideRes.data.lesson_id)
+      .single();
+
+    return { data, error };
+  },
+
+  /**
+   * Get lesson counts for multiple modules
+   */
+  fetchLessonCountsByModuleIds: async (
+    moduleIds: string[]
+  ): Promise<ApiResponse<Record<string, number>>> => {
+    if (!moduleIds || moduleIds.length === 0) {
+      return { data: {}, error: null };
+    }
+
+    const { data, error } = await supabase
+      .from('lessons')
+      .select('module_id')
+      .in('module_id', moduleIds);
+
+    if (error) return { data: {}, error };
+
+    const counts: Record<string, number> = {};
+    (data || []).forEach((r) => {
+      const mid = r.module_id;
+      counts[mid] = (counts[mid] || 0) + 1;
+    });
+
+    return { data: counts, error: null };
+  },
+};

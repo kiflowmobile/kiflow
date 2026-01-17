@@ -1,33 +1,11 @@
-import { supabase } from '@/src/config/supabaseClient';
-import { Module } from '@/src/constants/types/modules';
+// Re-export from new location for backwards compatibility
+// TODO: Update imports to use @/src/features/modules directly
+import { modulesApi } from '@/src/features/modules';
 
+// Legacy service interface for backwards compatibility
 export const modulesService = {
-  getModulesByCourse: async (courseId: string): Promise<{ data: Module[]; error: any }> => {
-    const { data, error } = await supabase
-      .from('modules')
-      .select('*')
-      .eq('course_id', courseId)
-      .order('module_order', { ascending: true });
-
-    return { data: data || [], error };
-  },
-    getMyModulesByCourses: async (courseIds: string[]) => {
-      if (courseIds.length === 0) {
-        return { data: [], error: null };
-      }
-  
-      return await supabase
-        .from('modules')
-        .select('*')
-        .in('course_id', courseIds)  
-        .order('module_order', { ascending: true });
-    },
-    getModuleIdByLessonId: async (lessonId: string) => {
-      return await supabase
-        .from('lessons')
-        .select('module_id')
-        .eq('id', lessonId)
-        .single();
-    },
+  getModulesByCourse: modulesApi.getModulesByCourse,
+  getMyModulesByCourses: modulesApi.getModulesByCourses,
+  getModuleIdByLessonId: modulesApi.getModuleIdByLessonId,
 };
 

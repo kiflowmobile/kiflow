@@ -5,6 +5,8 @@
     "lib": ["esnext", "dom"],
     "paths": {
       "@/*": ["./*"],
+      "@/features/*": ["./src/features/*"],
+      "@/shared/*": ["./src/shared/*"],
       "tailwind.config": ["./tailwind.config.js"],
       "tailwind-variants/dist/config": ["./src/types/tailwind-variants/config.ts"]
     },

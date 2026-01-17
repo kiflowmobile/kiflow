@@ -1,18 +1,18 @@
 import { create } from 'zustand';
-import { analytics } from '../firebase'; // <-- ось твій об’єкт
-import { logEvent as gaLogEvent, setUserId as gaSetUserId, setUserProperties as gaSetUserProperties } from 'firebase/analytics';
-import * as amplitude from '@amplitude/analytics-browser';
+import { analytics } from '@/src/shared/lib/firebase';
+import {
+  logEvent as gaLogEvent,
+  setUserId as gaSetUserId,
+  setUserProperties as gaSetUserProperties,
+} from 'firebase/analytics';
+import {
+  amplitude,
+  initAmplitude as _initAmplitude,
+  createIdentify,
+} from '@/src/shared/lib/amplitude';
 
-const AMPLITUDE_API_KEY = '64fd3a584ae35077dd93bea63cd25c3e';
-
-export const initAmplitude = () => {
-  amplitude.init(AMPLITUDE_API_KEY, {
-    defaultTracking: {
-      sessions: true,
-      pageViews: true,
-    },
-  });
-};
+// Re-export for backwards compatibility
+export const initAmplitude = _initAmplitude;
 
 interface AnalyticsState {
   trackEvent: (eventName: string, params?: Record<string, any>) => void;
@@ -20,7 +20,7 @@ interface AnalyticsState {
   setUserId: (userId: string) => void;
 }
 
-export const useAnalyticsStore = create<AnalyticsState>((set) => ({
+export const useAnalyticsStore = create<AnalyticsState>(() => ({
   trackEvent: (eventName, params: Record<string, any> = {}) => {
     // Google Analytics
     if (analytics) {
@@ -33,12 +33,13 @@ export const useAnalyticsStore = create<AnalyticsState>((set) => ({
 
   onCompanySelect: (companyCode) => {
     if (!companyCode) return;
-  
+
     // GA
-    if (analytics) gaSetUserProperties(analytics, { company: companyCode.toLowerCase() });
-  
+    if (analytics)
+      gaSetUserProperties(analytics, { company: companyCode.toLowerCase() });
+
     // Amplitude
-    const identify = new amplitude.Identify();
+    const identify = createIdentify();
     identify.set('company', companyCode.toLowerCase());
     amplitude.identify(identify);
   },
