@@ -16,3 +16,6 @@ export type {
   CourseSelectionProps,
   CompanyCourse,
 } from './types';
+
+// Screens
+export { CourseCodeScreen } from './components/course-code-screen';

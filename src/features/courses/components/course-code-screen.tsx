@@ -20,7 +20,7 @@ import { useCourseStore } from '@/features/courses';
 import { useAuthStore } from '@/features/auth';
 import { useAnalytics } from '@/features/analytics';
 
-export default function CourseCodeScreen() {
+export function CourseCodeScreen() {
   const [courseCode, setCourseCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
