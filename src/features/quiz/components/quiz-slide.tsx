@@ -1,19 +1,19 @@
-import { View } from '@/src/components/ui/view';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { useEffect, useState } from 'react';
-import { ScrollView, View as RNView, StyleSheet } from 'react-native';
-import { Colors } from '@/src/constants/Colors';
-import QuizBadge from './components/QuizBadge';
-import QuizQuestion from './components/QuizQuestion';
-import QuizOptions from './components/QuizOptions';
-import QuizControls from './components/QuizControls';
-import { useAnalyticsStore } from '@/src/stores/analyticsStore';
+import { View } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-type QuizData = {
+import { ScrollView } from '@/shared/ui';
+import { useAnalytics } from '@/features/analytics';
+import { QuizBadge } from './quiz-badge';
+import { QuizQuestion } from './quiz-question';
+import { QuizOptions } from './quiz-options';
+import { QuizControls } from './quiz-controls';
+
+interface QuizData {
   question: string;
   options: string[];
   correctAnswer: number;
-};
+}
 
 interface QuizProps {
   id: string;
@@ -26,7 +26,7 @@ interface QuizProps {
   onComplete?: () => void;
 }
 
-const QuizSlide: React.FC<QuizProps> = ({
+export const QuizSlide: React.FC<QuizProps> = ({
   id,
   title,
   subtitle,
@@ -36,53 +36,43 @@ const QuizSlide: React.FC<QuizProps> = ({
   isActive,
   onComplete,
 }) => {
+  const { trackEvent } = useAnalytics();
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
   const [checked, setChecked] = useState(false);
-  const analyticsStore = useAnalyticsStore.getState();
 
   const STORAGE_KEY = `course-progress-${courseId}`;
 
+  // Load saved progress
   useEffect(() => {
-    const loadProgress = async () => {
-      try {
-        const data = await AsyncStorage.getItem(STORAGE_KEY);
-        if (data) {
-          const parsed = JSON.parse(data);
-          if (parsed[id]?.selectedAnswer !== undefined) {
-            setSelectedAnswer(parsed[id].selectedAnswer);
-            if (parsed[id].checked) setChecked(true);
-          }
+    AsyncStorage.getItem(STORAGE_KEY).then((data) => {
+      if (data) {
+        const parsed = JSON.parse(data);
+        if (parsed[id]?.selectedAnswer !== undefined) {
+          setSelectedAnswer(parsed[id].selectedAnswer);
+          if (parsed[id].checked) setChecked(true);
         }
-      } catch (err) {
-        console.error('Error loading quiz progress:', err);
       }
-    };
-    loadProgress();
+    });
   }, [STORAGE_KEY, id]);
 
+  // Control scroll
   useEffect(() => {
     if (!setScrollEnabled || !isActive) return;
     setScrollEnabled(checked);
-    return () => {
-      setScrollEnabled(true);
-    };
+    return () => setScrollEnabled(true);
   }, [setScrollEnabled, checked, isActive]);
 
   const handleSelect = (index: number) => {
     if (checked) return;
     setSelectedAnswer(index);
-
-    analyticsStore.trackEvent('course_screen__vote__click', {
-      id,
-      index,
-    });
+    trackEvent('course_screen__vote__click', { id, index });
   };
 
   const handleCheck = async () => {
     if (selectedAnswer === null) return;
     setChecked(true);
 
-    analyticsStore.trackEvent('course_screen__vote__check', {
+    trackEvent('course_screen__vote__check', {
       id,
       selected: selectedAnswer,
       correct: quiz.correctAnswer,
@@ -105,25 +95,29 @@ const QuizSlide: React.FC<QuizProps> = ({
   };
 
   const handleNext = () => {
-    analyticsStore.trackEvent('course_screen__vote__next', {
+    trackEvent('course_screen__vote__next', {
       id,
       selected: selectedAnswer,
       correct: quiz.correctAnswer,
       correctResult: selectedAnswer === quiz.correctAnswer,
     });
 
-    // make sure scrolling is enabled before moving on
     if (setScrollEnabled) setScrollEnabled(true);
-
-    if (typeof onComplete === 'function') onComplete();
+    onComplete?.();
   };
 
   const isAnswerCorrect = checked && selectedAnswer === quiz.correctAnswer;
 
   return (
-    <View style={styles.screen}>
-      <ScrollView contentContainerStyle={styles.scrollContainer}>
-        <RNView style={styles.content}>
+    <View className="flex-1 bg-background-light px-4">
+      <ScrollView
+        contentContainerStyle={{
+          flexGrow: 1,
+          paddingVertical: 24,
+          justifyContent: 'space-between',
+        }}
+      >
+        <View className="items-center gap-6">
           <QuizBadge title={title} />
           <QuizQuestion question={quiz.question} subtitle={subtitle} />
           <QuizOptions
@@ -133,7 +127,7 @@ const QuizSlide: React.FC<QuizProps> = ({
             correctAnswer={quiz.correctAnswer}
             onSelect={handleSelect}
           />
-        </RNView>
+        </View>
 
         <QuizControls
           checked={checked}
@@ -148,20 +142,3 @@ const QuizSlide: React.FC<QuizProps> = ({
 };
 
 export default QuizSlide;
-
-const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-    backgroundColor: Colors.bg,
-    paddingHorizontal: 16,
-  },
-  scrollContainer: {
-    flexGrow: 1,
-    paddingVertical: 24,
-    justifyContent: 'space-between',
-  },
-  content: {
-    alignItems: 'center',
-    gap: 24,
-  },
-});
