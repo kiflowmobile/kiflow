@@ -1,8 +1,5 @@
 // Stores
-export {
-  useUserSkillRatingsStore,
-  useMainRatingStore,
-} from './store/ratingsStore';
+export { useUserSkillRatingsStore, useMainRatingStore } from './store/ratingsStore';
 export { useCriteriaStore } from './store/criteriaStore';
 
 // Hooks
@@ -25,3 +22,7 @@ export type {
   CriteriaActions,
   CriteriaStore,
 } from './types';
+
+// Screens
+export { StatisticsScreen } from './components/statistics-screen';
+export { CourseStatisticsScreen } from './components/course-statistics-screen';
