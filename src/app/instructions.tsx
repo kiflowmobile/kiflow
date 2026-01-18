@@ -1,1 +1,1 @@
-export { InstructionsScreen } from '@/features/instructions';
+export { InstructionsScreen as default } from '@/features/instructions';
