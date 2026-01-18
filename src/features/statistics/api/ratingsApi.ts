@@ -69,7 +69,7 @@ export const ratingsApi = {
             module_id: moduleId,
             criteria_key: key,
           },
-        ],
+        ] as any,
         { onConflict: 'user_id,module_id,criteria_key' }
       )
       .select();

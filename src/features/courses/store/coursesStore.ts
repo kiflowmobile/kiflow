@@ -4,8 +4,8 @@ import { getCurrentUser } from '@/src/features/auth';
 import type { Course, CourseStore } from '../types';
 
 // Lazy import to avoid circular dependencies
-const getCompanyApi = () =>
-  import('../../../services/users').then((m) => m.getCurrentUserCode);
+const getProfileApi = () =>
+  import('@/features/profile').then((m) => m.profileApi);
 
 export const useCourseStore = create<CourseStore>((set, get) => ({
   courses: [],
@@ -29,8 +29,8 @@ export const useCourseStore = create<CourseStore>((set, get) => ({
       const user = await getCurrentUser();
       if (user) {
         try {
-          const getCurrentUserCode = await getCompanyApi();
-          const { code: currentCode } = await getCurrentUserCode();
+          const profileApi = await getProfileApi();
+          const { code: currentCode } = await profileApi.getCurrentUserCode();
 
           if (currentCode) {
             const companyIdsResult = await coursesApi.getUserCompanyIds(user.id);

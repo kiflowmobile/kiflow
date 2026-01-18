@@ -19,7 +19,7 @@ export function StatisticsScreen() {
   const { courses, fetchCourses, isLoading: coursesLoading } = useCourseStore();
   const { criterias, fetchAllCriterias } = useCriteriaStore();
   const { fetchUserRatings, ratings } = useMainRatingStore();
-  const { modules, fetchMyModulesByCourses } = useModulesStore();
+  const { modules, fetchModulesByCourses } = useModulesStore();
   const { getCourseProgress, getModuleProgress } = useUserProgressStore();
 
   const [quizScores, setQuizScores] = useState<Record<string, number | undefined>>({});
@@ -43,9 +43,9 @@ export function StatisticsScreen() {
   // Load modules for courses
   useEffect(() => {
     if (courses.length) {
-      fetchMyModulesByCourses(courses.map((c) => c.id));
+      fetchModulesByCourses(courses.map((c) => c.id));
     }
-  }, [courses, fetchMyModulesByCourses]);
+  }, [courses, fetchModulesByCourses]);
 
   // Load quiz scores
   useEffect(() => {
@@ -142,7 +142,7 @@ export function StatisticsScreen() {
   if (coursesLoading) {
     return (
       <View className="flex-1 bg-background-light p-4">
-        <Text className="text-center text-gray-500">Loading courses...</Text>
+        <Text className="text-center text-gray-500">Завантаження курсів...</Text>
       </View>
     );
   }
@@ -262,4 +262,3 @@ export function StatisticsScreen() {
   );
 }
 
-export default StatisticsScreen;

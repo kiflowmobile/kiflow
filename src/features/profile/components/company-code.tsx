@@ -5,7 +5,7 @@ interface CompanyCodeProps {
   onPress: () => void;
 }
 
-export default function CompanyCode({ onPress }: CompanyCodeProps) {
+export function CompanyCode({ onPress }: CompanyCodeProps) {
   return (
     <View className="rounded-lg border border-[#E7E7E7] bg-surface p-4">
       <Text className="mb-2 text-lg font-semibold text-black">Access</Text>

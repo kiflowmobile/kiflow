@@ -1,23 +1,15 @@
 import React, { forwardRef, memo } from 'react';
-import { H1, H2, H3, H4, H5, H6 } from '@expo/html-elements';
+import { Text, type TextProps } from 'react-native';
 import { headingStyle } from './styles';
 import type { VariantProps } from '@gluestack-ui/nativewind-utils';
-import { cssInterop } from 'nativewind';
 
 type IHeadingProps = VariantProps<typeof headingStyle> &
-  React.ComponentPropsWithoutRef<typeof H1> & {
+  TextProps & {
     as?: React.ElementType;
   };
 
-cssInterop(H1, { className: 'style' });
-cssInterop(H2, { className: 'style' });
-cssInterop(H3, { className: 'style' });
-cssInterop(H4, { className: 'style' });
-cssInterop(H5, { className: 'style' });
-cssInterop(H6, { className: 'style' });
-
 const MappedHeading = memo(
-  forwardRef<React.ComponentRef<typeof H1>, IHeadingProps>(function MappedHeading(
+  forwardRef<Text, IHeadingProps>(function MappedHeading(
     {
       size,
       className,
@@ -32,148 +24,28 @@ const MappedHeading = memo(
     },
     ref
   ) {
-    switch (size) {
-      case '5xl':
-      case '4xl':
-      case '3xl':
-        return (
-          <H1
-            className={headingStyle({
-              size,
-              isTruncated,
-              bold,
-              underline,
-              strikeThrough,
-              sub,
-              italic,
-              highlight,
-              class: className,
-            })}
-            {...props}
-            ref={ref as React.Ref<never>}
-          />
-        );
-      case '2xl':
-        return (
-          <H2
-            className={headingStyle({
-              size,
-              isTruncated,
-              bold,
-              underline,
-              strikeThrough,
-              sub,
-              italic,
-              highlight,
-              class: className,
-            })}
-            {...props}
-            // @ts-expect-error asdf
-            ref={ref as React.Ref<HTMLHeadingElement>}
-          />
-        );
-      case 'xl':
-        return (
-          <H3
-            className={headingStyle({
-              size,
-              isTruncated,
-              bold,
-              underline,
-              strikeThrough,
-              sub,
-              italic,
-              highlight,
-              class: className,
-            })}
-            {...props}
-            // @ts-expect-error asdf
-            ref={ref as React.Ref<HTMLHeadingElement>}
-          />
-        );
-      case 'lg':
-        return (
-          <H4
-            className={headingStyle({
-              size,
-              isTruncated,
-              bold,
-              underline,
-              strikeThrough,
-              sub,
-              italic,
-              highlight,
-              class: className,
-            })}
-            {...props}
-            // @ts-expect-error asdf
-            ref={ref as React.Ref<HTMLHeadingElement>}
-          />
-        );
-      case 'md':
-        return (
-          <H5
-            className={headingStyle({
-              size,
-              isTruncated,
-              bold,
-              underline,
-              strikeThrough,
-              sub,
-              italic,
-              highlight,
-              class: className,
-            })}
-            {...props}
-            // @ts-expect-error asdf
-            ref={ref as React.Ref<HTMLHeadingElement>}
-          />
-        );
-      case 'sm':
-      case 'xs':
-        return (
-          <H6
-            className={headingStyle({
-              size,
-              isTruncated,
-              bold,
-              underline,
-              strikeThrough,
-              sub,
-              italic,
-              highlight,
-              class: className,
-            })}
-            {...props}
-            // @ts-expect-error asdf
-            ref={ref as React.Ref<HTMLHeadingElement>}
-          />
-        );
-      default:
-        return (
-          <H4
-            className={headingStyle({
-              size,
-              isTruncated,
-              bold,
-              underline,
-              strikeThrough,
-              sub,
-              italic,
-              highlight,
-              class: className,
-            })}
-            {...props}
-            // @ts-expect-error asdf
-            ref={ref as React.Ref<HTMLHeadingElement>}
-          />
-        );
-    }
+    return (
+      <Text
+        className={headingStyle({
+          size,
+          isTruncated,
+          bold,
+          underline,
+          strikeThrough,
+          sub,
+          italic,
+          highlight,
+          class: className,
+        })}
+        {...props}
+        ref={ref}
+      />
+    );
   })
 );
 
 const Heading = memo(
-  forwardRef<React.ComponentRef<typeof H1>, IHeadingProps>(function Heading(
+  forwardRef<Text, IHeadingProps>(function Heading(
     { className, size = 'lg', as: AsComp, ...props },
     ref
   ) {

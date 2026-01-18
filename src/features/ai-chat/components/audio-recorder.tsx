@@ -13,7 +13,7 @@ interface AudioRecorderProps {
   slideId?: string;
 }
 
-const AudioRecorder: React.FC<AudioRecorderProps> = ({ onAudioProcessed, disabled , id, slideId}) => {
+export const AudioRecorder: React.FC<AudioRecorderProps> = ({ onAudioProcessed, disabled , id, slideId}) => {
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -112,4 +112,3 @@ const AudioRecorder: React.FC<AudioRecorderProps> = ({ onAudioProcessed, disable
   );
 };
 
-export default AudioRecorder;

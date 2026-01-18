@@ -181,7 +181,7 @@ export const CourseCard: React.FC<CourseCardProps> = ({ course }) => {
 
         <Text className="text-lg font-bold mt-1">{course.title}</Text>
         <Text className="text-sm text-gray-700 leading-[18px]" numberOfLines={2}>
-          {course.description || 'No description available'}
+          {course.description || 'Опис відсутній'}
         </Text>
 
         <View className="w-full">{renderButton()}</View>

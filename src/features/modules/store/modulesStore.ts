@@ -55,11 +55,6 @@ export const useModulesStore = create<ModuleStore>()((set, get) => ({
     }
   },
 
-  // Backwards compatibility alias
-  fetchMyModulesByCourses: async (courseIds: string[]) => {
-    return get().fetchModulesByCourses(courseIds);
-  },
-
   setCurrentModule: (module: Module | null) => {
     set({ currentModule: module });
   },

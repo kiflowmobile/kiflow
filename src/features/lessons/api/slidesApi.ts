@@ -38,7 +38,7 @@ export const slidesApi = {
       .eq('id', slideId)
       .single();
 
-    return { data: data as Slide, error };
+    return { data: (data ?? null) as Slide | null, error };
   },
 
   /**

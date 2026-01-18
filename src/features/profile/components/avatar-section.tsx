@@ -23,7 +23,7 @@ interface AvatarSectionProps {
   onAvatarSecretTap?: () => void;
 }
 
-export default function AvatarSection({
+export function AvatarSection({
   fullName,
   onEditPress,
   onSignOutPress,

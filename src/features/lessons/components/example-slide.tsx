@@ -10,7 +10,7 @@ export interface ContentWithExampleProps {
   example: string;
 }
 
-const ContentWithExample: React.FC<ContentWithExampleProps> = ({
+export const ExampleSlide: React.FC<ContentWithExampleProps> = ({
   title,
   mainPoint,
   tips,
@@ -52,4 +52,3 @@ const ContentWithExample: React.FC<ContentWithExampleProps> = ({
   );
 };
 
-export default ContentWithExample;

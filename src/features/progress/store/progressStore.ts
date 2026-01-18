@@ -4,12 +4,11 @@ import { saveProgressLocal, loadProgressLocal } from '../utils/progressStorage';
 import type { UserCourseSummary, ProgressStore } from '../types';
 
 // Lazy imports to avoid circular dependencies
-// Note: These imports use relative paths to avoid circular dependencies
 const getAuthStore = () =>
-  import('../../../stores/authStore').then((m) => m.useAuthStore);
+  import('@/features/auth').then((m) => m.useAuthStore);
 
 const getSlidesStore = () =>
-  import('../../../stores/slidesStore').then((m) => m.useSlidesStore);
+  import('@/features/lessons').then((m) => m.useSlidesStore);
 
 const persistCourses = async (courses: UserCourseSummary[]) => {
   const authStore = await getAuthStore();

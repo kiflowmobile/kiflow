@@ -13,9 +13,10 @@
     "jsx": "react-jsx",
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
-    "moduleResolution": "nodenext",
-    "module": "nodenext",
-    "types": ["react", "react-native"]
+    "moduleResolution": "bundler",
+    "module": "esnext",
+    "types": ["react", "react-native"],
+    "skipLibCheck": true
   },
   "include": [
     "**/*.ts",

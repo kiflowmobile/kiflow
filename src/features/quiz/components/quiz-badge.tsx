@@ -15,4 +15,3 @@ export const QuizBadge: React.FC<Props> = ({ title }) => {
   );
 };
 
-export default QuizBadge;

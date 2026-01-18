@@ -20,9 +20,9 @@ import { useAnalytics } from '@/features/analytics';
 import { askGemini, type Message } from '../api/ask-gemini';
 import { usePromptsStore } from '../store/promptsStore';
 import { formatAIResponseForChat } from '../utils/format-ai-response';
-import ChatHeader from './ai-chat-header';
-import ChatMessages from './ai-chat-messages';
-import ChatInput from './ai-chat-input';
+import { AIChatHeader } from './ai-chat-header';
+import { AIChatMessages } from './ai-chat-messages';
+import { AIChatInput } from './ai-chat-input';
 
 // Extended Message type with id for React keys
 interface MessageWithId extends Message {
@@ -34,7 +34,7 @@ interface AICourseChatProps {
   slideId: string;
 }
 
-const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
+export const AIChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
   const [messages, setMessages] = useState<MessageWithId[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
@@ -259,13 +259,13 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 80 : 0}
       >
-        <ChatHeader title={title} />
+        <AIChatHeader title={title} />
         <View className="flex-1 rounded-xl p-4 bg-surface shadow-md my-2">
           <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
-            <ChatMessages messages={messages} loading={loading} />
+            <AIChatMessages messages={messages} loading={loading} />
           </ScrollView>
         </View>
-        <ChatInput
+        <AIChatInput
           input={input}
           setInput={setInput}
           onSend={handleSend}
@@ -283,4 +283,3 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
   );
 };
 
-export default AICourseChat;

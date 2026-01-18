@@ -7,12 +7,9 @@ import type { AuthStore } from '../types';
 import { asyncStorageUtils } from '@/src/shared/hooks/useAsyncStorage';
 
 // Lazy imports to avoid circular dependencies
-// Note: These imports use relative paths that resolve to files in src/stores/
-// which now re-export from the feature modules
-const getProgressStore = () => import('../../../stores/userProgressStore').then(m => m.useUserProgressStore);
-const getQuizStore = () => import('../../../stores/quizStore').then(m => m.useQuizStore);
-const getChatStore = () => import('../../../stores/chatStore').then(m => m.useChatStore);
-const getAnalyticsStore = () => import('../../../stores/analyticsStore').then(m => m.useAnalyticsStore);
+const getProgressStore = () => import('@/features/progress').then(m => m.useUserProgressStore);
+const getQuizStore = () => import('@/features/quiz').then(m => m.useQuizStore);
+const getAnalyticsService = () => import('@/features/analytics').then(m => m.analyticsService);
 
 export const useAuthStore = create<AuthStore>()((set, get) => ({
   user: null,
@@ -28,7 +25,7 @@ export const useAuthStore = create<AuthStore>()((set, get) => ({
       const { data, error } = await authApi.signIn({ email, password });
       if (error) throw error;
 
-      const isGuest = isGuestSession(data?.session);
+      const isGuest = isGuestSession(data?.session ?? null);
       set({
         user: data?.user ?? null,
         session: data?.session ?? null,
@@ -38,22 +35,20 @@ export const useAuthStore = create<AuthStore>()((set, get) => ({
 
       const currentUser = get().user;
       if (currentUser) {
-        const analyticsStore = await getAnalyticsStore();
-        analyticsStore.getState().setUserId(currentUser.id);
-        analyticsStore.getState().trackEvent('start_screen__sign_in__click');
+        const analyticsService = await getAnalyticsService();
+        analyticsService.setUserId(currentUser.id);
+        analyticsService.trackEvent('start_screen__sign_in__click');
       }
 
       // Sync data from DB to local storage
-      const [quizStore, chatStore, progressStore] = await Promise.all([
+      const [quizStore, progressStore] = await Promise.all([
         getQuizStore(),
-        getChatStore(),
         getProgressStore(),
       ]);
       await Promise.all([
-        quizStore.getState().syncQuizFromDBToLocalStorage(),
-        chatStore.getState().syncChatFromDBToLocalStorage(),
-        progressStore.getState().syncProgressFromDBToLocalStorage(),
-      ]);
+        quizStore.getState().syncQuizFromDBToLocalStorage?.(),
+        progressStore.getState().syncProgressFromDBToLocalStorage?.(),
+      ].filter(Boolean));
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Sign in failed';
       set({
@@ -90,9 +85,9 @@ export const useAuthStore = create<AuthStore>()((set, get) => ({
 
       const currentUser = get().user;
       if (currentUser) {
-        const analyticsStore = await getAnalyticsStore();
-        analyticsStore.getState().setUserId(currentUser.id);
-        analyticsStore.getState().trackEvent('start_screen__sign_up__click');
+        const analyticsService = await getAnalyticsService();
+        analyticsService.setUserId(currentUser.id);
+        analyticsService.trackEvent('start_screen__sign_up__click');
       }
 
       await AsyncStorage.setItem('justSignedUp', 'true');
@@ -121,16 +116,14 @@ export const useAuthStore = create<AuthStore>()((set, get) => ({
       }
 
       // Sync local data to DB before signing out
-      const [progressStore, quizStore, chatStore] = await Promise.all([
+      const [progressStore, quizStore] = await Promise.all([
         getProgressStore(),
         getQuizStore(),
-        getChatStore(),
       ]);
       await Promise.all([
-        progressStore.getState().syncProgressToDB(),
-        quizStore.getState().syncQuizToDB(),
-        chatStore.getState().syncChatFromLocalStorageToDB(),
-      ]);
+        progressStore.getState().syncProgressToDB?.(),
+        quizStore.getState().syncQuizToDB?.(),
+      ].filter(Boolean));
 
       // Clear local user data
       await asyncStorageUtils.clearUserLocalData();

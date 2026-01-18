@@ -15,18 +15,16 @@ export {
 export { lessonsApi } from './api/lessonsApi';
 export { slidesApi } from './api/slidesApi';
 
-// Types
+// Types - note: individual slide types (TextSlide, QuizSlide, etc.) are not exported to avoid
+// conflicts with component names. Use the `Slide` union type instead.
 export type {
   Lesson,
   Slide,
   SlideType,
-  TextSlide,
   VideoSlide,
   ContentSlide,
-  QuizSlide,
   AiSlide,
   CompletionSlide,
-  DashboardSlide,
   LessonsState,
   LessonsActions,
   LessonsStore,
@@ -35,5 +33,12 @@ export type {
   SlidesStore,
 } from './types';
 
+// Slide type interfaces (renamed to avoid component name conflicts)
+export type { TextSlide as TextSlideType, QuizSlide as QuizSlideType, DashboardSlide as DashboardSlideType } from './types';
+
 // Components
 export { LessonSlide } from './components/lesson';
+export { TextSlide } from './components/text-slide';
+export { ExampleSlide } from './components/example-slide';
+export { DashboardSlide } from './components/dashboard-slide';
+export { MediaPlaceholder } from './components/media-placeholder';

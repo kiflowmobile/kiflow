@@ -44,7 +44,7 @@ export const quizApi = {
 
     const { error } = await supabase
       .from('user_slide_interactions')
-      .upsert(rows, { onConflict: 'user_id,slide_id,interaction_type' });
+      .upsert(rows as any, { onConflict: 'user_id,slide_id,interaction_type' });
 
     return { data: null, error };
   },

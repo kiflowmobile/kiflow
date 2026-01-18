@@ -5,10 +5,9 @@ interface ChatHeaderProps {
   title: string;
 }
 
-const ChatHeader: React.FC<ChatHeaderProps> = ({ title }) => (
+export const AIChatHeader: React.FC<ChatHeaderProps> = ({ title }) => (
   <View className="flex-row justify-between mb-3">
     <Text className="text-xl font-bold text-slate-900 flex-shrink">{title}</Text>
   </View>
 );
 
-export default ChatHeader;

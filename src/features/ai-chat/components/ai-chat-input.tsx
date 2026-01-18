@@ -4,7 +4,7 @@ import { Send } from 'lucide-react-native';
 
 import { useAnalytics } from '@/features/analytics';
 import { Icon } from '@/shared/ui';
-import AudioRecorder from './audio-recorder';
+import { AudioRecorder } from './audio-recorder';
 
 interface ChatInputProps {
   input: string;
@@ -20,7 +20,7 @@ interface ChatInputProps {
   slideId?: string;
 }
 
-const ChatInput: React.FC<ChatInputProps> = ({
+export const AIChatInput: React.FC<ChatInputProps> = ({
   input,
   setInput,
   onSend,
@@ -92,4 +92,3 @@ const ChatInput: React.FC<ChatInputProps> = ({
   );
 };
 
-export default ChatInput;

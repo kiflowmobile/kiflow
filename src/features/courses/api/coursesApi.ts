@@ -41,7 +41,7 @@ export const coursesApi = {
         return { data: [], error: null };
       }
 
-      const courseIds = companyCourses.map((item) => item.course_id);
+      const courseIds = companyCourses.map((item: any) => item.course_id);
 
       // Then fetch the actual courses
       const { data, error } = await supabase
@@ -118,7 +118,7 @@ export const coursesApi = {
         return { data: null, error: new Error(error.message) };
       }
 
-      const companyIds = data?.map((item) => item.company_id) || [];
+      const companyIds = data?.map((item: any) => item.company_id) || [];
       return { data: companyIds, error: null };
     } catch (err) {
       return {

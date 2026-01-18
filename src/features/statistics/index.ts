@@ -23,6 +23,9 @@ export type {
   CriteriaStore,
 } from './types';
 
+// Utils
+export { computeCourseAvgNum, computeCombinedAvg, formatBubbleScore } from './utils';
+
 // Screens
 export { StatisticsScreen } from './components/statistics-screen';
 export { CourseStatisticsScreen } from './components/course-statistics-screen';

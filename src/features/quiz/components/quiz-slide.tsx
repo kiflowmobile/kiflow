@@ -18,7 +18,7 @@ interface QuizProps {
   quiz: QuizData;
 }
 
-const QuizSlide: React.FC<QuizProps> = ({ id, title, subtitle, quiz, courseId }) => {
+export const QuizSlide: React.FC<QuizProps> = ({ id, title, subtitle, quiz, courseId }) => {
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
   const isAnswered = selectedAnswer !== null;
   const { trackEvent } = useAnalytics();
@@ -119,4 +119,3 @@ const QuizSlide: React.FC<QuizProps> = ({ id, title, subtitle, quiz, courseId })
   );
 };
 
-export default QuizSlide;

@@ -167,9 +167,9 @@ export function ModulesScreen() {
     return (
       <View className="flex-1 bg-background-light p-4">
         <View className="items-center p-5 mt-12">
-          <Text className="text-red-500 text-center mb-2.5">Error: {error}</Text>
+          <Text className="text-red-500 text-center mb-2.5">Помилка: {error}</Text>
           <Text className="text-blue-500 text-center underline" onPress={handleRetry}>
-            Try again
+            Спробувати знову
           </Text>
         </View>
       </View>
@@ -179,7 +179,7 @@ export function ModulesScreen() {
   if (isLoading) {
     return (
       <View className="flex-1 bg-background-light p-4">
-        <Text className="text-center text-gray-500 mt-12">Loading modules...</Text>
+        <Text className="text-center text-gray-500 mt-12">Завантаження модулів...</Text>
       </View>
     );
   }
@@ -187,7 +187,7 @@ export function ModulesScreen() {
   if (modules.length === 0) {
     return (
       <View className="flex-1 bg-background-light p-4">
-        <Text className="text-center text-gray-500 mt-12">No modules found</Text>
+        <Text className="text-center text-gray-500 mt-12">Модулі не знайдено</Text>
       </View>
     );
   }
@@ -196,7 +196,7 @@ export function ModulesScreen() {
     <View className="flex-1 bg-background-light p-4">
       {currentCourse?.title && (
         <Text className="text-xl font-bold mb-4" numberOfLines={2} ellipsizeMode="tail">
-          Course "{currentCourse.title}"
+          Курс "{currentCourse.title}"
         </Text>
       )}
 

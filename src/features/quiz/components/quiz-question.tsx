@@ -15,4 +15,3 @@ export const QuizQuestion: React.FC<Props> = ({ question, subtitle }) => {
   );
 };
 
-export default QuizQuestion;

@@ -7,9 +7,9 @@ import { useEffect, useState } from 'react';
 import { ScrollView, Switch, View, Text } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import AvatarSection from './avatar-section';
-import LoadingState from './loading-state';
-import CompanyCode from './company-code';
+import { AvatarSection } from './avatar-section';
+import { LoadingState } from './loading-state';
+import { CompanyCode } from './company-code';
 
 export function ProfileScreen() {
   const router = useRouter();

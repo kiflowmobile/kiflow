@@ -24,7 +24,7 @@ const calculateQuizRating = (quizData: Record<string, { selectedAnswer: number; 
   return Number(rating.toFixed(1)); 
 };
 
-const DashboardSlide: React.FC<DashboardSlideProps> = ({ courseId, title }) => {
+export const DashboardSlide: React.FC<DashboardSlideProps> = ({ courseId, title }) => {
   const { user } = useAuthStore();
   const currentModuleId = useModulesStore.getState().currentModule?.id;
 
@@ -126,5 +126,4 @@ const DashboardSlide: React.FC<DashboardSlideProps> = ({ courseId, title }) => {
   );
 };
 
-export default DashboardSlide;
 

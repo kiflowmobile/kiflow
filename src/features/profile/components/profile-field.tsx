@@ -13,7 +13,7 @@ interface ProfileFieldProps {
   readOnly?: boolean;
 }
 
-export default function ProfileField({
+export function ProfileField({
   label,
   value,
   placeholder,

@@ -152,7 +152,7 @@ export const authApi = {
         .upsert({
           id: userId,
           ...profile,
-        })
+        } as any)
         .select()
         .single();
 

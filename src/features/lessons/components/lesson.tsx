@@ -8,11 +8,11 @@ import { useModulesStore } from '@/features/modules';
 import { QuizSlide } from '@/features/quiz';
 import { Spinner } from '@/shared/ui';
 import { VideoPlayer } from '@/shared/ui/video-player';
-import TextSlide from './text-slide';
-import ContentWithExample from './example-slide';
-import DashboardSlide from './dashboard-slide';
-import MediaPlaceholder from './media-placeholder';
-import { AIChat as AICourseChat } from '@/features/ai-chat';
+import { TextSlide } from './text-slide';
+import { ExampleSlide } from './example-slide';
+import { DashboardSlide } from './dashboard-slide';
+import { MediaPlaceholder } from './media-placeholder';
+import { AIChat } from '@/features/ai-chat';
 
 interface CourseSlideProps {
   slideId: string | number;
@@ -119,10 +119,10 @@ export const LessonSlide: React.FC<CourseSlideProps> = ({
         />
       );
     case 'ai':
-      return <AICourseChat title={slideData.slide_title} slideId={slideData.id} />;
+      return <AIChat title={slideData.slide_title} slideId={slideData.id} />;
     case 'content':
       return (
-        <ContentWithExample
+        <ExampleSlide
           title={slideData.slide_title}
           mainPoint={slideData.slide_data?.mainPoint}
           tips={slideData.slide_data?.tips}

@@ -14,7 +14,7 @@ interface ChatMessagesProps {
   loading: boolean;
 }
 
-const ChatMessages: React.FC<ChatMessagesProps> = ({ messages, loading }) => (
+export const AIChatMessages: React.FC<ChatMessagesProps> = ({ messages, loading }) => (
   <View className="py-2">
     {messages.map((msg) => (
       <MessageBubble key={msg.id} {...msg} />
@@ -23,4 +23,3 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({ messages, loading }) => (
   </View>
 );
 
-export default ChatMessages;

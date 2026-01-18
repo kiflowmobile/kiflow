@@ -33,7 +33,7 @@ export const criteriaApi = {
       .eq('id', criteriaId)
       .single();
 
-    return { data: data as Criteria, error };
+    return { data: (data ?? null) as Criteria | null, error };
   },
 
   /**

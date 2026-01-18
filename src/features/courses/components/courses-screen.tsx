@@ -36,9 +36,9 @@ export const CoursesScreen = () => {
     return (
       <SafeAreaView className="flex-1 bg-background-light">
         <View className="items-center p-5">
-          <Text className="text-red-500 text-center mb-2.5">Error: {error}</Text>
+          <Text className="text-red-500 text-center mb-2.5">Помилка: {error}</Text>
           <Text className="text-blue-500 text-center underline" onPress={handleRetry}>
-            Try again
+            Спробувати знову
           </Text>
         </View>
       </SafeAreaView>
@@ -49,7 +49,7 @@ export const CoursesScreen = () => {
     return (
       <SafeAreaView className="flex-1 bg-background-light">
         <View className="flex-1 items-center justify-center">
-          <Text className="text-center text-gray-500">Loading courses...</Text>
+          <Text className="text-center text-gray-500">Завантаження курсів...</Text>
         </View>
       </SafeAreaView>
     );
@@ -89,4 +89,3 @@ export const CoursesScreen = () => {
   );
 };
 
-export default CoursesScreen;

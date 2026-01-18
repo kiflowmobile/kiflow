@@ -1,15 +1,15 @@
 interface AIResponse {
-    content: string;
-    rating: {
+    content?: string;
+    rating?: {
       comment?: string
     } | null;
   }
-  
+
   export function formatAIResponseForChat(aiResponse: AIResponse): string {
     if (!aiResponse) return "";
-  
+
     const { content, rating } = aiResponse;
-    if (!rating) return content;
+    if (!rating) return content || "";
   
     const lines: string[] = [];
 

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Alert, ScrollView, View } from 'react-native';
 import { CustomHeader, Button } from '@/shared/ui';
-import ProfileField from './profile-field';
+import { ProfileField } from './profile-field';
 import { useRouter } from 'expo-router';
 import { useAuthStore } from '@/features/auth';
 import { profileApi } from '../api/profileApi';

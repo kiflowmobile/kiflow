@@ -5,7 +5,7 @@ interface MediaPlaceholderProps {
   message?: string;
 }
 
-const MediaPlaceholder: React.FC<MediaPlaceholderProps> = ({
+export const MediaPlaceholder: React.FC<MediaPlaceholderProps> = ({
   message = 'Відео ще недоступне',
 }) => {
   return (
@@ -17,4 +17,3 @@ const MediaPlaceholder: React.FC<MediaPlaceholderProps> = ({
   );
 };
 
-export default MediaPlaceholder;

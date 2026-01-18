@@ -1,6 +1,7 @@
 import { supabase } from '@/src/shared/lib/supabase';
 import { getCurrentUser } from '@/src/features/auth';
 import type { User, UserUpdateData } from '../types';
+import type { Database } from '@/src/shared/lib/supabase';
 
 export interface ApiResponse<T> {
   data: T | null;
@@ -54,6 +55,7 @@ export const profileApi = {
     try {
       const { data, error } = await supabase
         .from('users')
+        // @ts-expect-error - Supabase type inference issue with update method
         .update(updateData)
         .eq('id', userId)
         .select()
@@ -100,7 +102,7 @@ export const profileApi = {
           {
             id: userId,
             ...userData,
-          },
+          } as any,
           { onConflict: 'id' }
         )
         .select()
@@ -139,7 +141,7 @@ export const profileApi = {
         return { code: null, error };
       }
 
-      const code = data?.joined_via_code || (data?.companies as any)?.code || null;
+      const code = (data as any)?.joined_via_code || (data as any)?.companies?.code || null;
       return { code, error: null };
     } catch (err) {
       console.error('Error fetching user company code:', err);

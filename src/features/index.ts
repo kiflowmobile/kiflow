@@ -17,10 +17,32 @@ export * from './lessons';
 export * from './progress';
 
 // Profile - exclude User to avoid conflict with auth
-export { profileApi, useProfile, type UserUpdateData } from './profile';
+export {
+  profileApi,
+  useProfile,
+  type UserUpdateData,
+  ProfileScreen,
+  EditProfileScreen,
+  ChangePasswordScreen,
+} from './profile';
 
 // Company
 export * from './company';
 
 // Statistics (includes criteria and ratings)
 export * from './statistics';
+
+// Quiz
+export * from './quiz';
+
+// AI Chat
+export * from './ai-chat';
+
+// Analytics
+export * from './analytics';
+
+// Welcome
+export * from './welcome';
+
+// Instructions
+export * from './instructions';

@@ -4,7 +4,7 @@ import { ScrollView, View } from 'react-native';
 import { useRouter } from 'expo-router';
 
 import { Button, CustomHeader } from '@/shared/ui';
-import ProfileField from './profile-field';
+import { ProfileField } from './profile-field';
 import { useAuthStore } from '@/features/auth';
 
 import OpenEye from '@/src/assets/images/eye-open.svg';

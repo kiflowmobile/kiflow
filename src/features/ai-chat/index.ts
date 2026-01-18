@@ -13,9 +13,9 @@ export { buildPrompt } from './utils/build-prompt';
 export { formatAIResponseForChat } from './utils/format-ai-response';
 
 // Components
-export { default as AIChat } from './components/ai-chat';
-export { default as ChatHeader } from './components/ai-chat-header';
-export { default as ChatMessages } from './components/ai-chat-messages';
-export { default as ChatInput } from './components/ai-chat-input';
+export { AIChat } from './components/ai-chat';
+export { AIChatHeader } from './components/ai-chat-header';
+export { AIChatMessages } from './components/ai-chat-messages';
+export { AIChatInput } from './components/ai-chat-input';
 export { MessageBubble } from './components/ai-message-bubble';
-export { default as AudioRecorder } from './components/audio-recorder';
+export { AudioRecorder } from './components/audio-recorder';

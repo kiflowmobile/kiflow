@@ -46,4 +46,3 @@ export const QuizOptions: React.FC<Props> = ({
   );
 };
 
-export default QuizOptions;

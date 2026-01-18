@@ -115,15 +115,10 @@ export interface LessonsState {
   lessons: Lesson[];
   isLoading: boolean;
   error: string | null;
-  // Backwards compatibility aliases
-  isLoadingModule: boolean;
-  errorModule: string | null;
 }
 
 export interface LessonsActions {
   fetchLessonsByModule: (moduleId: string) => Promise<void>;
-  // Backwards compatibility alias
-  fetchLessonByModule: (moduleId: string) => Promise<void>;
   setLessons: (lessons: Lesson[]) => void;
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;

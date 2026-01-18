@@ -6,13 +6,6 @@ export const useLessonsStore = create<LessonsStore>()((set, get) => ({
   lessons: [],
   isLoading: false,
   error: null,
-  // Backwards compatibility aliases
-  get isLoadingModule() {
-    return get().isLoading;
-  },
-  get errorModule() {
-    return get().error;
-  },
 
   fetchLessonsByModule: async (moduleId: string) => {
     set({ isLoading: true, error: null });
@@ -35,11 +28,6 @@ export const useLessonsStore = create<LessonsStore>()((set, get) => ({
         isLoading: false,
       });
     }
-  },
-
-  // Backwards compatibility alias
-  fetchLessonByModule: async (moduleId: string) => {
-    return get().fetchLessonsByModule(moduleId);
   },
 
   setLessons: (lessons: Lesson[]) => set({ lessons }),

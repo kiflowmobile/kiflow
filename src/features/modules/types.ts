@@ -17,8 +17,6 @@ export interface ModuleState {
 export interface ModuleActions {
   fetchModulesByCourse: (courseId: string) => Promise<void>;
   fetchModulesByCourses: (courseIds: string[]) => Promise<void>;
-  // Backwards compatibility alias
-  fetchMyModulesByCourses: (courseIds: string[]) => Promise<void>;
   setCurrentModule: (module: Module | null) => void;
   setModules: (modules: Module[]) => void;
   setLoading: (loading: boolean) => void;

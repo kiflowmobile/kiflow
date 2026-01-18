@@ -1,5 +1,6 @@
 import { supabase } from '@/src/shared/lib/supabase';
 import type { Lesson } from '../types';
+import type { Database } from '@/src/shared/lib/supabase';
 
 export interface ApiResponse<T> {
   data: T | null;
@@ -61,17 +62,22 @@ export const lessonsApi = {
       .from('slides')
       .select('lesson_id')
       .eq('id', slideId)
-      .single();
+      .single() as { data: { lesson_id: string } | null; error: any };
 
     if (slideRes.error || !slideRes.data) {
       return { data: null, error: slideRes.error };
     }
 
     // Then get the lesson_order from the lesson
+    const lessonId = slideRes.data.lesson_id;
+    if (!lessonId) {
+      return { data: null, error: new Error('Lesson ID not found') };
+    }
+    
     const { data, error } = await supabase
       .from('lessons')
       .select('lesson_order')
-      .eq('id', slideRes.data.lesson_id)
+      .eq('id', lessonId)
       .single();
 
     return { data, error };
@@ -95,7 +101,7 @@ export const lessonsApi = {
     if (error) return { data: {}, error };
 
     const counts: Record<string, number> = {};
-    (data || []).forEach((r) => {
+    (data || []).forEach((r: any) => {
       const mid = r.module_id;
       counts[mid] = (counts[mid] || 0) + 1;
     });

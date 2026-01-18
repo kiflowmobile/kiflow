@@ -23,4 +23,3 @@ export const formatBubbleScore = (
   return '0.0';
 };
 
-export default { computeCourseAvgNum, computeCombinedAvg, formatBubbleScore };

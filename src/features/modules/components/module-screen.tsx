@@ -18,7 +18,7 @@ import { useModulesStore } from '@/features/modules';
 import { useUserProgressStore } from '@/features/progress';
 import { useMainRatingStore } from '@/features/statistics';
 import { useAnalytics } from '@/features/analytics';
-import PaginationDots from './pagination-dot';
+import { PaginationDots } from './pagination-dot';
 
 // Helper function to send last slide email
 async function sendLastSlideEmail(emailData: {
@@ -101,7 +101,7 @@ export function ModuleScreen() {
     slideId?: string;
   }>();
 
-  const { lessons, isLoadingModule, errorModule, fetchLessonByModule } = useLessonsStore();
+  const { lessons, isLoading: isLoadingLessons, error: errorLessons, fetchLessonsByModule } = useLessonsStore();
   const { slides, isLoading, error, fetchSlidesByLessons } = useSlidesStore();
   const router = useRouter();
   const { user } = useAuthStore();
@@ -142,8 +142,8 @@ export function ModuleScreen() {
 
   useEffect(() => {
     if (!moduleId) return;
-    fetchLessonByModule(moduleId).catch((err) => console.error(err));
-  }, [moduleId, fetchLessonByModule]);
+    fetchLessonsByModule(moduleId).catch((err) => console.error(err));
+  }, [moduleId, fetchLessonsByModule]);
 
   useEffect(() => {
     if (lessons.length === 0) return;
@@ -371,7 +371,7 @@ export function ModuleScreen() {
       }
     }, [slides, pageH, slideId]);
 
-  if (error || errorModule)
+  if (error || errorLessons)
       return (
         <View className="flex-1 justify-center items-center p-5">
           <Text className="text-red-500 text-center mb-2.5 text-base">Помилка: {error}</Text>
@@ -387,7 +387,7 @@ export function ModuleScreen() {
         </View>
       );
 
-    if (isLoading || isLoadingModule)
+    if (isLoading || isLoadingLessons)
       return (
         <View className="flex-1 justify-center items-center">
           <ActivityIndicator size="large" />

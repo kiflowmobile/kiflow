@@ -13,7 +13,7 @@ interface TextSlideProps {
   subtitle?: string;
 }
 
-const TextSlide: React.FC<TextSlideProps> = ({ title, data, subtitle }) => {
+export const TextSlide: React.FC<TextSlideProps> = ({ title, data, subtitle }) => {
   const translateYAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -75,4 +75,3 @@ const TextSlide: React.FC<TextSlideProps> = ({ title, data, subtitle }) => {
   );
 };
 
-export default TextSlide;

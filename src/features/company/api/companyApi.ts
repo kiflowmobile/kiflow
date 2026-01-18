@@ -1,6 +1,7 @@
 import { supabase } from '@/src/shared/lib/supabase';
 import { getCurrentUser } from '@/src/features/auth';
 import type { Company, CompanyMember, JoinCompanyResult } from '../types';
+import type { Database } from '@/src/shared/lib/supabase';
 
 export interface ApiResponse<T> {
   data: T | null;
@@ -75,7 +76,7 @@ export const companyApi = {
           user_id: userId,
           company_id: companyId,
           joined_via_code: joinedViaCode,
-        })
+        } as any)
         .select()
         .single();
 
@@ -132,7 +133,7 @@ export const companyApi = {
       }
 
       const companies =
-        data?.map((item) => item.companies).filter(Boolean) || [];
+        data?.map((item: any) => item.companies).filter(Boolean) || [];
 
       return { data: companies as unknown as Company[], error: null };
     } catch (err) {
@@ -201,6 +202,7 @@ export const companyApi = {
     try {
       const resp = await supabase
         .from('companies')
+        // @ts-expect-error - Supabase type inference issue with update method
         .update({ service_standards: standards })
         .eq('id', companyId)
         .select();

@@ -1,6 +1,6 @@
 import { View } from 'react-native';
 
-function PaginationDots({ total, currentIndex }: { total: number; currentIndex: number }) {
+export function PaginationDots({ total, currentIndex }: { total: number; currentIndex: number }) {
   return (
     <View className="absolute right-0.5 top-1/2 -translate-y-1/2 justify-center items-center gap-2">
       {Array.from({ length: total }).map((_, i) => (
@@ -17,4 +17,3 @@ function PaginationDots({ total, currentIndex }: { total: number; currentIndex: 
   );
 }
 
-export default PaginationDots;

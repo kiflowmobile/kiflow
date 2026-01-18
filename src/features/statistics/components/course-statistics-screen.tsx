@@ -119,7 +119,7 @@ export function CourseStatisticsScreen() {
         />
 
         {loading.modules ? (
-          <Text className="text-slate-500 text-center mt-4">Loading modules...</Text>
+          <Text className="text-slate-500 text-center mt-4">Завантаження модулів...</Text>
         ) : (
           modules.map((module) => {
             const { percent, totalSlides, completedSlides } = getModuleProgress(module.id);
@@ -141,4 +141,3 @@ export function CourseStatisticsScreen() {
   );
 }
 
-export default CourseStatisticsScreen;

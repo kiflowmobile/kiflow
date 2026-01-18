@@ -37,7 +37,7 @@ export const progressApi = {
         module_id: moduleId,
         progress,
         last_slide_id: lastSlideId,
-      })
+      } as any)
       .select()
       .single();
 
