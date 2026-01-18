@@ -12,3 +12,4 @@ export type { Module, ModuleState, ModuleActions, ModuleStore } from './types';
 
 // Screens
 export { ModulesScreen } from './components/modules-screen';
+export { ModuleScreen } from './components/module-screen';

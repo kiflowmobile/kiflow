@@ -1,4 +1,4 @@
-import { Box } from '@/src/components/ui/box';
+import { Box } from '@/shared/ui';
 import { useEvent } from 'expo';
 import { useVideoPlayer, VideoView } from 'expo-video';
 import React, { useEffect } from 'react';
@@ -10,7 +10,7 @@ interface VideoPlayerProps {
   thumbnail?: string; // Added for consistency with web version
 }
 
-const VideoPlayer: React.FC<VideoPlayerProps> = ({ uri, isActive }) => {
+export const VideoPlayer: React.FC<VideoPlayerProps> = ({ uri, isActive }) => {
   // Only call useVideoPlayer with a valid URI since it doesn't accept undefined
   const player = useVideoPlayer(uri || '');
   const { status } = useEvent(player, 'statusChange', { status: player.status });
@@ -34,5 +34,3 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ uri, isActive }) => {
     </Box>
   );
 };
-
-export default VideoPlayer;

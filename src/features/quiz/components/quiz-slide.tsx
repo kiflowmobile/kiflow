@@ -1,19 +1,14 @@
-import React, { useEffect, useState } from 'react';
-import { View } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import React, { useEffect, useState } from 'react';
+import { Pressable, ScrollView, Text, View } from 'react-native';
 
-import { ScrollView } from '@/shared/ui';
 import { useAnalytics } from '@/features/analytics';
-import { QuizBadge } from './quiz-badge';
-import { QuizQuestion } from './quiz-question';
-import { QuizOptions } from './quiz-options';
-import { QuizControls } from './quiz-controls';
 
-interface QuizData {
+type QuizData = {
   question: string;
   options: string[];
   correctAnswer: number;
-}
+};
 
 interface QuizProps {
   id: string;
@@ -21,61 +16,39 @@ interface QuizProps {
   title: string;
   subtitle?: string;
   quiz: QuizData;
-  setScrollEnabled?: (enabled: boolean) => void;
-  isActive?: boolean;
-  onComplete?: () => void;
 }
 
-export const QuizSlide: React.FC<QuizProps> = ({
-  id,
-  title,
-  subtitle,
-  quiz,
-  courseId,
-  setScrollEnabled,
-  isActive,
-  onComplete,
-}) => {
-  const { trackEvent } = useAnalytics();
+const QuizSlide: React.FC<QuizProps> = ({ id, title, subtitle, quiz, courseId }) => {
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
-  const [checked, setChecked] = useState(false);
+  const isAnswered = selectedAnswer !== null;
+  const { trackEvent } = useAnalytics();
 
-  const STORAGE_KEY = `course-progress-${courseId}`;
 
-  // Load saved progress
+  const STORAGE_KEY = `quiz-progress-${courseId}`;
+
   useEffect(() => {
-    AsyncStorage.getItem(STORAGE_KEY).then((data) => {
-      if (data) {
-        const parsed = JSON.parse(data);
-        if (parsed[id]?.selectedAnswer !== undefined) {
-          setSelectedAnswer(parsed[id].selectedAnswer);
-          if (parsed[id].checked) setChecked(true);
+    const loadProgress = async () => {
+      try {
+        const data = await AsyncStorage.getItem(STORAGE_KEY);
+        if (data) {
+          const parsed = JSON.parse(data);
+          if (parsed[id]?.selectedAnswer !== undefined) {
+            setSelectedAnswer(parsed[id].selectedAnswer);
+          }
         }
+      } catch (err) {
+        console.error('Error loading quiz progress:', err);
       }
-    });
-  }, [STORAGE_KEY, id]);
+    };
+    loadProgress();
+  }, []);
 
-  // Control scroll
-  useEffect(() => {
-    if (!setScrollEnabled || !isActive) return;
-    setScrollEnabled(checked);
-    return () => setScrollEnabled(true);
-  }, [setScrollEnabled, checked, isActive]);
-
-  const handleSelect = (index: number) => {
-    if (checked) return;
+  const handleSelect = async (index: number) => {
     setSelectedAnswer(index);
-    trackEvent('course_screen__vote__click', { id, index });
-  };
 
-  const handleCheck = async () => {
-    if (selectedAnswer === null) return;
-    setChecked(true);
-
-    trackEvent('course_screen__vote__check', {
+    trackEvent('course_screen__vote__click', {
       id,
-      selected: selectedAnswer,
-      correct: quiz.correctAnswer,
+      index,
     });
 
     try {
@@ -83,9 +56,8 @@ export const QuizSlide: React.FC<QuizProps> = ({
       const parsed = existing ? JSON.parse(existing) : {};
 
       parsed[id] = {
-        selectedAnswer,
+        selectedAnswer: index,
         correctAnswer: quiz.correctAnswer,
-        checked: true,
       };
 
       await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(parsed));
@@ -94,48 +66,54 @@ export const QuizSlide: React.FC<QuizProps> = ({
     }
   };
 
-  const handleNext = () => {
-    trackEvent('course_screen__vote__next', {
-      id,
-      selected: selectedAnswer,
-      correct: quiz.correctAnswer,
-      correctResult: selectedAnswer === quiz.correctAnswer,
-    });
-
-    if (setScrollEnabled) setScrollEnabled(true);
-    onComplete?.();
-  };
-
-  const isAnswerCorrect = checked && selectedAnswer === quiz.correctAnswer;
 
   return (
-    <View className="flex-1 bg-background-light px-4">
+    <View className="flex-1 bg-surface px-4 justify-center items-center">
       <ScrollView
         contentContainerStyle={{
           flexGrow: 1,
+          justifyContent: 'center',
+          alignItems: 'center',
           paddingVertical: 24,
-          justifyContent: 'space-between',
+          gap: 16,
         }}
       >
-        <View className="items-center gap-6">
-          <QuizBadge title={title} />
-          <QuizQuestion question={quiz.question} subtitle={subtitle} />
-          <QuizOptions
-            options={quiz.options}
-            selectedAnswer={selectedAnswer}
-            checked={checked}
-            correctAnswer={quiz.correctAnswer}
-            onSelect={handleSelect}
-          />
+        <View className="items-center self-stretch">
+          <Text className="text-xl font-bold text-black text-center">{title}</Text>
+          {subtitle ? (
+            <Text className="text-base text-gray-500 text-center mt-1">{subtitle}</Text>
+          ) : null}
         </View>
 
-        <QuizControls
-          checked={checked}
-          selectedAnswer={selectedAnswer}
-          isAnswerCorrect={isAnswerCorrect}
-          onCheck={handleCheck}
-          onNext={handleNext}
-        />
+        <View className="self-stretch max-w-[760px] bg-black/5 rounded-xl p-4">
+          <Text className="text-lg font-medium text-center text-black">{quiz.question}</Text>
+        </View>
+
+        <View className="self-stretch max-w-[760px]">
+          {quiz.options.map((option, index) => {
+            const isCorrect = index === quiz.correctAnswer;
+            const isSelected = index === selectedAnswer;
+
+            const visualClass = isAnswered
+              ? isCorrect
+                ? 'bg-green-500/30 border-green-500'
+                : isSelected
+                  ? 'bg-red-500/30 border-red-500'
+                  : ''
+              : '';
+
+            return (
+              <Pressable
+                key={index}
+                className={`py-3.5 px-3 rounded-xl bg-surface mb-3 items-center border border-gray-300 ${visualClass}`}
+                onPress={() => handleSelect(index)}
+                disabled={isAnswered}
+              >
+                <Text className="text-base text-black text-center">{option}</Text>
+              </Pressable>
+            );
+          })}
+        </View>
       </ScrollView>
     </View>
   );

@@ -1,16 +1,18 @@
 import React, { useMemo, useState, useEffect } from 'react';
-import { Spinner, SPINNER_SIZES } from '../../ui/spinner';
 import { Text, View } from 'react-native';
-import TextSlide from './slides/TextSlide';
-import QuizSlide from './slides/Quiz/QuizeSlide';
-import AICourseChat from './slides/AICourseChat/AiCourseChat';
-import ContentWithExample from './slides/ContentWithExample';
-import DashboardSlide from './slides/DashboardSlide';
-import MediaPlaceholder from './slides/MediaPlaceholder';
-import { useSlidesStore, useModulesStore } from '@/src/stores';
-import { getLessonOrderBySlideId } from '@/src/services/lessons';
-import VideoPlayer from './VideoPlayer';
 import { useLocalSearchParams } from 'expo-router';
+
+import { lessonsApi } from '../api/lessonsApi';
+import { useSlidesStore } from '../store/slidesStore';
+import { useModulesStore } from '@/features/modules';
+import { QuizSlide } from '@/features/quiz';
+import { Spinner } from '@/shared/ui';
+import { VideoPlayer } from '@/shared/ui/video-player';
+import TextSlide from './text-slide';
+import ContentWithExample from './example-slide';
+import DashboardSlide from './dashboard-slide';
+import MediaPlaceholder from './media-placeholder';
+import AICourseChat from '@/src/components/screens/ModuleScreen/slides/AICourseChat/AiCourseChat';
 
 interface CourseSlideProps {
   slideId: string | number;
@@ -21,13 +23,9 @@ interface CourseSlideProps {
   setScrollEnabled?: (enabled: boolean) => void;
 }
 
-const ModuleSlide: React.FC<CourseSlideProps> = ({
+export const LessonSlide: React.FC<CourseSlideProps> = ({
   slideId,
   isActive,
-  onComplete,
-  currentIndex,
-  totalSlides,
-  setScrollEnabled,
 }) => {
   const { slides, isLoading, error } = useSlidesStore();
   const { modules } = useModulesStore();
@@ -48,7 +46,7 @@ const ModuleSlide: React.FC<CourseSlideProps> = ({
       }
 
       try {
-        const res = await getLessonOrderBySlideId(String(slideData.id));
+        const res = await lessonsApi.getLessonOrderBySlideId(String(slideData.id));
         if (!mounted) return;
         if (!res.error && res.data && res.data.lesson_order != null) {
           setLessonNumberFromDb(res.data.lesson_order);
@@ -69,8 +67,8 @@ const ModuleSlide: React.FC<CourseSlideProps> = ({
   if (isLoading) {
     return (
       <View className="flex-1 items-center justify-center">
-        <Spinner size={SPINNER_SIZES.md} />
-        <Text className="mt-2 text-center text-typography-600">Loading slide...</Text>
+        <Spinner size="md" />
+        <Text className="mt-2 text-center text-gray-600">Loading slide...</Text>
       </View>
     );
   }
@@ -118,9 +116,6 @@ const ModuleSlide: React.FC<CourseSlideProps> = ({
           courseId={courseIdStr}
           title={slideData.slide_title}
           quiz={slideData.slide_data}
-          onComplete={onComplete}
-          isActive={isActive}
-          setScrollEnabled={setScrollEnabled}
         />
       );
     case 'ai':
@@ -142,5 +137,3 @@ const ModuleSlide: React.FC<CourseSlideProps> = ({
       );
   }
 };
-
-export default ModuleSlide;

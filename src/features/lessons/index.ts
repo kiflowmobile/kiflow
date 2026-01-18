@@ -34,3 +34,6 @@ export type {
   SlidesActions,
   SlidesStore,
 } from './types';
+
+// Components
+export { LessonSlide } from './components/lesson';

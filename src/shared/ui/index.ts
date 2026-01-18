@@ -38,3 +38,4 @@ export { CustomHeader } from './CustomHeader';
 export { ThemedText } from './ThemedText';
 export { ThemedView } from './ThemedView';
 export { SkillsChart } from './SkillsChart';
+export { VideoPlayer } from './video-player';
