@@ -3,9 +3,9 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { ScrollView, Text, View } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 
-import { useAuthStore } from '@/features/auth/store/authStore';
-import { useModulesStore } from '@/features/modules/store/modulesStore';
-import { useMainRatingStore } from '@/features/statistics/store/ratingsStore';
+import { useAuth } from '@/features/auth';
+import { useModules, useModulesStore } from '@/features/modules';
+import { useSkillRatings } from '@/features/statistics';
 
 import { SkillsChart } from './skills-chart';
 
@@ -28,10 +28,10 @@ const calculateQuizRating = (
 };
 
 export const DashboardSlide: React.FC<DashboardSlideProps> = ({ courseId, title }) => {
-  const { user } = useAuthStore();
+  const { user } = useAuth();
   const currentModuleId = useModulesStore.getState().currentModule?.id;
 
-  const { average, skills, fetchAverage, fetchSkills } = useMainRatingStore();
+  const { average, skills, fetchAverage, fetchSkills } = useSkillRatings();
   const [quizRatings, setQuizRatings] = useState<number | null>(null);
 
   useEffect(() => {

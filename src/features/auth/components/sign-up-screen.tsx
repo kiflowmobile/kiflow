@@ -5,7 +5,6 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { SafeAreaView, KeyboardAvoidingView, Button, Input } from '@/shared/ui';
 import { useAuth } from '../hooks/useAuth';
-import { useAuthStore } from '../store/authStore';
 import { emailRegex, normalizeEmail } from '../utils/authUtils';
 import { useAnalytics } from '@/features/analytics';
 import BackIcon from '@/src/assets/images/arrow-left.svg';
@@ -36,7 +35,7 @@ export function SignUpScreen() {
   const router = useRouter();
   const rootNavigationState = useRootNavigationState();
   const { trackEvent } = useAnalytics();
-  const { user, isLoading, error, signUp, clearError } = useAuth();
+  const { user, isLoading, error, signUp, clearError, justSignedUp } = useAuth();
 
   const [form, setForm] = useState<FormFields>({
     firstName: '',
@@ -168,7 +167,7 @@ export function SignUpScreen() {
         normalizeName(form.lastName),
       );
 
-      if (useAuthStore.getState().justSignedUp) {
+      if (justSignedUp) {
         router.replace('/course-code');
       }
     } catch (err: any) {

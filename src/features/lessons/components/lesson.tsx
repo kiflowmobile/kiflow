@@ -3,8 +3,8 @@ import { Text, View } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 
 import { lessonsApi } from '../api/lessonsApi';
-import { useSlidesStore } from '../store/slidesStore';
-import { useModulesStore } from '@/features/modules/store/modulesStore';
+import { useSlides } from '../hooks/useSlides';
+import { useModules } from '@/features/modules';
 import { QuizSlide } from '@/features/quiz';
 import { Spinner } from '@/shared/ui';
 import { VideoPlayer } from '@/shared/ui/video-player';
@@ -24,8 +24,8 @@ interface CourseSlideProps {
 }
 
 export const LessonSlide: React.FC<CourseSlideProps> = ({ slideId, isActive }) => {
-  const { slides, isLoading, error } = useSlidesStore();
-  const { modules } = useModulesStore();
+  const { slides, isLoading, error } = useSlides();
+  const { modules } = useModules();
 
   const slideData = useMemo(() => slides.find((s) => s.id === slideId), [slides, slideId]);
   const { moduleId, courseId } = useLocalSearchParams();

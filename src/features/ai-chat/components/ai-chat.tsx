@@ -4,12 +4,12 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-import { useAuthStore } from '@/features/auth/store/authStore';
+import { useAuth } from '@/features/auth';
 import { companyApi } from '@/features/company';
 import { profileApi } from '@/features/profile';
-import { useCriteriaStore } from '@/features/statistics/store/criteriaStore';
-import { useMainRatingStore } from '@/features/statistics/store/ratingsStore';
-import { useSlidesStore } from '@/features/lessons/store/slidesStore';
+import { useCriteria } from '@/features/statistics';
+import { useSkillRatings } from '@/features/statistics';
+import { useSlideAnswers } from '@/features/lessons';
 import { useAnalytics } from '@/features/analytics';
 
 import { askGemini, type Message } from '../api/ask-gemini';
@@ -34,9 +34,10 @@ export const AIChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const { prompt, fetchPromptBySlide } = usePromptsStore();
-  const { criterias, fetchCriterias } = useCriteriaStore();
-  const { user } = useAuthStore();
-  const { saveRating } = useMainRatingStore();
+  const { criteria, fetchCriteria } = useCriteria();
+  const { user } = useAuth();
+  const { saveRating } = useSkillRatings();
+  const { markSlideAnswered } = useSlideAnswers();
   const { trackEvent } = useAnalytics();
   const inputRef = useRef<TextInput | null>(null);
   const pageScrollLockedRef = useRef(false);
@@ -103,9 +104,9 @@ export const AIChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
       loadChat(); // Load chat history independently
     }
     if (courseIdStr) {
-      fetchCriterias(courseIdStr);
+      fetchCriteria(courseIdStr);
     }
-  }, [slideId, courseIdStr, fetchPromptBySlide, fetchCriterias]);
+  }, [slideId, courseIdStr, fetchPromptBySlide, fetchCriteria]);
 
   // Handle Initial AI Message (Question) if no chat history
   useEffect(() => {
@@ -150,11 +151,11 @@ export const AIChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
     setMessages(newMessages);
     setInput('');
     setLoading(true);
-    useSlidesStore.getState().markSlideAnswered(slideId);
+    markSlideAnswered(slideId);
 
     try {
       const systemInstruction = prompt[slideId]?.system_instruction || '';
-      const criteriasText = criterias.map((item) => `${item.key} - ${item.name.trim()}`).join('\n');
+      const criteriasText = criteria.map((item) => `${item.key} - ${item.name.trim()}`).join('\n');
 
       // Resolve Company ID
       let companyIdToUse: string | undefined = undefined;

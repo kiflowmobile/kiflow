@@ -3,14 +3,13 @@ import { Image, Pressable, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 
 import { ScrollView, ProgressBar } from '@/shared/ui';
-import { useAuth } from '@/features/auth/hooks/useAuth';
+import { useAuth } from '@/features/auth';
 import { useAnalytics } from '@/features/analytics';
-import { useCourseStore } from '@/features/courses';
-import { useModulesStore } from '@/features/modules/store/modulesStore';
-import { useMainRatingStore } from '../store/ratingsStore';
-import { useCriteriaStore } from '../store/criteriaStore';
+import { useCourses } from '@/features/courses';
+import { useModules } from '@/features/modules';
+import { useSkillRatings, useCriteria, useMainRatingStore } from '@/features/statistics';
 import type { Skill } from '../types';
-import { useUserProgressStore } from '@/features/progress';
+import { useUserProgress } from '@/features/progress';
 import { useQuizStore } from '@/features/quiz';
 import { formatBubbleScore } from '@/features/statistics/utils';
 
@@ -18,11 +17,11 @@ export function StatisticsScreen() {
   const router = useRouter();
   const { trackEvent } = useAnalytics();
   const { user } = useAuth();
-  const { courses, fetchCourses, isLoading: coursesLoading } = useCourseStore();
-  const { criterias, fetchAllCriterias } = useCriteriaStore();
-  const { fetchUserRatings, ratings } = useMainRatingStore();
-  const { modules, fetchModulesByCourses } = useModulesStore();
-  const { getCourseProgress, getModuleProgress } = useUserProgressStore();
+  const { courses, fetchCourses, isLoading: coursesLoading } = useCourses();
+  const { criteria, fetchAllCriteria } = useCriteria();
+  const { fetchUserRatings, ratings } = useSkillRatings();
+  const { modules, fetchModulesByCourses } = useModules();
+  const { getCourseProgress, getModuleProgress } = useUserProgress();
 
   const [quizScores, setQuizScores] = useState<Record<string, number | undefined>>({});
   const [skillsByCourse, setSkillsByCourse] = useState<Record<string, Skill[]>>({});
@@ -37,10 +36,10 @@ export function StatisticsScreen() {
   useEffect(() => {
     if (user?.id) {
       fetchCourses();
-      fetchAllCriterias();
+      fetchAllCriteria();
       fetchUserRatings(user.id);
     }
-  }, [user?.id, fetchCourses, fetchAllCriterias, fetchUserRatings]);
+  }, [user?.id, fetchCourses, fetchAllCriteria, fetchUserRatings]);
 
   // Load modules for courses
   useEffect(() => {
@@ -220,7 +219,7 @@ export function StatisticsScreen() {
                   <View className="mt-2 pt-3 border-t border-gray-100">
                     <Text className="text-base font-bold mb-2">Skills level</Text>
 
-                    {criterias
+                    {criteria
                       .filter((c) => c.course_id === course.id)
                       .slice(0, 4)
                       .map((item) => {

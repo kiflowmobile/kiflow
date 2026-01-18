@@ -11,14 +11,14 @@ import {
 import Animated, { useAnimatedScrollHandler, runOnJS } from 'react-native-reanimated';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-import { useAuthStore } from '@/features/auth/store/authStore';
-import { useCourseStore } from '@/features/courses';
+import { useAuth } from '@/features/auth';
+import { useCourses, useCourseStore } from '@/features/courses';
 import { LessonSlide } from '@/features/lessons/components/lesson';
-import { useLessonsStore } from '@/features/lessons/store/lessonsStore';
-import { useSlidesStore } from '@/features/lessons/store/slidesStore';
-import { useModulesStore } from '../store/modulesStore';
-import { useUserProgressStore } from '@/features/progress';
-import { useMainRatingStore } from '@/features/statistics/store/ratingsStore';
+import { useLessons } from '@/features/lessons';
+import { useSlides } from '@/features/lessons';
+import { useModules, useModulesStore } from '@/features/modules';
+import { useUserProgress } from '@/features/progress';
+import { useSkillRatings } from '@/features/statistics';
 import { useAnalytics } from '@/features/analytics';
 import { PaginationDots } from './pagination-dot';
 
@@ -60,7 +60,7 @@ async function sendLastSlideEmail(emailData: {
 
 // Hook to save progress on leave
 function useSaveProgressOnLeave() {
-  const syncProgressToDB = useUserProgressStore((state) => state.syncProgressToDB);
+  const { syncProgressToDB } = useUserProgress();
 
   useEffect(() => {
     return () => {
@@ -108,13 +108,13 @@ export function ModuleScreen() {
     isLoading: isLoadingLessons,
     error: errorLessons,
     fetchLessonsByModule,
-  } = useLessonsStore();
-  const { slides, isLoading, error, fetchSlidesByLessons } = useSlidesStore();
+  } = useLessons();
+  const { slides, isLoading, error, fetchSlidesByLessons } = useSlides();
   const router = useRouter();
-  const { user } = useAuthStore();
+  const { user } = useAuth();
   const { trackEvent } = useAnalytics();
-  const { average, skills, fetchAverage, fetchSkills } = useMainRatingStore();
-  const { setModuleProgressSafe } = useUserProgressStore();
+  const { average, skills, fetchAverage, fetchSkills } = useSkillRatings();
+  const { setModuleProgressSafe } = useUserProgress();
 
   const emailSentRef = useRef(false);
   const lastScrollIndexRef = useRef<number>(-1);

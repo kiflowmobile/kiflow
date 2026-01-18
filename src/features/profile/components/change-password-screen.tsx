@@ -6,7 +6,7 @@ import { useRouter } from 'expo-router';
 import { Button } from '@/shared/ui';
 import { Header } from '@/shared/components/header';
 import { ProfileField } from './profile-field';
-import { useAuthStore } from '@/features/auth';
+import { useAuth } from '@/features/auth';
 
 import OpenEye from '@/src/assets/images/eye-open.svg';
 import ClosedEye from '@/src/assets/images/eye-closed.svg';
@@ -42,7 +42,7 @@ function getValidationError(data: PasswordFormState): string | null {
 }
 
 export function ChangePasswordScreen() {
-  const { changePassword } = useAuthStore();
+  const { changePassword } = useAuth();
   const router = useRouter();
 
   const [passwordData, setPasswordData] = useState<PasswordFormState>({

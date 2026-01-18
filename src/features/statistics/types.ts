@@ -56,9 +56,6 @@ export interface CriteriaState {
 export interface CriteriaActions {
   fetchCriteria: (courseId: string) => Promise<void>;
   fetchAllCriteria: () => Promise<void>;
-  // Backwards compatibility aliases
-  fetchCriterias: (courseId: string) => Promise<void>;
-  fetchAllCriterias: () => Promise<void>;
   clear: () => void;
 }
 

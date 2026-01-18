@@ -3,12 +3,12 @@ import { View, Text, Image, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
 
 import { SafeAreaView, ScrollView } from '@/shared/ui';
-import { useCourseStore } from '../store/coursesStore';
+import { useCourses } from '../hooks/useCourses';
 import { useAnalytics } from '@/features/analytics';
 import { CourseCard } from './course-card';
 
 export const CoursesScreen = () => {
-  const { courses, isLoading, error, fetchCourses, clearError } = useCourseStore();
+  const { courses, isLoading, error, fetchCourses, clearError } = useCourses();
   const { trackEvent } = useAnalytics();
   const router = useRouter();
 

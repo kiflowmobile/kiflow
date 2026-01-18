@@ -16,7 +16,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button, Input } from '@/shared/ui';
 import { companyApi } from '@/features/company';
 import { profileApi } from '@/features/profile';
-import { useCourseStore } from '../store/coursesStore';
+import { useCourses } from '../hooks/useCourses';
 import { useAuthStore } from '@/features/auth/store/authStore';
 import { useAnalytics } from '@/features/analytics';
 
@@ -28,7 +28,7 @@ export function CourseCodeScreen() {
   const [isSkipModalVisible, setIsSkipModalVisible] = useState(false);
 
   const router = useRouter();
-  const fetchCourses = useCourseStore((state) => state.fetchCourses);
+  const { fetchCourses } = useCourses();
   const analytics = useAnalytics();
 
   useEffect(() => {

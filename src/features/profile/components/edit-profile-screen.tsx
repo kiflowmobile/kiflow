@@ -5,12 +5,13 @@ import { Button } from '@/shared/ui';
 import { Header } from '@/shared/components/header';
 import { ProfileField } from './profile-field';
 import { useRouter } from 'expo-router';
-import { useAuthStore } from '@/features/auth';
-import { profileApi } from '../api/profileApi';
+import { useAuth } from '@/features/auth';
+import { useProfile } from '../hooks/useProfile';
 
 export function EditProfileScreen() {
   const router = useRouter();
-  const { user: supabaseUser } = useAuthStore();
+  const { user: supabaseUser } = useAuth();
+  const { profile, fetchProfile, updateProfile, error: profileError } = useProfile();
 
   const [formData, setFormData] = useState({
     first_name: '',
@@ -28,22 +29,25 @@ export function EditProfileScreen() {
 
   useEffect(() => {
     const load = async () => {
-      const { data } = await profileApi.getCurrentUserProfile();
-      if (data) {
-        setFormData({
-          first_name: data.first_name || '',
-          last_name: data.last_name || '',
-          email: data.email || supabaseUser?.email || '',
-        });
-        setInitialFormData({
-          first_name: data.first_name || '',
-          last_name: data.last_name || '',
-          email: data.email || supabaseUser?.email || '',
-        });
-      }
+      await fetchProfile();
     };
     load();
-  }, [supabaseUser]);
+  }, [supabaseUser, fetchProfile]);
+
+  useEffect(() => {
+    if (profile) {
+      setFormData({
+        first_name: profile.first_name || '',
+        last_name: profile.last_name || '',
+        email: profile.email || supabaseUser?.email || '',
+      });
+      setInitialFormData({
+        first_name: profile.first_name || '',
+        last_name: profile.last_name || '',
+        email: profile.email || supabaseUser?.email || '',
+      });
+    }
+  }, [profile, supabaseUser]);
 
   const isDirty =
     formData.first_name !== initialFormData.first_name ||
@@ -62,11 +66,10 @@ export function EditProfileScreen() {
         last_name: formData.last_name,
       };
 
-      const { error } = await profileApi.updateCurrentUserProfile(updateData);
-      if (error) {
-        console.error('Error updating profile:', error);
-        const msg =
-          typeof error === 'string' ? error : (error?.message ?? 'Не вдалося оновити профіль');
+      const result = await updateProfile(updateData);
+      if (!result) {
+        console.error('Error updating profile:', profileError);
+        const msg = profileError || 'Не вдалося оновити профіль';
         Alert.alert('Помилка', msg);
         return;
       }

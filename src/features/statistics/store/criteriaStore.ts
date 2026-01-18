@@ -1,19 +1,9 @@
 import { create } from 'zustand';
 import { criteriaApi } from '../api/criteriaApi';
-import type { CriteriaStore, CriteriaState } from '../types';
+import type { CriteriaStore } from '../types';
 
-// Extended state with backwards compatibility
-interface CriteriaStoreWithCompat extends CriteriaStore {
-  // Backwards compatibility - criterias as alias for criteria
-  criterias: CriteriaState['criteria'];
-}
-
-export const useCriteriaStore = create<CriteriaStoreWithCompat>()((set, get) => ({
+export const useCriteriaStore = create<CriteriaStore>()((set) => ({
   criteria: [],
-  // Backwards compatibility getter
-  get criterias() {
-    return get().criteria;
-  },
   isLoading: false,
   error: null,
 
@@ -41,15 +31,6 @@ export const useCriteriaStore = create<CriteriaStoreWithCompat>()((set, get) => 
       const errorMessage = err instanceof Error ? err.message : 'Failed to fetch criteria';
       set({ error: errorMessage, isLoading: false });
     }
-  },
-
-  // Backwards compatibility aliases
-  fetchCriterias: async (courseId: string) => {
-    return get().fetchCriteria(courseId);
-  },
-
-  fetchAllCriterias: async () => {
-    return get().fetchAllCriteria();
   },
 
   clear: () => set({ criteria: [], error: null }),

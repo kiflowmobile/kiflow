@@ -5,9 +5,9 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import Svg, { Path } from 'react-native-svg';
 
 import { Button, ProgressBar } from '@/shared/ui';
-import { useAuthStore } from '@/features/auth/store/authStore';
+import { useAuth } from '@/features/auth';
 import { useAnalytics } from '@/features/analytics';
-import { useCourseProgress, useUserProgressStore } from '@/features/progress';
+import { useCourseProgress, useUserProgress } from '@/features/progress';
 import { navigateToCourse } from '../utils/navigate-to-course';
 import type { Course } from '../types';
 
@@ -19,9 +19,9 @@ interface CourseCardProps {
 
 export const CourseCard: React.FC<CourseCardProps> = ({ course }) => {
   const router = useRouter();
-  const { user } = useAuthStore();
+  const { user } = useAuth();
   const { trackEvent } = useAnalytics();
-  const { fetchUserProgress, resetCourseProgress } = useUserProgressStore();
+  const { fetchUserProgress, resetCourseProgress } = useUserProgress();
   const { courseProgress, lastSlideId, modules } = useCourseProgress(course.id);
   const [isDeveloper, setIsDeveloper] = useState(false);
 

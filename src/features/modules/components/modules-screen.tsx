@@ -4,10 +4,10 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 
 import { ProgressBar } from '@/shared/ui';
 import { useAnalytics } from '@/features/analytics';
-import { useCourseStore } from '@/features/courses';
-import { useModulesStore } from '../store/modulesStore';
+import { useCourses } from '@/features/courses';
+import { useModules } from '../hooks/useModules';
 import type { Module } from '../types';
-import { useCourseProgress, useUserProgressStore } from '@/features/progress';
+import { useCourseProgress, useUserProgress } from '@/features/progress';
 import { lessonsApi } from '@/features/lessons/api/lessonsApi';
 
 const LINE_DEFAULT = '#D9D9D9';
@@ -26,10 +26,10 @@ export function ModulesScreen() {
     clearError,
     currentModule,
     setCurrentModule,
-  } = useModulesStore();
+  } = useModules();
 
-  const { currentCourse, fetchCourseById } = useCourseStore();
-  const { getModuleProgress } = useUserProgressStore();
+  const { currentCourse, fetchCourseById } = useCourses();
+  const { getModuleProgress } = useUserProgress();
   const { modules: progressModules } = useCourseProgress(params.id || '');
 
   const [lessonCounts, setLessonCounts] = useState<Record<string, number>>({});

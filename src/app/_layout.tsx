@@ -7,16 +7,16 @@ import { useFonts } from 'expo-font';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
-import { useAuthStore } from '@/features/auth';
-import { useUserProgressStore } from '@/features/progress';
+import { useAuth } from '@/features/auth';
+import { useUserProgress } from '@/features/progress';
 import { Header } from '@/shared/components/header';
 
 import { initFirebase } from '@/shared/lib/firebase';
 import { initAmplitude } from '@/shared/lib/amplitude';
 
 export default function RootLayout() {
-  const { initFromLocal } = useUserProgressStore();
-  const { user, isGuest, isLoading } = useAuthStore();
+  const { initFromLocal } = useUserProgress();
+  const { user, isGuest, isLoading, checkSession } = useAuth();
   const router = useRouter();
   const navigationState = useRootNavigationState();
   const isNavigationReady = Boolean(navigationState?.key);
@@ -25,8 +25,6 @@ export default function RootLayout() {
     RobotoCondensed: require('../assets/fonts/RobotoCondensed.ttf'),
     Inter: require('../assets/fonts/Inter.ttf'),
   });
-
-  const checkSession = useAuthStore((state) => state.checkSession);
 
   useEffect(() => {
     checkSession();

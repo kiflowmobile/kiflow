@@ -3,14 +3,14 @@ import { Text, View } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 
 import { ScrollView } from '@/shared/ui';
-import { useAuth } from '@/features/auth/hooks/useAuth';
+import { useAuth } from '@/features/auth';
 import { useAnalytics } from '@/features/analytics';
-import { useCourseStore } from '@/features/courses';
+import { useCourses } from '@/features/courses';
 import { modulesApi } from '@/features/modules/api/modulesApi';
 import type { Module } from '@/features/modules/types';
-import { useMainRatingStore } from '../store/ratingsStore';
+import { useSkillRatings, useMainRatingStore } from '@/features/statistics';
 import type { Skill } from '../types';
-import { useUserProgressStore } from '@/features/progress';
+import { useUserProgress, useUserProgressStore } from '@/features/progress';
 import { useQuizStore } from '@/features/quiz';
 
 import { StatisticsHeader } from './statistics-header';
@@ -20,8 +20,8 @@ export function CourseStatisticsScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { trackEvent } = useAnalytics();
   const { user } = useAuth();
-  const { currentCourse, fetchCourseById } = useCourseStore();
-  const { fetchSkills } = useMainRatingStore();
+  const { currentCourse, fetchCourseById } = useCourses();
+  const { fetchSkills } = useSkillRatings();
 
   const [modules, setModules] = useState<Module[]>([]);
   const [skillsMap, setSkillsMap] = useState<Record<string, Skill[]>>({});

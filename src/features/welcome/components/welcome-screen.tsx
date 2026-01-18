@@ -3,12 +3,12 @@ import { ImageBackground, View, Image } from 'react-native';
 import { useRootNavigationState, useRouter } from 'expo-router';
 
 import { Button } from '@/shared/ui';
-import { useAuthStore } from '@/features/auth';
+import { useAuth } from '@/features/auth';
 import { useAnalytics } from '@/features/analytics';
 
 export function WelcomeScreen() {
   const router = useRouter();
-  const { isGuest, justSignedUp } = useAuthStore();
+  const { isGuest, justSignedUp } = useAuth();
   const rootNavigationState = useRootNavigationState();
   const { trackEvent } = useAnalytics();
 
