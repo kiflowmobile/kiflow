@@ -15,7 +15,7 @@ export const ratingsApi = {
     moduleId: string,
   ): Promise<ApiResponse<Array<{ criteria_key: string; rating: number }>>> => {
     const { data, error } = await supabase
-      .from('user_skill_ratings')
+      .from('user_criteria_ratings')
       .select('criteria_key, rating')
       .eq('user_id', userId)
       .eq('module_id', moduleId);
@@ -32,7 +32,7 @@ export const ratingsApi = {
     key: string,
   ): Promise<ApiResponse<{ rating: number }>> => {
     const { data, error } = await supabase
-      .from('user_skill_ratings')
+      .from('user_criteria_ratings')
       .select('rating')
       .eq('user_id', userId)
       .eq('criteria_key', key)
@@ -60,7 +60,7 @@ export const ratingsApi = {
     }
 
     const { data, error } = await supabase
-      .from('user_skill_ratings')
+      .from('user_criteria_ratings')
       .upsert(
         [
           {
@@ -82,7 +82,7 @@ export const ratingsApi = {
    */
   fetchAllRatings: async (userId: string): Promise<ApiResponse<RatingItem[]>> => {
     const { data, error } = await supabase
-      .from('user_skill_ratings')
+      .from('user_criteria_ratings')
       .select('id, user_id, module_id, criteria_key, rating')
       .eq('user_id', userId);
 
