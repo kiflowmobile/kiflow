@@ -12,7 +12,7 @@ import TextSlide from './text-slide';
 import ContentWithExample from './example-slide';
 import DashboardSlide from './dashboard-slide';
 import MediaPlaceholder from './media-placeholder';
-import AICourseChat from '@/src/features/ai-chat/components/ai-chat';
+import { AIChat as AICourseChat } from '@/features/ai-chat';
 
 interface CourseSlideProps {
   slideId: string | number;

@@ -1,7 +1,11 @@
-import { Message } from '@/src/constants/types/ai_chat';
-import { buildPrompt } from './buildPrompt';
-import { getCompanyById } from '@/src/services/company';
-import { jsonrepair } from 'jsonrepair';
+import { buildPrompt } from '../utils/build-prompt';
+import { companyApi } from '@/features/company';
+
+// Message type for AI chat (without id - id is added in components)
+export interface Message {
+  role: 'user' | 'ai';
+  text: string;
+}
 
 const GEMINI_API_KEY = process.env.EXPO_PUBLIC_GEMINI_API_KEY;
 
@@ -54,20 +58,20 @@ export async function askGemini(context: AskGeminiContext): Promise<GeminiRespon
   const lastUserMessage = messages.filter((m) => m.role === 'user').slice(-1)[0];
 
   let companyStandards: any = undefined;
-  // Note: Optimally this should be passed in ready-to-use, but keeping here for now if not refactored in caller
+  // Fetch company standards if companyId is provided
   if (companyId) {
     try {
-      const { data: companyData, error: companyError } = await getCompanyById(companyId);
+      const { data: companyData, error: companyError } = await companyApi.getCompanyById(companyId);
       if (!companyError && companyData?.service_standards) {
         const raw = companyData.service_standards;
         try {
           companyStandards = typeof raw === 'string' ? JSON.parse(raw) : raw;
         } catch {
-             // fallback
-             companyStandards = raw;
+          // fallback
+          companyStandards = raw;
         }
       }
-    } catch(e) {
+    } catch (e) {
       console.warn('Failed to fetch company standards', e);
     }
   }

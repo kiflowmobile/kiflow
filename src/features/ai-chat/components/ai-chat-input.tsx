@@ -1,9 +1,10 @@
 import React, { RefObject, useRef } from 'react';
-import { View, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
-import { Icon } from '@/src/components/ui/icon';
+import { TextInput, TouchableOpacity, View } from 'react-native';
 import { Send } from 'lucide-react-native';
-import AudioRecorder from '../AudioRecorder';
-import { useAnalyticsStore } from '@/src/stores/analyticsStore';
+
+import { useAnalytics } from '@/features/analytics';
+import { Icon } from '@/shared/ui';
+import AudioRecorder from './audio-recorder';
 
 interface ChatInputProps {
   input: string;
@@ -32,7 +33,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
   id,
   slideId,
 }) => {
-  const analyticsStore = useAnalyticsStore.getState();
+  const analyticsStore = useAnalytics();
   const hasTrackedInputRef = useRef(false); 
 
   const handleFocus = () => {
@@ -59,11 +60,12 @@ const ChatInput: React.FC<ChatInputProps> = ({
   };
 
   return (
-    <View style={styles.footer}>
+    <View className="pt-2">
       <TextInput
         ref={inputRef}
-        style={styles.input}
-        placeholder={isLocked ? "Ви вже використали 3 спроби" : "Введіть відповідь..."}
+        className="min-h-[40px] max-h-[100px] rounded-lg border border-gray-300 px-3 py-2 text-base bg-surface mb-2"
+        placeholder={isLocked ? 'Ви вже використали 3 спроби' : 'Введіть відповідь...'}
+        placeholderTextColor="#a1a1a1"
         value={input}
         onChangeText={handleChangeText}
         onFocus={handleFocus}
@@ -71,7 +73,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
         multiline
         editable={!isLocked && !loading}
       />
-      <View style={styles.buttonContainer}>
+      <View className="flex-row items-center justify-between gap-2">
         <AudioRecorder
           onAudioProcessed={onAudioProcessed}
           disabled={loading || isLocked}
@@ -91,27 +93,3 @@ const ChatInput: React.FC<ChatInputProps> = ({
 };
 
 export default ChatInput;
-
-const styles = StyleSheet.create({
-  footer: {
-    paddingTop: 8,
-  },
-  input: {
-    minHeight: 40,
-    maxHeight: 100,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#cbd5e1',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    fontSize: 16,
-    backgroundColor: '#fff',
-    marginBottom: 8,
-  },
-  buttonContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: 8,
-  },
-});

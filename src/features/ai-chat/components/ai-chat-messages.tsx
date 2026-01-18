@@ -1,29 +1,26 @@
 import React from 'react';
-import { View, StyleSheet } from 'react-native';
-import MessageBubble from './MessageBubble';
+import { View } from 'react-native';
 
-interface Message {
+import { MessageBubble } from './ai-message-bubble';
+
+interface MessageWithId {
   id: string;
   role: 'user' | 'ai';
   text: string;
 }
 
 interface ChatMessagesProps {
-  messages: Message[];
+  messages: MessageWithId[];
   loading: boolean;
 }
 
 const ChatMessages: React.FC<ChatMessagesProps> = ({ messages, loading }) => (
-  <View style={styles.chatContent}>
+  <View className="py-2">
     {messages.map((msg) => (
       <MessageBubble key={msg.id} {...msg} />
     ))}
     {loading && <MessageBubble id="ai-thinking" role="ai" text="AI думає..." />}
   </View>
 );
-
-const styles = StyleSheet.create({
-  chatContent: { paddingVertical: 8 },
-});
 
 export default ChatMessages;

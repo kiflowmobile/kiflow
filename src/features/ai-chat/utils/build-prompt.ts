@@ -1,4 +1,4 @@
-import { Message } from '@/src/constants/types/ai_chat';
+import type { Message } from '../api/ask-gemini';
 
 
 export function buildPrompt(

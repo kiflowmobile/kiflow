@@ -1,32 +1,32 @@
+import { useState, useRef, useEffect } from 'react';
 import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
   TextInput,
   View,
-  StyleSheet,
 } from 'react-native';
-import { usePromptsStore } from '@/src/services/slidePrompt';
-import { useAuthStore, useCriteriaStore, useMainRatingStore, useSlidesStore } from '@/src/stores';
-
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { askGemini } from './askGemini';
-import { getCurrentUserCode } from '@/src/services/users';
-import { getCompanyByCode } from '@/src/services/company';
-import ChatHeader from './components/ChatHeader';
-import ChatMessages from './components/ChatMessages';
-import ChatInput from './components/ChatInput';
-import { formatAIResponseForChat } from './formatAIResponseForChat';
-import { shadow } from '@/src/components/ui/styles/shadow';
 import { useLocalSearchParams } from 'expo-router';
-import { useState, useRef, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useAnalyticsStore } from '@/src/stores/analyticsStore';
 
-interface Message {
+import { useAuthStore } from '@/features/auth';
+import { companyApi } from '@/features/company';
+import { profileApi } from '@/features/profile';
+import { useCriteriaStore, useMainRatingStore } from '@/features/statistics';
+import { useSlidesStore } from '@/features/lessons';
+import { useAnalytics } from '@/features/analytics';
+
+import { askGemini, type Message } from '../api/ask-gemini';
+import { usePromptsStore } from '../store/promptsStore';
+import { formatAIResponseForChat } from '../utils/format-ai-response';
+import ChatHeader from './ai-chat-header';
+import ChatMessages from './ai-chat-messages';
+import ChatInput from './ai-chat-input';
+
+// Extended Message type with id for React keys
+interface MessageWithId extends Message {
   id: string;
-  role: 'user' | 'ai';
-  text: string;
 }
 
 interface AICourseChatProps {
@@ -35,20 +35,20 @@ interface AICourseChatProps {
 }
 
 const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [messages, setMessages] = useState<MessageWithId[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const { prompt, fetchPromptBySlide } = usePromptsStore();
   const { criterias, fetchCriterias } = useCriteriaStore();
   const { user } = useAuthStore();
   const { saveRating } = useMainRatingStore();
+  const { trackEvent } = useAnalytics();
   const inputRef = useRef<TextInput | null>(null);
   const pageScrollLockedRef = useRef(false);
   const { moduleId, courseId } = useLocalSearchParams();
   const moduleIdStr = Array.isArray(moduleId) ? moduleId[0] : moduleId;
   const courseIdStr = Array.isArray(courseId) ? courseId[0] : courseId;
   const CHAT_STORAGE_KEY = `course-chat-${courseIdStr}`;
-  const analyticsStore = useAnalyticsStore.getState();
 
   // Derived state: User message count & Locking
   const userMessageCount = messages.filter(m => m.role === 'user').length;
@@ -58,8 +58,8 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
     try {
       const stored = await AsyncStorage.getItem(CHAT_STORAGE_KEY);
       if (!stored) return;
-  
-      const parsed: Record<string, Message[]> = JSON.parse(stored);
+
+      const parsed: Record<string, MessageWithId[]> = JSON.parse(stored);
       if (parsed[slideId]) {
         setMessages(parsed[slideId]);
       }
@@ -104,46 +104,54 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
   // Combined initialization effect
   useEffect(() => {
     if (slideId) {
-       fetchPromptBySlide(slideId);
-       loadChat(); // Load chat history independently
+      fetchPromptBySlide(slideId);
+      loadChat(); // Load chat history independently
     }
     if (courseIdStr) {
-       fetchCriterias(courseIdStr);
+      fetchCriterias(courseIdStr);
     }
-  }, [slideId, courseIdStr]);
+  }, [slideId, courseIdStr, fetchPromptBySlide, fetchCriterias]);
 
   // Handle Initial AI Message (Question) if no chat history
   useEffect(() => {
-     if (!prompt[slideId] || messages.length > 0) return;
-     
-     // Check storage one last time to avoid overwriting or doubling
-     const checkStorageAndSetInitial = async () => {
+    if (!prompt[slideId] || messages.length > 0) return;
+
+    // Check storage one last time to avoid overwriting or doubling
+    const checkStorageAndSetInitial = async () => {
+      try {
         const stored = await AsyncStorage.getItem(CHAT_STORAGE_KEY);
         if (stored) {
-            const parsed = JSON.parse(stored);
-            if (parsed[slideId] && parsed[slideId].length > 0) return; // Already has messages
+          const parsed = JSON.parse(stored);
+          if (parsed[slideId] && parsed[slideId].length > 0) return; // Already has messages
         }
 
         const initialMsgText = prompt[slideId]?.initial_message;
         if (initialMsgText) {
-             const aiMsg: Message = {
-                id: Date.now().toString(),
-                role: 'ai',
-                text: initialMsgText,
-              };
-              setMessages([aiMsg]);
+          const aiMsg: MessageWithId = {
+            id: Date.now().toString(),
+            role: 'ai',
+            text: initialMsgText,
+          };
+          setMessages([aiMsg]);
         }
-     };
-     
-     checkStorageAndSetInitial();
-  }, [slideId, prompt, messages.length]);
+      } catch (err) {
+        console.error('Error setting initial message:', err);
+      }
+    };
+
+    checkStorageAndSetInitial();
+  }, [slideId, prompt, messages.length, CHAT_STORAGE_KEY]);
 
 
   const handleSend = async () => {
-    analyticsStore.trackEvent("course_screen__submit__click", { courseIdStr, slideId });
+    trackEvent('course_screen__submit__click', { courseIdStr, slideId });
     if (!input.trim() || loading) return;
 
-    const userMsg: Message = { id: Date.now().toString(), role: 'user', text: input.trim() };
+    const userMsg: MessageWithId = {
+      id: Date.now().toString(),
+      role: 'user',
+      text: input.trim(),
+    };
     const newMessages = [...messages, userMsg];
     setMessages(newMessages);
     setInput('');
@@ -152,14 +160,16 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
 
     try {
       const systemInstruction = prompt[slideId]?.system_instruction || '';
-      const criteriasText = criterias.map((item) => `${item.key} - ${item.name.trim()}`).join('\n');
+      const criteriasText = criterias
+        .map((item) => `${item.key} - ${item.name.trim()}`)
+        .join('\n');
 
       // Resolve Company ID
       let companyIdToUse: string | undefined = undefined;
       try {
-        const { code } = await getCurrentUserCode();
+        const { code } = await profileApi.getCurrentUserCode();
         if (code) {
-          const { data: companyData } = await getCompanyByCode(code);
+          const { data: companyData } = await companyApi.getCompanyByCode(code);
           if (companyData) companyIdToUse = companyData.id;
         }
       } catch (err) {
@@ -174,7 +184,7 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
         companyId: companyIdToUse,
       });
 
-      analyticsStore.trackEvent('course_screen__response_success__load', {
+      trackEvent('course_screen__response_success__load', {
         id: slideId,
         index: 0,
         model: aiResponse?.model || 'gemini',
@@ -186,18 +196,16 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
         const criteriaScores = aiResponse.rating.criteriaScores;
         // Parallel save
         Promise.allSettled(
-            Object.entries(criteriaScores).map(([criteriaKey, score]) => 
-                saveRating(user.id, score as number, moduleIdStr, criteriaKey)
-            )
-        ).catch(err => console.warn("Failed saving ratings", err));
+          Object.entries(criteriaScores).map(([criteriaKey, score]) =>
+            saveRating(user.id, score as number, moduleIdStr, criteriaKey)
+          )
+        ).catch((err) => console.warn('Failed saving ratings', err));
       }
 
       // Formatting response
-      // Note: formatAIResponseForChat likely expects { content: string, rating: ... } 
-      // We ensure aiResponse matches that shape or we adapt needed fields.
-      const chatText = formatAIResponseForChat(aiResponse as any); 
-      
-      const aiMsg: Message = {
+      const chatText = formatAIResponseForChat(aiResponse);
+
+      const aiMsg: MessageWithId = {
         id: Date.now().toString(),
         role: 'ai',
         text: chatText,
@@ -216,7 +224,7 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
       }
     } catch (e) {
       console.error(e);
-      analyticsStore.trackEvent('course_screen__response_fail__load', { id: slideId, index: 0 });
+      trackEvent('course_screen__response_fail__load', { id: slideId, index: 0 });
     } finally {
       setLoading(false);
     }
@@ -245,14 +253,14 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
   };
 
   return (
-    <SafeAreaView style={styles.screen}>
+    <SafeAreaView className="flex-1 bg-surface p-4">
       <KeyboardAvoidingView
-        style={{ flex: 1 }}
+        className="flex-1"
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 80 : 0}
       >
         <ChatHeader title={title} />
-        <View style={styles.chatBox}>
+        <View className="flex-1 rounded-xl p-4 bg-surface shadow-md my-2">
           <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
             <ChatMessages messages={messages} loading={loading} />
           </ScrollView>
@@ -276,15 +284,3 @@ const AICourseChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
 };
 
 export default AICourseChat;
-
-const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: '#ffffff', padding: 16 },
-  chatBox: {
-    flex: 1,
-    borderRadius: 16,
-    padding: 16,
-    ...shadow,
-    backgroundColor: '#ffffff',
-    marginVertical: 8,
-  },
-});
