@@ -1,14 +1,16 @@
 import 'react-native-reanimated';
-import { useAuthStore } from '@/src/stores/authStore';
-import { useFonts } from 'expo-font';
-import { Stack, useRouter, useRootNavigationState } from 'expo-router';
 import { useEffect } from 'react';
+import { Stack, useRouter, useRootNavigationState } from 'expo-router';
+import { useFonts } from 'expo-font';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { useUserProgressStore } from '../stores';
-import CustomHeader from '../components/ui/CustomHeader';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import '../firebase';
-import { initAmplitude } from '../amplitude';
+
+import { useAuthStore } from '@/features/auth';
+import { useUserProgressStore } from '@/features/progress';
+import { CustomHeader } from '@/shared/ui';
+
+import { initFirebase } from '@/shared/lib/firebase';
+import { initAmplitude } from '@/shared/lib/amplitude';
 
 export default function RootLayout() {
   const { initFromLocal } = useUserProgressStore();
@@ -29,6 +31,11 @@ export default function RootLayout() {
   }, [checkSession]);
 
   useEffect(() => {
+    initFirebase();
+    initAmplitude();
+  }, []);
+
+  useEffect(() => {
     initFromLocal();
   }, [user, initFromLocal]);
 
@@ -42,10 +49,6 @@ export default function RootLayout() {
       return () => clearTimeout(id);
     }
   }, [isGuest, isLoading, isNavigationReady, loaded, router]);
-
-  useEffect(() => {
-    initAmplitude();
-  }, []);
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>

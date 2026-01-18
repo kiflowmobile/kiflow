@@ -1,7 +1,8 @@
 import nodemailer from 'nodemailer';
-import { fetchCriteriaByKeys } from '@/src/services/userSkillRatings';
+import { ratingsApi } from '@/features/statistics';
+import { dedupeSkills, escapeHtml, normalizeScore, type Skill } from '../utils/email-utils';
 
-interface ClientSkill {
+export interface ClientSkill {
   criterion_id?: string;
   criterion_key?: string;
   criterion_name?: string;
@@ -9,10 +10,10 @@ interface ClientSkill {
   score?: number;
 }
 
-interface EmailRequest {
+export interface EmailRequest {
   userEmail: string;
   moduleTitle: string;
-  slide: any;
+  slide: unknown;
   courseTitle?: string;
   userId?: string;
   moduleId?: string;
@@ -26,71 +27,9 @@ interface EmailRequest {
   skills?: ClientSkill[];
 }
 
-// 🔹 утилита для удаления/слияния дубликатов критериев
-function dedupeSkills(
-  skills: {
-    name: string;
-    key?: string;
-    score: number;
-    individualScores?: (number | string)[];
-  }[],
-) {
-  function normalizeId(s?: string) {
-    if (!s) return '';
-    try {
-      const normalized = s
-        .toString()
-        .normalize('NFKD')
-        .replace(/\p{M}/gu, '')
-        .replace(/[^\p{L}\p{N}]+/gu, ' ')
-        .trim()
-        .toLowerCase();
-      return normalized;
-    } catch {
-      return s.toString().trim().toLowerCase();
-    }
-  }
-
-  const map = new Map<
-    string,
-    { name: string; key?: string; score: number; individualScores?: (number | string)[] }
-  >();
-  const unkeyed: typeof skills = [];
-
-  for (const skill of skills) {
-    const rawId = skill.key ?? skill.name ?? '';
-    const id = normalizeId(rawId as string);
-
-    if (!id) {
-      unkeyed.push(skill);
-      continue;
-    }
-
-    const existing = map.get(id);
-    if (!existing) {
-      map.set(id, {
-        name: skill.name,
-        key: skill.key,
-        score: skill.score,
-        individualScores: skill.individualScores ? [...skill.individualScores] : undefined,
-      });
-    } else {
-      if (skill.name && skill.name.length > (existing.name ?? '').length)
-        existing.name = skill.name;
-      if (!existing.key && skill.key) existing.key = skill.key;
-
-      const avg = Math.round((((existing.score ?? 0) + (skill.score ?? 0)) / 2) * 10) / 10;
-      existing.score = avg;
-
-      if (skill.individualScores && skill.individualScores.length > 0) {
-        existing.individualScores = Array.from(
-          new Set([...(existing.individualScores ?? []), ...skill.individualScores]),
-        );
-      }
-    }
-  }
-
-  return [...map.values(), ...unkeyed];
+interface UserStats {
+  averageScore?: number;
+  skills?: Skill[];
 }
 
 export async function POST(request: Request) {
@@ -117,41 +56,38 @@ export async function POST(request: Request) {
       );
     }
 
-    let userStats: {
-      averageScore?: number;
-      skills?: {
-        name: string;
-        key?: string;
-        score: number;
-        individualScores?: (number | string)[];
-      }[];
-    } = {};
-
-    if (typeof averageScore === 'number' && Number.isFinite(averageScore)) {
-      userStats.averageScore = Math.round(averageScore * 10) / 10;
-    }
+    const userStats: UserStats = {
+      averageScore: normalizeScore(averageScore),
+    };
 
     if (Array.isArray(skills) && skills.length > 0) {
-      userStats.skills = skills.map((skill) => {
-        const key = skill.criterion_key ?? skill.criterion_id ?? undefined;
-        const name =
-          skill.criterion_name ?? skill.criterion_id ?? skill.criterion_key ?? 'Без названия';
+      userStats.skills = skills
+        .map((skill) => {
+          const key = skill.criterion_key ?? skill.criterion_id ?? undefined;
+          const name =
+            skill.criterion_name ?? skill.criterion_id ?? skill.criterion_key ?? 'Без названия';
 
-        let s = 0;
-        if (typeof skill.average_score === 'number') s = skill.average_score;
-        else if (typeof skill.score === 'number') s = skill.score;
+          let score = 0;
+          if (typeof skill.average_score === 'number') {
+            score = skill.average_score;
+          } else if (typeof skill.score === 'number') {
+            score = skill.score;
+          }
 
-        const normalizedScore = Math.round(s * 10) / 10;
+          const normalizedScore = normalizeScore(score);
+          if (normalizedScore === undefined) return null;
 
-        return {
-          name,
-          key,
-          score: normalizedScore,
-          individualScores: undefined,
-        };
-      });
+          return {
+            name,
+            key,
+            score: normalizedScore,
+            individualScores: undefined,
+          } as Skill;
+        })
+        .filter((s): s is Skill => s !== null);
     }
 
+    // Calculate average from skills if not provided
     if (
       (userStats.averageScore === undefined || Number.isNaN(userStats.averageScore)) &&
       userStats.skills &&
@@ -159,24 +95,30 @@ export async function POST(request: Request) {
     ) {
       const sum = userStats.skills.reduce((acc, s) => acc + (s.score ?? 0), 0);
       const avg = sum / userStats.skills.length;
-      userStats.averageScore = Math.round(avg * 10) / 10;
+      userStats.averageScore = normalizeScore(avg);
     }
 
+    // Deduplicate skills
     if (userStats.skills && userStats.skills.length > 0) {
       userStats.skills = dedupeSkills(userStats.skills);
     }
 
+    // Fetch criteria names from database
     if (userStats.skills && userStats.skills.length > 0) {
       try {
-        const keys = Array.from(new Set(userStats.skills.map((s) => s.key).filter(Boolean)));
+        const keys = Array.from(
+          new Set(userStats.skills.map((s) => s.key).filter((k): k is string => Boolean(k)))
+        );
         if (keys.length > 0) {
-          const { data: criterias, error: criteriasError } = await fetchCriteriaByKeys(
-            keys as string[],
+          const { data: criterias, error: criteriasError } = await ratingsApi.fetchCriteriaByKeys(
+            keys
           );
           if (!criteriasError && criterias && Array.isArray(criterias) && criterias.length > 0) {
             const nameByKey = new Map<string, string>();
-            (criterias as any[]).forEach((c) => {
-              if (c?.key) nameByKey.set(c.key, c.name ?? c.key);
+            criterias.forEach((c) => {
+              if (c?.key) {
+                nameByKey.set(c.key, c.name ?? c.key);
+              }
             });
 
             userStats.skills = userStats.skills.map((s) => {
@@ -187,7 +129,8 @@ export async function POST(request: Request) {
             });
           }
         }
-      } catch {
+      } catch (error) {
+        console.error('Failed to fetch criteria names:', error);
       }
     }
 
@@ -209,18 +152,8 @@ export async function POST(request: Request) {
     const payloadExtraEmails = Array.isArray(extraRecipients)
       ? extraRecipients
       : extraRecipients
-      ? [extraRecipients]
-      : [];
-
-    function escapeHtml(str: any) {
-      if (str == null) return '';
-      return String(str)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#39;');
-    }
+        ? [extraRecipients]
+        : [];
 
     const userPlainText: string[] = [];
 
@@ -261,11 +194,11 @@ export async function POST(request: Request) {
     const skillsHtml =
       userStats.skills && userStats.skills.length > 0
         ? `<ul>${userStats.skills
-            .map((skill: any) => {
+            .map((skill: Skill) => {
               const scores =
                 skill.individualScores && skill.individualScores.length > 0
                   ? ` <small>(оцінки: ${skill.individualScores
-                      .map((s: any) => escapeHtml(s))
+                      .map((s) => escapeHtml(s))
                       .join(', ')})</small>`
                   : '';
               return `<li><strong>${escapeHtml(skill.name)}</strong>: ${escapeHtml(
@@ -360,11 +293,22 @@ moduleId: ${moduleId ?? 'n/a'}`,
             `,
           });
         }
-      } catch {
+      } catch (error) {
+        console.error('Failed to send email:', error);
       }
     }
 
-    const baseResponse: any = { success: true, message: 'Email sent successfully' };
+    interface ResponseData {
+      success: boolean;
+      message: string;
+      userId?: string | null;
+      moduleId?: string | null;
+      userStats?: UserStats;
+      userName?: string | null;
+      quizScore?: number | null;
+    }
+
+    const baseResponse: ResponseData = { success: true, message: 'Email sent successfully' };
     if (debug) {
       baseResponse.userId = userId ?? null;
       baseResponse.moduleId = moduleId ?? null;

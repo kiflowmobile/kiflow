@@ -1,13 +1,8 @@
 import nodemailer from 'nodemailer';
-import { fetchCriteriaByKeys } from '@/src/services/userSkillRatings';
+import { ratingsApi } from '@/features/statistics';
+import { dedupeSkills, escapeHtml, normalizeScore, type Skill, type ClientSkill } from '../utils/email-utils';
 
-interface ClientSkill {
-  criterion_id?: string;
-  criterion_key?: string;
-  criterion_name?: string;
-  average_score?: number;
-  score?: number;
-}
+export type { ClientSkill } from '../utils/email-utils';
 
 interface ModuleItem {
   moduleId: string;
@@ -16,7 +11,7 @@ interface ModuleItem {
   skills?: ClientSkill[];
 }
 
-interface EmailRequest {
+export interface EmailRequest {
   userEmail: string;
   userName?: string;
   courseId?: string;
@@ -29,80 +24,12 @@ interface EmailRequest {
   debug?: boolean;
 }
 
-function dedupeSkills(
-  skills: {
-    name: string;
-    key?: string;
-    score: number;
-    individualScores?: (number | string)[];
-  }[],
-) {
-  function normalizeId(s?: string) {
-    if (!s) return '';
-    try {
-      const normalized = s
-        .toString()
-        .normalize('NFKD')
-        .replace(/\p{M}/gu, '')
-        .replace(/[^\p{L}\p{N}]+/gu, ' ')
-        .trim()
-        .toLowerCase();
-      return normalized;
-    } catch {
-      return s.toString().trim().toLowerCase();
-    }
-  }
-
-  const map = new Map<
-    string,
-    { name: string; key?: string; score: number; individualScores?: (number | string)[] }
-  >();
-  const unkeyed: typeof skills = [];
-
-  for (const skill of skills) {
-    const rawId = skill.key ?? skill.name ?? '';
-    const id = normalizeId(rawId as string);
-
-    if (!id) {
-      unkeyed.push(skill);
-      continue;
-    }
-
-    const existing = map.get(id);
-    if (!existing) {
-      map.set(id, {
-        name: skill.name,
-        key: skill.key,
-        score: skill.score,
-        individualScores: skill.individualScores ? [...skill.individualScores] : undefined,
-      });
-    } else {
-      if (skill.name && skill.name.length > (existing.name ?? '').length)
-        existing.name = skill.name;
-      if (!existing.key && skill.key) existing.key = skill.key;
-
-      const avg = Math.round((((existing.score ?? 0) + (skill.score ?? 0)) / 2) * 10) / 10;
-      existing.score = avg;
-
-      if (skill.individualScores && skill.individualScores.length > 0) {
-        existing.individualScores = Array.from(
-          new Set([...(existing.individualScores ?? []), ...skill.individualScores]),
-        );
-      }
-    }
-  }
-
-  return [...map.values(), ...unkeyed];
+interface NormalizedModule extends ModuleItem {
+  skills?: ClientSkill[];
 }
 
-function escapeHtml(str: any) {
-  if (str == null) return '';
-  return String(str)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
+interface NormalizedGlobalSkills extends ClientSkill {
+  average_score: number;
 }
 
 export async function POST(request: Request) {
@@ -175,15 +102,23 @@ export async function POST(request: Request) {
           const deduped = dedupeSkills(moduleSkills);
 
           try {
-            const keys = Array.from(new Set(deduped.map((s) => s.key).filter(Boolean)));
+            const keys = Array.from(
+              new Set(deduped.map((s) => s.key).filter((k): k is string => Boolean(k)))
+            );
             if (keys.length > 0) {
-              const { data: criterias, error: criteriasError } = await fetchCriteriaByKeys(
-                keys as string[],
-              );
-              if (!criteriasError && criterias && Array.isArray(criterias) && criterias.length > 0) {
+              const { data: criterias, error: criteriasError } =
+                await ratingsApi.fetchCriteriaByKeys(keys);
+              if (
+                !criteriasError &&
+                criterias &&
+                Array.isArray(criterias) &&
+                criterias.length > 0
+              ) {
                 const nameByKey = new Map<string, string>();
-                (criterias as any[]).forEach((c) => {
-                  if (c?.key) nameByKey.set(c.key, c.name ?? c.key);
+                criterias.forEach((c) => {
+                  if (c?.key) {
+                    nameByKey.set(c.key, c.name ?? c.key);
+                  }
                 });
 
                 const finalSkills = deduped.map((s) => {
@@ -201,7 +136,7 @@ export async function POST(request: Request) {
                     criterion_name: s.name,
                     average_score: s.score,
                   })),
-                };
+                } as NormalizedModule;
               }
             }
           } catch (e) {
@@ -244,23 +179,31 @@ export async function POST(request: Request) {
       const deduped = dedupeSkills(globalSkills);
 
       try {
-        const keys = Array.from(new Set(deduped.map((s) => s.key).filter(Boolean)));
+        const keys = Array.from(
+          new Set(deduped.map((s) => s.key).filter((k): k is string => Boolean(k)))
+        );
         if (keys.length > 0) {
-          const { data: criterias, error: criteriasError } = await fetchCriteriaByKeys(
-            keys as string[],
-          );
-          if (!criteriasError && criterias && Array.isArray(criterias) && criterias.length > 0) {
+          const { data: criterias, error: criteriasError } =
+            await ratingsApi.fetchCriteriaByKeys(keys);
+          if (
+            !criteriasError &&
+            criterias &&
+            Array.isArray(criterias) &&
+            criterias.length > 0
+          ) {
             const nameByKey = new Map<string, string>();
-            (criterias as any[]).forEach((c) => {
-              if (c?.key) nameByKey.set(c.key, c.name ?? c.key);
+            criterias.forEach((c) => {
+              if (c?.key) {
+                nameByKey.set(c.key, c.name ?? c.key);
+              }
             });
 
             normalizedGlobalSkills = deduped.map((s) => ({
               criterion_id: s.key,
               criterion_key: s.key,
-              criterion_name: s.key && nameByKey.has(s.key) ? nameByKey.get(s.key)! : s.name,
+              criterion_name: (s.key && nameByKey.has(s.key) ? nameByKey.get(s.key)! : s.name) ?? '',
               average_score: s.score,
-            }));
+            })) as NormalizedGlobalSkills[];
           }
         }
       } catch (e) {
@@ -277,10 +220,7 @@ export async function POST(request: Request) {
       }
     }
 
-    let normalizedAverageScore: number | undefined = undefined;
-    if (typeof averageScore === 'number' && Number.isFinite(averageScore)) {
-      normalizedAverageScore = Math.round(averageScore * 10) / 10;
-    }
+    let normalizedAverageScore = normalizeScore(averageScore);
 
     if (
       (normalizedAverageScore === undefined || Number.isNaN(normalizedAverageScore)) &&
@@ -292,7 +232,7 @@ export async function POST(request: Request) {
         0,
       );
       const avg = sum / normalizedGlobalSkills.length;
-      normalizedAverageScore = Math.round(avg * 10) / 10;
+      normalizedAverageScore = normalizeScore(avg);
     }
 
     const modulesHtml =
@@ -464,10 +404,25 @@ export async function POST(request: Request) {
         }
       } catch (err) {
         console.error('Failed to send course completion email:', err);
+        throw err;
       }
     }
 
-    const baseResponse: any = { success: true, message: 'Course completion email sent' };
+    interface ResponseData {
+      success: boolean;
+      message: string;
+      courseId?: string | null;
+      courseTitle?: string | null;
+      modules?: ModuleItem[] | null;
+      averageScore?: number | null;
+      quizScore?: number | null;
+      skills?: ClientSkill[] | null;
+    }
+
+    const baseResponse: ResponseData = {
+      success: true,
+      message: 'Course completion email sent',
+    };
     if (debug) {
       baseResponse.courseId = courseId ?? null;
       baseResponse.courseTitle = courseTitle ?? null;
