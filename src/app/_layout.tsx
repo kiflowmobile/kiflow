@@ -1,4 +1,5 @@
 import 'react-native-reanimated';
+
 import { useEffect } from 'react';
 import { Stack, useRouter, useRootNavigationState } from 'expo-router';
 import { useFonts } from 'expo-font';
@@ -40,7 +41,7 @@ export default function RootLayout() {
   }, [user, initFromLocal]);
 
   useEffect(() => {
-    if (loaded && !isLoading && isGuest === true && isNavigationReady) {
+    if (loaded && !isLoading && isGuest && isNavigationReady) {
       // Delay navigation to the next tick so the Root navigator has a chance to mount.
       // This avoids "Attempted to navigate before mounting the Root Layout component".
       const id = setTimeout(() => {
@@ -67,18 +68,12 @@ export default function RootLayout() {
 
           <Stack.Screen
             name="courses/[id]"
-            options={{
-              headerShown: true,
-              header: () => <CustomHeader showBackButton />,
-            }}
+            options={{ headerShown: true, header: () => <CustomHeader showBackButton /> }}
           />
 
           <Stack.Screen
             name="statistics/[id]"
-            options={{
-              headerShown: true,
-              header: () => <CustomHeader showBackButton title="Course progress" />,
-            }}
+            options={{ headerShown: true, header: () => <CustomHeader showBackButton title="Course progress" /> }}
           />
 
           <Stack.Screen name="instructions" />

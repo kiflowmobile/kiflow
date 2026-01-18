@@ -1,1 +1,1 @@
-export { SignUpScreen } from '@/src/features/auth';
+export { SignUpScreen as default } from '@/src/features/auth';

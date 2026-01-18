@@ -1,1 +1,1 @@
-export { CoursesScreen } from '@/src/features/courses';
+export { CoursesScreen as default } from '@/src/features/courses';

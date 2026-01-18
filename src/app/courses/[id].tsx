@@ -1,1 +1,1 @@
-export { ModulesScreen } from '@/src/features/modules';
+export { ModulesScreen as default } from '@/src/features/modules';

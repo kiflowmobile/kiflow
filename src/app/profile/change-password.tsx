@@ -1,1 +1,1 @@
-export { ChangePasswordScreen } from '@/src/features/profile';
+export { ChangePasswordScreen as default } from '@/src/features/profile';

@@ -1,1 +1,1 @@
-export { StatisticsScreen } from '@/src/features/statistics';
+export { StatisticsScreen as default } from '@/src/features/statistics';
