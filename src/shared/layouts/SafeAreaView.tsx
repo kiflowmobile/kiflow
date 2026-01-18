@@ -1,5 +1,5 @@
 import React from 'react';
-import { SafeAreaView as RNSafeAreaView, ViewProps, StyleSheet } from 'react-native';
+import { SafeAreaView as RNSafeAreaView, ViewProps } from 'react-native';
 import { SafeAreaView as SAVContext } from 'react-native-safe-area-context';
 import clsx from 'clsx';
 
@@ -17,23 +17,19 @@ export function SafeAreaView({
   useContext = true,
   ...props
 }: SafeAreaViewProps) {
+  const containerClassName = clsx('flex-1', className);
+
   if (useContext && edges) {
     return (
-      <SAVContext edges={edges} style={[styles.container, style]} {...props}>
+      <SAVContext edges={edges} className={containerClassName} style={style} {...props}>
         {children}
       </SAVContext>
     );
   }
 
   return (
-    <RNSafeAreaView style={[styles.container, style]} {...props}>
+    <RNSafeAreaView className={containerClassName} style={style} {...props}>
       {children}
     </RNSafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-});

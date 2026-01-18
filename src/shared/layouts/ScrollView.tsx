@@ -2,7 +2,6 @@ import React from 'react';
 import {
   ScrollView as RNScrollView,
   ScrollViewProps,
-  StyleSheet,
   RefreshControl,
 } from 'react-native';
 
@@ -22,8 +21,9 @@ export function ScrollView({
 }: ScrollViewLayoutProps) {
   return (
     <RNScrollView
-      style={[styles.container, style]}
-      contentContainerStyle={styles.content}
+      className={className || 'flex-1'}
+      style={style}
+      contentContainerStyle={{ flexGrow: 1 }}
       showsVerticalScrollIndicator={false}
       refreshControl={
         onRefresh ? (
@@ -36,12 +36,3 @@ export function ScrollView({
     </RNScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  content: {
-    flexGrow: 1,
-  },
-});

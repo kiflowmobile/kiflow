@@ -1,5 +1,12 @@
 import { useColorScheme } from './useColorScheme.web';
-import { Colors } from '@/src/constants/Colors';
+
+// Color values from tailwind.config.js
+// These are used for inline styles when className isn't suitable (e.g., dynamic colors)
+const COLORS = {
+  white: '#FFFFFF', // surface
+  black: '#0A0A0A', // black
+  bg: '#F4F4F4', // background
+} as const;
 
 export function useThemeColor(
   props?: { light?: string; dark?: string },
@@ -8,18 +15,18 @@ export function useThemeColor(
   const colorScheme = useColorScheme();
   
   if (props) {
-    return colorScheme === 'dark' ? (props.dark || props.light || Colors.white) : (props.light || Colors.white);
+    return colorScheme === 'dark' ? (props.dark || props.light || COLORS.white) : (props.light || COLORS.white);
   }
   
   // Default colors based on color name
   const defaultColors: Record<string, { light: string; dark: string }> = {
-    background: { light: Colors.bg, dark: Colors.black },
-    text: { light: Colors.black, dark: Colors.white },
+    background: { light: COLORS.bg, dark: COLORS.black },
+    text: { light: COLORS.black, dark: COLORS.white },
   };
   
   if (colorName && defaultColors[colorName]) {
     return colorScheme === 'dark' ? defaultColors[colorName].dark : defaultColors[colorName].light;
   }
   
-  return Colors.white;
+  return COLORS.white;
 }

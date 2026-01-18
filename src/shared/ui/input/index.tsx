@@ -13,7 +13,7 @@ import {
   Pressable,
 } from 'react-native';
 import * as Haptics from 'expo-haptics';
-import { Colors } from '@/src/constants/Colors';
+import clsx from 'clsx';
 
 export type InputProps = TextInputProps & {
   errorMessage?: string;
@@ -108,15 +108,15 @@ export const Input = forwardRef<TextInput, InputProps>(
       }
     });
 
-    const containerStyles: StyleProp<ViewStyle> = [
-      styles.inputContainer,
-      focused && styles.inputContainerFocused,
-      isDisabled && styles.inputContainerDisabled,
-      hasError && styles.inputContainerError,
-      containerWithoutMargins,
-    ];
+    const containerClassName = clsx(
+      'w-full h-14 rounded-md bg-surface border flex-row items-center overflow-hidden',
+      focused && 'border-primary',
+      !focused && !hasError && 'border-gray-300',
+      hasError && 'border-error',
+      isDisabled && 'opacity-40'
+    );
 
-    const fieldStyles: StyleProp<TextStyle> = [styles.inputField, inputStyle];
+    const containerStyles: StyleProp<ViewStyle> = [containerWithoutMargins];
 
     const handleChangeText = (text: string) => {
       setHasText(text.length > 0);
@@ -125,14 +125,15 @@ export const Input = forwardRef<TextInput, InputProps>(
 
     return (
       <View style={wrapperMarginStyle}>
-        <View style={containerStyles}>
-          {leftIcon ? <View style={styles.iconWrapper}>{leftIcon}</View> : null}
+        <View className={containerClassName} style={containerStyles}>
+          {leftIcon ? <View className="justify-center items-center px-3">{leftIcon}</View> : null}
 
-          <View style={styles.fieldWrapper}>
+          <View className="flex-1 relative h-full justify-center">
             <TextInput
               ref={ref}
               editable={!isDisabled}
-              style={fieldStyles}
+              className="flex-1 text-black text-base px-4 py-4"
+              style={inputStyle}
               placeholder={renderCustomPlaceholder ? undefined : placeholder}
               value={value}
               defaultValue={defaultValue}
@@ -144,7 +145,10 @@ export const Input = forwardRef<TextInput, InputProps>(
             />
 
             {renderCustomPlaceholder && !hasText ? (
-              <View pointerEvents="none" style={styles.customPlaceholder}>
+              <View
+                pointerEvents="none"
+                className="absolute inset-0 justify-center px-4"
+              >
                 {renderCustomPlaceholder({ focused, hasError, disabled: isDisabled })}
               </View>
             ) : null}
@@ -152,76 +156,25 @@ export const Input = forwardRef<TextInput, InputProps>(
 
           {rightIcon ? (
             onPressRightIcon ? (
-              <Pressable style={styles.iconWrapper} onPress={onPressRightIcon} hitSlop={8}>
+              <Pressable
+                className="justify-center items-center px-3"
+                onPress={onPressRightIcon}
+                hitSlop={8}
+              >
                 {rightIcon}
               </Pressable>
             ) : (
-              <View style={styles.iconWrapper}>{rightIcon}</View>
+              <View className="justify-center items-center px-3">{rightIcon}</View>
             )
           ) : null}
         </View>
 
-        {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
+        {errorMessage ? (
+          <Text className="mt-1 ml-1 text-xs text-error">{errorMessage}</Text>
+        ) : null}
       </View>
     );
   },
 );
-
-const styles = StyleSheet.create({
-  inputContainer: {
-    width: '100%',
-    height: 56,
-    borderRadius: 8,
-    backgroundColor: Colors.white,
-    borderWidth: 1,
-    borderColor: '#E0E0E0',
-    flexDirection: 'row',
-    alignItems: 'center',
-    overflow: 'hidden',
-  },
-  inputContainerFocused: {
-    borderColor: Colors.blue,
-  },
-  inputContainerDisabled: {
-    opacity: 0.4,
-  },
-  inputContainerError: {
-    borderColor: Colors.red,
-  },
-  inputField: {
-    flex: 1,
-    color: Colors.black,
-    fontSize: 16,
-    paddingHorizontal: 16,
-    paddingVertical: 16,
-  },
-  fieldWrapper: {
-    flex: 1,
-    position: 'relative',
-    height: '100%',
-    justifyContent: 'center',
-  },
-  customPlaceholder: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    top: 0,
-    bottom: 0,
-    justifyContent: 'center',
-    paddingHorizontal: 16,
-    color: '#000',
-  },
-  iconWrapper: {
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 12,
-  },
-  errorText: {
-    marginTop: 4,
-    marginLeft: 4,
-    fontSize: 12,
-    color: Colors.red,
-  },
-});
 
 Input.displayName = 'Input';

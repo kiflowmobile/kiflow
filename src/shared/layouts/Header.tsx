@@ -1,8 +1,7 @@
 import React from 'react';
-import { StyleSheet, TouchableOpacity, View, Text } from 'react-native';
+import { TouchableOpacity, View, Text } from 'react-native';
 import { Href, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Colors } from '@/src/constants/Colors';
 import BackIcon from '@/src/assets/images/arrow-left.svg';
 
 export interface HeaderProps {
@@ -42,11 +41,11 @@ export function Header({
   };
 
   return (
-    <View style={[styles.headerContainer, { paddingTop: insets.top }]}>
-      <View style={styles.headerContent}>
+    <View className="bg-background" style={{ paddingTop: insets.top }}>
+      <View className="flex-row items-center px-3 py-4">
         {showBackButton && (
           <TouchableOpacity
-            style={styles.backButton}
+            className="mr-2"
             onPress={handleBack}
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           >
@@ -54,37 +53,12 @@ export function Header({
           </TouchableOpacity>
         )}
 
-        <Text style={styles.title} numberOfLines={1}>
+        <Text className="flex-1 text-base font-primary font-medium text-black" numberOfLines={1}>
           {title}
         </Text>
 
-        {rightAction && <View style={styles.rightAction}>{rightAction}</View>}
+        {rightAction && <View className="ml-2">{rightAction}</View>}
       </View>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  headerContainer: {
-    backgroundColor: Colors.bg,
-  },
-  headerContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 16,
-  },
-  backButton: {
-    marginRight: 8,
-  },
-  title: {
-    flex: 1,
-    fontSize: 16,
-    fontFamily: 'RobotoCondensed',
-    fontWeight: '500',
-    color: '#000',
-  },
-  rightAction: {
-    marginLeft: 8,
-  },
-});

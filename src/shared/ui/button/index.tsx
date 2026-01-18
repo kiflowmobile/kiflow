@@ -6,14 +6,12 @@ import {
   ImageSourcePropType,
   Pressable,
   StyleProp,
-  StyleSheet,
   Text,
   TextStyle,
   View,
   ViewStyle,
 } from 'react-native';
-import { Colors } from '@/src/constants/Colors';
-import { FONT_FAMILY, FONT_SIZE, TEXT_VARIANTS } from '@/src/constants/Fonts';
+import clsx from 'clsx';
 
 export type ButtonVariant = 'dark' | 'light' | 'accent' | 'outline';
 export type ButtonSize = 'sm' | 'md' | 'lg';
@@ -50,19 +48,15 @@ interface ButtonProps {
 
 /**
  * Вариант + состояния (default, pressed, disabled)
+ * Only custom colors for pressed/disabled states that aren't in Tailwind
  */
 const VARIANT_STYLES: Record<ButtonVariant, VariantStateStyles> = {
   dark: {
-    container: {
-      backgroundColor: Colors.black,
-      borderColor: Colors.black,
-    },
-    text: {
-      color: Colors.white,
-    },
+    container: {},
+    text: {},
     pressed: {
       container: {
-        backgroundColor: '#111111',
+        backgroundColor: '#111111', // Slightly lighter black for pressed
       },
     },
     disabled: {
@@ -70,22 +64,15 @@ const VARIANT_STYLES: Record<ButtonVariant, VariantStateStyles> = {
         backgroundColor: '#d4d4d4',
         borderColor: '#d4d4d4',
       },
-      text: {
-        color: Colors.white,
-      },
+      text: {},
     },
   },
   light: {
-    container: {
-      backgroundColor: Colors.white,
-      borderColor: Colors.white,
-    },
-    text: {
-      color: Colors.black,
-    },
+    container: {},
+    text: {},
     pressed: {
       container: {
-        backgroundColor: '#f2f2f2',
+        backgroundColor: '#f2f2f2', // Slightly darker white for pressed
       },
     },
     disabled: {
@@ -98,16 +85,11 @@ const VARIANT_STYLES: Record<ButtonVariant, VariantStateStyles> = {
     },
   },
   accent: {
-    container: {
-      backgroundColor: Colors.buttonBlue,
-      borderColor: Colors.buttonBlue,
-    },
-    text: {
-      color: Colors.black,
-    },
+    container: {},
+    text: {},
     pressed: {
       container: {
-        backgroundColor: '#5aa9ff',
+        backgroundColor: '#5aa9ff', // Custom pressed color
       },
     },
     disabled: {
@@ -120,14 +102,8 @@ const VARIANT_STYLES: Record<ButtonVariant, VariantStateStyles> = {
     },
   },
   outline: {
-    container: {
-      backgroundColor: 'transparent',
-      borderColor: Colors.white,
-    },
-    text: {
-      color: Colors.white,
-      fontSize: FONT_SIZE.lg,
-    },
+    container: {},
+    text: {},
     pressed: {
       container: {
         backgroundColor: 'rgba(255,255,255,0.08)',
@@ -216,15 +192,15 @@ export const Button: React.FC<ButtonProps> = ({
     () => ({
       left:
         icon && iconPosition === 'left' ? (
-          <View style={styles.iconWrapper}>{icon}</View>
+          <View className="mx-2">{icon}</View>
         ) : image && imagePosition === 'left' ? (
-          <Image source={image} style={styles.image} />
+          <Image source={image} className="w-5 h-5 mx-2" />
         ) : null,
       right:
         icon && iconPosition === 'right' ? (
-          <View style={styles.iconWrapper}>{icon}</View>
+          <View className="mx-2">{icon}</View>
         ) : image && imagePosition === 'right' ? (
-          <Image source={image} style={styles.image} />
+          <Image source={image} className="w-5 h-5 mx-2" />
         ) : null,
     }),
     [icon, iconPosition, image, imagePosition],
@@ -251,27 +227,55 @@ export const Button: React.FC<ButtonProps> = ({
       {({ pressed }) => {
         const isPressed = pressed && !isDisabled;
 
+        const baseClasses = 'rounded-md border-2 items-center justify-center flex-row';
+        const sizeClasses = {
+          sm: 'py-1 px-2 min-h-[32px]',
+          md: 'py-2 px-6 min-h-[48px]',
+          lg: 'py-4 px-6 min-h-[56px]',
+        };
+        const variantClasses = {
+          dark: 'bg-black border-black',
+          light: 'bg-surface border-surface',
+          accent: 'bg-primary-light border-primary-light',
+          outline: 'bg-transparent border-surface',
+        };
+
         return (
           <View
+            className={clsx(
+              baseClasses,
+              sizeClasses[size],
+              variantClasses[variant],
+              isDisabled && variant === 'dark' && 'bg-gray-400 border-gray-400',
+              isDisabled && variant === 'light' && 'bg-gray-200',
+              isDisabled && variant === 'accent' && 'bg-blue-400',
+              isDisabled && 'opacity-40'
+            )}
             style={[
-              styles.base,
-              variantTheme.container,
               sizeTheme.container,
               isPressed && variantTheme.pressed?.container,
-              isDisabled && (variantTheme.disabled?.container || styles.disabled),
+              isDisabled && variantTheme.disabled?.container,
               !hasFlex && style,
             ]}
           >
-            <View style={styles.content}>
+            <View className="flex-row items-center justify-center">
               {adornment.left}
 
               <Text
+                className={clsx(
+                  'font-primary font-semibold text-center',
+                  size === 'sm' && 'text-sm',
+                  (size === 'md' || size === 'lg') && 'text-md',
+                  variant === 'dark' && (isDisabled ? 'text-white' : 'text-white'),
+                  variant === 'light' && (isDisabled ? 'text-gray-500' : 'text-black'),
+                  variant === 'accent' && (isDisabled ? 'text-gray-800' : 'text-black'),
+                  variant === 'outline' && (isDisabled ? 'text-white/60' : 'text-white'),
+                  isDisabled && 'opacity-60'
+                )}
                 style={[
-                  styles.text,
-                  variantTheme.text,
                   sizeTheme.text,
                   isPressed && variantTheme.pressed?.text,
-                  isDisabled && (variantTheme.disabled?.text || styles.disabledText),
+                  isDisabled && variantTheme.disabled?.text,
                   textStyle,
                 ]}
               >
@@ -280,10 +284,10 @@ export const Button: React.FC<ButtonProps> = ({
 
               {loading && (
                 <ActivityIndicator
-                  style={styles.spinner}
+                  className="ml-2"
                   color={
                     (isDisabled ? variantTheme.disabled?.text?.color : variantTheme.text?.color) ||
-                    Colors.white
+                    '#FFFFFF'
                   }
                   size="small"
                 />
@@ -304,40 +308,3 @@ export const Button: React.FC<ButtonProps> = ({
 
   return pressableContent;
 };
-
-const styles = StyleSheet.create({
-  base: {
-    borderRadius: 8,
-    borderWidth: 2,
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexDirection: 'row',
-  },
-  content: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  image: {
-    width: 20,
-    height: 20,
-    marginHorizontal: 8,
-  },
-  iconWrapper: {
-    marginHorizontal: 8,
-  },
-  text: {
-    ...TEXT_VARIANTS.button,
-    textAlign: 'center',
-    fontFamily: FONT_FAMILY.primary,
-  },
-  disabled: {
-    opacity: 0.4,
-  },
-  disabledText: {
-    opacity: 0.6,
-  },
-  spinner: {
-    marginLeft: 8,
-  },
-});

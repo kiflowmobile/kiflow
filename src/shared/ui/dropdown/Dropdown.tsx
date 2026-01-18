@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Animated, FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Animated, FlatList, Text, TouchableOpacity, View } from 'react-native';
+import clsx from 'clsx';
 
 type DropdownItemType = {
   id: string;
@@ -57,23 +58,30 @@ export function Dropdown({ label, items, selected, onSelect, disabled }: Dropdow
   };
 
   return (
-    <View style={styles.container}>
+    <View className="my-2.5 z-[1000]">
       <TouchableOpacity
-        style={[styles.dropdownButton, disabled && styles.disabled]}
+        className={clsx(
+          'p-3 bg-gray-200 rounded-md',
+          disabled && 'bg-gray-300'
+        )}
         onPress={() => !disabled && setIsOpen(!isOpen)}
       >
         {/* Показываем имя выбранного элемента (если есть), иначе лейбл */}
-        <Text style={styles.buttonText}>{items.find((i) => i.id === selected)?.name ?? label}</Text>
+        <Text className="text-base">{items.find((i) => i.id === selected)?.name ?? label}</Text>
       </TouchableOpacity>
 
       <Animated.View
-        style={[styles.dropdownList, { maxHeight: animatedHeight, opacity: animatedOpacity }]}
+        className="absolute top-[50px] left-0 right-0 overflow-hidden bg-surface border border-gray-300 rounded-md z-[1000]"
+        style={{ maxHeight: animatedHeight, opacity: animatedOpacity, elevation: 5 }}
       >
         <FlatList
           data={items}
           keyExtractor={(item) => item.id}
           renderItem={({ item }) => (
-            <TouchableOpacity style={styles.dropdownItem} onPress={() => handleSelect(item.id)}>
+            <TouchableOpacity
+              className="p-3 border-b border-gray-300"
+              onPress={() => handleSelect(item.id)}
+            >
               <Text>{item.name}</Text>
             </TouchableOpacity>
           )}
@@ -82,34 +90,3 @@ export function Dropdown({ label, items, selected, onSelect, disabled }: Dropdow
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { marginVertical: 10, zIndex: 1000 },
-  dropdownButton: {
-    padding: 12,
-    backgroundColor: '#eee',
-    borderRadius: 6,
-  },
-  disabled: {
-    backgroundColor: '#ddd',
-  },
-  buttonText: { fontSize: 16 },
-  dropdownList: {
-    position: 'absolute',
-    top: 50,
-    left: 0,
-    right: 0,
-    overflow: 'hidden',
-    backgroundColor: '#fff',
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 6,
-    zIndex: 1000,
-    elevation: 5,
-  },
-  dropdownItem: {
-    padding: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#ddd',
-  },
-});

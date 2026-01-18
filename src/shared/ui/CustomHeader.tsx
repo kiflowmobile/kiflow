@@ -1,8 +1,6 @@
-import { Colors } from '@/src/constants/Colors';
 import { Href, useRouter } from 'expo-router';
 import BackIcon from '@/src/assets/images/arrow-left.svg';
-
-import { StyleSheet, TouchableOpacity, View, Text } from 'react-native';
+import { TouchableOpacity, View, Text } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 type CustomHeaderProps = {
@@ -28,11 +26,11 @@ export function CustomHeader({ showBackButton = true, title = 'Courses' }: Custo
   };
 
   return (
-    <View style={[styles.headerContainer, { paddingTop: insets.top }]}>
-      <View style={styles.headerContent}>
+    <View className="bg-background" style={{ paddingTop: insets.top }}>
+      <View className="flex-row items-center px-3 py-4">
         {showBackButton && (
           <TouchableOpacity
-            style={styles.backButton}
+            className="mr-2"
             onPress={handleBack}
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           >
@@ -40,29 +38,8 @@ export function CustomHeader({ showBackButton = true, title = 'Courses' }: Custo
           </TouchableOpacity>
         )}
 
-        <Text style={styles.title}>{title}</Text>
+        <Text className="text-base font-primary font-medium text-black">{title}</Text>
       </View>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  headerContainer: {
-    backgroundColor: Colors.bg,
-  },
-  headerContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 16,
-  },
-  backButton: {
-    marginRight: 8,
-  },
-  title: {
-    fontSize: 16,
-    fontFamily: 'RobotoCondensed',
-    fontWeight: '500',
-    color: '#000',
-  },
-});
