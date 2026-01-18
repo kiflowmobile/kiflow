@@ -2,7 +2,7 @@ import { Tabs } from 'expo-router';
 import { Platform } from 'react-native';
 
 import { useAnalytics } from '@/features/analytics';
-import { CustomHeader } from '@/shared/ui';
+import { Header } from '@/shared/components/header';
 
 import CoursesIconActive from '@/src/assets/images/courses-active.svg';
 import CoursesIconInactive from '@/src/assets/images/courses-inactive.svg';
@@ -44,7 +44,7 @@ export default function TabsLayout() {
               <CoursesIconInactive width={24} height={24} />
             ),
           headerShown: true,
-          header: () => <CustomHeader showBackButton={false} title="Courses" />,
+          header: () => <Header showBackButton={false} title="Courses" />,
         }}
         listeners={{
           focus: () => trackEvent('tab_bar__courses__click'),
@@ -56,7 +56,7 @@ export default function TabsLayout() {
         options={{
           title: 'Progress',
           headerShown: true,
-          header: () => <CustomHeader showBackButton={false} title="Your Progress" />,
+          header: () => <Header showBackButton={false} title="Your Progress" />,
           tabBarIcon: ({ focused }: { focused: boolean; color: string; size: number }) =>
             focused ? (
               <ProgressIconActive width={24} height={24} />

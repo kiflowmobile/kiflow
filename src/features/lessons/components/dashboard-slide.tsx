@@ -6,7 +6,8 @@ import Svg, { Path } from 'react-native-svg';
 import { useAuthStore } from '@/features/auth/store/authStore';
 import { useModulesStore } from '@/features/modules/store/modulesStore';
 import { useMainRatingStore } from '@/features/statistics/store/ratingsStore';
-import { SkillsChart } from '@/shared/ui';
+
+import { SkillsChart } from './skills-chart';
 
 interface DashboardSlideProps {
   title: string;

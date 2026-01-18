@@ -1,4 +1,5 @@
 import 'react-native-reanimated';
+import '../../global.css';
 
 import { useEffect } from 'react';
 import { Stack, useRouter, useRootNavigationState } from 'expo-router';
@@ -8,7 +9,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { useAuthStore } from '@/features/auth';
 import { useUserProgressStore } from '@/features/progress';
-import { CustomHeader } from '@/shared/ui';
+import { Header } from '@/shared/components/header';
 
 import { initFirebase } from '@/shared/lib/firebase';
 import { initAmplitude } from '@/shared/lib/amplitude';
@@ -68,14 +69,14 @@ export default function RootLayout() {
 
           <Stack.Screen
             name="courses/[id]"
-            options={{ headerShown: true, header: () => <CustomHeader showBackButton /> }}
+            options={{ headerShown: true, header: () => <Header showBackButton /> }}
           />
 
           <Stack.Screen
             name="statistics/[id]"
             options={{
               headerShown: true,
-              header: () => <CustomHeader showBackButton title="Course progress" />,
+              header: () => <Header showBackButton title="Course progress" />,
             }}
           />
 

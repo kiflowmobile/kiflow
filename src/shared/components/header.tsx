@@ -3,12 +3,12 @@ import BackIcon from '@/src/assets/images/arrow-left.svg';
 import { TouchableOpacity, View, Text } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-type CustomHeaderProps = {
+type HeaderProps = {
   showBackButton?: boolean;
   title?: string;
 };
 
-export function CustomHeader({ showBackButton = true, title = 'Courses' }: CustomHeaderProps) {
+export function Header({ showBackButton = true, title = 'Courses' }: HeaderProps) {
   const router = useRouter();
   const insets = useSafeAreaInsets();
 

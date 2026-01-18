@@ -3,7 +3,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { ScrollView, View } from 'react-native';
 import { useRouter } from 'expo-router';
 
-import { Button, CustomHeader } from '@/shared/ui';
+import { Button } from '@/shared/ui';
+import { Header } from '@/shared/components/header';
 import { ProfileField } from './profile-field';
 import { useAuthStore } from '@/features/auth';
 
@@ -99,7 +100,7 @@ export function ChangePasswordScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-background">
-      <CustomHeader title="Change password" showBackButton />
+      <Header title="Change password" showBackButton />
 
       <ScrollView
         contentContainerStyle={{ padding: 16, paddingBottom: 120 }}

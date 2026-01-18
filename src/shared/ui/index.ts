@@ -3,6 +3,8 @@ export { Box } from './box';
 export { VStack } from './vstack';
 export { HStack } from './hstack';
 export { View } from './view';
+export { ThemedText } from './ThemedText';
+export { ThemedView } from './ThemedView';
 
 // Form components
 export { Button } from './button';
@@ -34,8 +36,4 @@ export { IconSymbol } from './IconSymbol';
 
 // Other
 export { Dropdown } from './dropdown/Dropdown';
-export { CustomHeader } from './CustomHeader';
-export { ThemedText } from './ThemedText';
-export { ThemedView } from './ThemedView';
-export { SkillsChart } from './SkillsChart';
 export { VideoPlayer } from './video-player';
