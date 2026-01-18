@@ -11,18 +11,12 @@ export function useSlides() {
   const isLoading = useSlidesStore((state) => state.isLoading);
   const error = useSlidesStore((state) => state.error);
 
-  const fetchSlidesByLessons = useSlidesStore(
-    (state) => state.fetchSlidesByLessons
-  );
-  const setCurrentSlideIndex = useSlidesStore(
-    (state) => state.setCurrentSlideIndex
-  );
+  const fetchSlidesByLessons = useSlidesStore((state) => state.fetchSlidesByLessons);
+  const setCurrentSlideIndex = useSlidesStore((state) => state.setCurrentSlideIndex);
   const nextSlide = useSlidesStore((state) => state.nextSlide);
   const previousSlide = useSlidesStore((state) => state.previousSlide);
   const setSlides = useSlidesStore((state) => state.setSlides);
-  const setCurrentModuleId = useSlidesStore(
-    (state) => state.setCurrentModuleId
-  );
+  const setCurrentModuleId = useSlidesStore((state) => state.setCurrentModuleId);
   const getCurrentSlideId = useSlidesStore((state) => state.getCurrentSlideId);
   const clearError = useSlidesStore((state) => state.clearError);
   const clearSlides = useSlidesStore((state) => state.clearSlides);
@@ -60,9 +54,7 @@ export function useSlideAnswers() {
   const answeredBySlideId = useSlidesStore((state) => state.answeredBySlideId);
   const isSlideAnswered = useSlidesStore((state) => state.isSlideAnswered);
   const markSlideAnswered = useSlidesStore((state) => state.markSlideAnswered);
-  const clearAnsweredSlides = useSlidesStore(
-    (state) => state.clearAnsweredSlides
-  );
+  const clearAnsweredSlides = useSlidesStore((state) => state.clearAnsweredSlides);
 
   return {
     answeredBySlideId,
@@ -91,9 +83,7 @@ export function useSlideNavigation() {
   const slides = useSlidesStore((state) => state.slides);
   const nextSlide = useSlidesStore((state) => state.nextSlide);
   const previousSlide = useSlidesStore((state) => state.previousSlide);
-  const setCurrentSlideIndex = useSlidesStore(
-    (state) => state.setCurrentSlideIndex
-  );
+  const setCurrentSlideIndex = useSlidesStore((state) => state.setCurrentSlideIndex);
 
   const canGoNext = currentSlideIndex < slides.length - 1;
   const canGoPrevious = currentSlideIndex > 0;

@@ -22,4 +22,3 @@ export const AIChatMessages: React.FC<ChatMessagesProps> = ({ messages, loading 
     {loading && <MessageBubble id="ai-thinking" role="ai" text="AI думає..." />}
   </View>
 );
-

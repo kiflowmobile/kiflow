@@ -39,12 +39,7 @@ export interface SkillRatingsState {
 export interface SkillRatingsActions {
   fetchAverage: (userId: string, moduleId: string) => Promise<void>;
   fetchSkills: (userId: string, moduleId: string) => Promise<void>;
-  saveRating: (
-    userId: string,
-    rating: number,
-    moduleId: string,
-    key: string
-  ) => Promise<void>;
+  saveRating: (userId: string, rating: number, moduleId: string, key: string) => Promise<void>;
   fetchUserAverage: (userId: string) => Promise<void>;
   fetchUserRatings: (userId: string) => Promise<void>;
   clear: () => void;

@@ -14,4 +14,3 @@ export const QuizBadge: React.FC<Props> = ({ title }) => {
     </View>
   );
 };
-

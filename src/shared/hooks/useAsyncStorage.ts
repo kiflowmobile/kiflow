@@ -31,7 +31,7 @@ export function useAsyncStorage<T>(key: string, initialValue: T) {
         console.error(`Error saving ${key} to AsyncStorage:`, error);
       }
     },
-    [key, storedValue]
+    [key, storedValue],
   );
 
   const removeValue = useCallback(async () => {
@@ -58,7 +58,7 @@ export const asyncStorageUtils = {
           key.startsWith('user-progress-') ||
           key.startsWith('quizProgress') ||
           key.startsWith('lesson-progress-') ||
-          key.startsWith('progress_')
+          key.startsWith('progress_'),
       );
 
       if (keysToRemove.length > 0) {

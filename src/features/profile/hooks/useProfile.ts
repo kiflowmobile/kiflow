@@ -19,8 +19,7 @@ export function useProfile() {
       if (apiError) throw apiError;
       setProfile(data);
     } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : 'Failed to fetch profile';
+      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch profile';
       setError(errorMessage);
     } finally {
       setIsLoading(false);
@@ -32,14 +31,12 @@ export function useProfile() {
     setError(null);
 
     try {
-      const { data, error: apiError } =
-        await profileApi.updateCurrentUserProfile(updateData);
+      const { data, error: apiError } = await profileApi.updateCurrentUserProfile(updateData);
       if (apiError) throw apiError;
       setProfile(data);
       return data;
     } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : 'Failed to update profile';
+      const errorMessage = err instanceof Error ? err.message : 'Failed to update profile';
       setError(errorMessage);
       return null;
     } finally {

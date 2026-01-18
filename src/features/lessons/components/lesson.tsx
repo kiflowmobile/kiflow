@@ -23,10 +23,7 @@ interface CourseSlideProps {
   setScrollEnabled?: (enabled: boolean) => void;
 }
 
-export const LessonSlide: React.FC<CourseSlideProps> = ({
-  slideId,
-  isActive,
-}) => {
+export const LessonSlide: React.FC<CourseSlideProps> = ({ slideId, isActive }) => {
   const { slides, isLoading, error } = useSlidesStore();
   const { modules } = useModulesStore();
 

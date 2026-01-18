@@ -101,14 +101,7 @@ export type Slide =
   | DashboardSlide;
 
 // Slide type enum
-export type SlideType =
-  | 'text'
-  | 'video'
-  | 'quiz'
-  | 'content'
-  | 'completion'
-  | 'ai'
-  | 'dashboard';
+export type SlideType = 'text' | 'video' | 'quiz' | 'content' | 'completion' | 'ai' | 'dashboard';
 
 // Store state types
 export interface LessonsState {

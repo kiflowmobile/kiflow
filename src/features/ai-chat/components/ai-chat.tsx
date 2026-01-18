@@ -1,11 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import {
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  TextInput,
-  View,
-} from 'react-native';
+import { KeyboardAvoidingView, Platform, ScrollView, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -51,7 +45,7 @@ export const AIChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
   const CHAT_STORAGE_KEY = `course-chat-${courseIdStr}`;
 
   // Derived state: User message count & Locking
-  const userMessageCount = messages.filter(m => m.role === 'user').length;
+  const userMessageCount = messages.filter((m) => m.role === 'user').length;
   const isLocked = userMessageCount >= 3;
 
   const loadChat = async () => {
@@ -67,7 +61,7 @@ export const AIChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
       console.error('Error loading chat:', err);
     }
   };
-  
+
   const lockPageScroll = () => {
     if (Platform.OS !== 'web' || pageScrollLockedRef.current) return;
     const y = window.scrollY || 0;
@@ -142,7 +136,6 @@ export const AIChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
     checkStorageAndSetInitial();
   }, [slideId, prompt, messages.length, CHAT_STORAGE_KEY]);
 
-
   const handleSend = async () => {
     trackEvent('course_screen__submit__click', { courseIdStr, slideId });
     if (!input.trim() || loading) return;
@@ -160,9 +153,7 @@ export const AIChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
 
     try {
       const systemInstruction = prompt[slideId]?.system_instruction || '';
-      const criteriasText = criterias
-        .map((item) => `${item.key} - ${item.name.trim()}`)
-        .join('\n');
+      const criteriasText = criterias.map((item) => `${item.key} - ${item.name.trim()}`).join('\n');
 
       // Resolve Company ID
       let companyIdToUse: string | undefined = undefined;
@@ -197,8 +188,8 @@ export const AIChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
         // Parallel save
         Promise.allSettled(
           Object.entries(criteriaScores).map(([criteriaKey, score]) =>
-            saveRating(user.id, score as number, moduleIdStr, criteriaKey)
-          )
+            saveRating(user.id, score as number, moduleIdStr, criteriaKey),
+          ),
         ).catch((err) => console.warn('Failed saving ratings', err));
       }
 
@@ -282,4 +273,3 @@ export const AIChat: React.FC<AICourseChatProps> = ({ title, slideId }) => {
     </SafeAreaView>
   );
 };
-

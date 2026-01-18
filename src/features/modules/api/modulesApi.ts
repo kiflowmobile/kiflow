@@ -41,11 +41,7 @@ export const modulesApi = {
    * Get a single module by ID
    */
   getModuleById: async (moduleId: string): Promise<ApiResponse<Module>> => {
-    const { data, error } = await supabase
-      .from('modules')
-      .select('*')
-      .eq('id', moduleId)
-      .single();
+    const { data, error } = await supabase.from('modules').select('*').eq('id', moduleId).single();
 
     return { data, error };
   },
@@ -53,9 +49,7 @@ export const modulesApi = {
   /**
    * Get the module ID for a given lesson
    */
-  getModuleIdByLessonId: async (
-    lessonId: string
-  ): Promise<ApiResponse<{ module_id: string }>> => {
+  getModuleIdByLessonId: async (lessonId: string): Promise<ApiResponse<{ module_id: string }>> => {
     const { data, error } = await supabase
       .from('lessons')
       .select('module_id')

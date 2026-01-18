@@ -22,8 +22,7 @@ export const useModulesStore = create<ModuleStore>()((set, get) => ({
         error: null,
       });
     } catch (error: unknown) {
-      const errorMessage =
-        error instanceof Error ? error.message : 'Failed to fetch modules';
+      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch modules';
       console.error('ModulesStore: Error fetching modules:', error);
       set({
         error: errorMessage,
@@ -46,8 +45,7 @@ export const useModulesStore = create<ModuleStore>()((set, get) => ({
         error: null,
       });
     } catch (error: unknown) {
-      const errorMessage =
-        error instanceof Error ? error.message : 'Failed to fetch modules';
+      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch modules';
       set({
         error: errorMessage,
         isLoading: false,

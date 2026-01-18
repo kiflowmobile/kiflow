@@ -14,11 +14,7 @@ export const profileApi = {
    */
   getUserById: async (userId: string): Promise<ApiResponse<User>> => {
     try {
-      const { data, error } = await supabase
-        .from('users')
-        .select('*')
-        .eq('id', userId)
-        .single();
+      const { data, error } = await supabase.from('users').select('*').eq('id', userId).single();
 
       return { data, error };
     } catch (err) {
@@ -50,7 +46,7 @@ export const profileApi = {
    */
   updateUserProfile: async (
     userId: string,
-    updateData: UserUpdateData
+    updateData: UserUpdateData,
   ): Promise<ApiResponse<User>> => {
     try {
       const { data, error } = await supabase
@@ -71,9 +67,7 @@ export const profileApi = {
   /**
    * Update current user's profile
    */
-  updateCurrentUserProfile: async (
-    updateData: UserUpdateData
-  ): Promise<ApiResponse<User>> => {
+  updateCurrentUserProfile: async (updateData: UserUpdateData): Promise<ApiResponse<User>> => {
     try {
       const authUser = await getCurrentUser();
 
@@ -93,7 +87,7 @@ export const profileApi = {
    */
   upsertUserProfile: async (
     userId: string,
-    userData: Partial<User>
+    userData: Partial<User>,
   ): Promise<ApiResponse<User>> => {
     try {
       const { data, error } = await supabase
@@ -103,7 +97,7 @@ export const profileApi = {
             id: userId,
             ...userData,
           } as any,
-          { onConflict: 'id' }
+          { onConflict: 'id' },
         )
         .select()
         .single();
@@ -127,11 +121,13 @@ export const profileApi = {
 
       const { data, error } = await supabase
         .from('company_members')
-        .select(`
+        .select(
+          `
           company_id,
           joined_via_code,
           companies (code)
-        `)
+        `,
+        )
         .eq('user_id', user.id)
         .order('created_at', { ascending: false })
         .limit(1)

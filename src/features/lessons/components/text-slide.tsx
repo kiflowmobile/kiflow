@@ -74,4 +74,3 @@ export const TextSlide: React.FC<TextSlideProps> = ({ title, data, subtitle }) =
     </SafeAreaView>
   );
 };
-

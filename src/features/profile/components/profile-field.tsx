@@ -35,15 +35,11 @@ export function ProfileField({
         onChangeText={isEditable && onValueChange ? onValueChange : undefined}
         disabled={isDisabled}
         placeholder={isEditable ? placeholder : undefined}
-        containerStyle={[
-          isDisabled && { backgroundColor: '#FFFFFF', borderColor: '#404040' },
-        ]}
+        containerStyle={[isDisabled && { backgroundColor: '#FFFFFF', borderColor: '#404040' }]}
         inputStyle={isDisabled ? { color: '#404040' } : undefined}
         renderCustomPlaceholder={
           isDisabled && !hasValue
-            ? () => (
-                <Text className="text-sm text-gray-400/80">Не вказано</Text>
-              )
+            ? () => <Text className="text-sm text-gray-400/80">Не вказано</Text>
             : undefined
         }
         {...inputProps}

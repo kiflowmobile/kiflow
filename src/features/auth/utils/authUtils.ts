@@ -40,12 +40,7 @@ export const mapAuthErrorToMessage = (err: AuthError): string => {
   const status = err?.status;
   const msg = (err?.message || '').toLowerCase();
 
-  if (
-    status === 400 ||
-    status === 401 ||
-    msg.includes('invalid') ||
-    msg.includes('credentials')
-  ) {
+  if (status === 400 || status === 401 || msg.includes('invalid') || msg.includes('credentials')) {
     return 'Incorrect email or password';
   }
   if (status === 403 || msg.includes('unconfirmed') || msg.includes('blocked')) {
@@ -70,7 +65,7 @@ export const mapAuthErrorToMessage = (err: AuthError): string => {
  * Check if user session is guest/anonymous
  */
 export const isGuestSession = (
-  session: { user?: { is_anonymous?: boolean } | null } | null
+  session: { user?: { is_anonymous?: boolean } | null } | null,
 ): boolean => {
   return !session || !session.user || session.user.is_anonymous === true;
 };

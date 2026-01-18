@@ -10,30 +10,27 @@ import { SkillsChart } from '@/shared/ui';
 
 interface DashboardSlideProps {
   title: string;
-  courseId: string
+  courseId: string;
 }
 
-const calculateQuizRating = (quizData: Record<string, { selectedAnswer: number; correctAnswer: number }>) => {
+const calculateQuizRating = (
+  quizData: Record<string, { selectedAnswer: number; correctAnswer: number }>,
+) => {
   const entries = Object.values(quizData);
   const total = entries.length;
   if (total === 0) return 0;
 
-  const correct = entries.filter(q => q.selectedAnswer === q.correctAnswer).length;
+  const correct = entries.filter((q) => q.selectedAnswer === q.correctAnswer).length;
   const rating = (correct / total) * 5;
 
-  return Number(rating.toFixed(1)); 
+  return Number(rating.toFixed(1));
 };
 
 export const DashboardSlide: React.FC<DashboardSlideProps> = ({ courseId, title }) => {
   const { user } = useAuthStore();
   const currentModuleId = useModulesStore.getState().currentModule?.id;
 
-  const {
-    average,
-    skills,
-    fetchAverage,
-    fetchSkills,
-  } = useMainRatingStore();
+  const { average, skills, fetchAverage, fetchSkills } = useMainRatingStore();
   const [quizRatings, setQuizRatings] = useState<number | null>(null);
 
   useEffect(() => {
@@ -43,15 +40,13 @@ export const DashboardSlide: React.FC<DashboardSlideProps> = ({ courseId, title 
         if (!stored) return;
         const parsed = JSON.parse(stored);
 
-        
-  
         const quizScore = calculateQuizRating(parsed);
         setQuizRatings(quizScore);
       } catch (err) {
         console.error('Error loading quiz ratings:', err);
       }
     };
-  
+
     if (courseId) loadQuizRatings();
   }, [courseId]);
 
@@ -69,7 +64,6 @@ export const DashboardSlide: React.FC<DashboardSlideProps> = ({ courseId, title 
     }
     return '...';
   }, [quizRatings, average]);
-
 
   return (
     <View className="flex-1 p-4 items-center justify-center bg-surface">
@@ -102,9 +96,7 @@ export const DashboardSlide: React.FC<DashboardSlideProps> = ({ courseId, title 
               {average !== null && (
                 <View className="flex-1 rounded-xl p-3 items-center bg-green-100">
                   <Text className="text-xs text-slate-600 mb-1">Середній бал</Text>
-                  <Text className="text-lg font-bold text-green-700">
-                    {average.toFixed(1)} /5
-                  </Text>
+                  <Text className="text-lg font-bold text-green-700">{average.toFixed(1)} /5</Text>
                 </View>
               )}
               <View className="flex-1 rounded-xl p-3 items-center bg-purple-100">
@@ -125,5 +117,3 @@ export const DashboardSlide: React.FC<DashboardSlideProps> = ({ courseId, title 
     </View>
   );
 };
-
-

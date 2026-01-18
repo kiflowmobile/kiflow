@@ -4,10 +4,7 @@ import type { Course, CompanyCourse } from '../types';
 export const coursesApi = {
   async getPublicCourses(): Promise<ApiResponse<Course[]>> {
     try {
-      const { data, error } = await supabase
-        .from('courses')
-        .select('*')
-        .eq('is_public', true);
+      const { data, error } = await supabase.from('courses').select('*').eq('is_public', true);
 
       if (error) {
         return { data: null, error: new Error(error.message) };
@@ -44,10 +41,7 @@ export const coursesApi = {
       const courseIds = companyCourses.map((item: any) => item.course_id);
 
       // Then fetch the actual courses
-      const { data, error } = await supabase
-        .from('courses')
-        .select('*')
-        .in('id', courseIds);
+      const { data, error } = await supabase.from('courses').select('*').in('id', courseIds);
 
       if (error) {
         return { data: null, error: new Error(error.message) };
@@ -68,10 +62,7 @@ export const coursesApi = {
     }
 
     try {
-      const { data, error } = await supabase
-        .from('courses')
-        .select('*')
-        .in('id', courseIds);
+      const { data, error } = await supabase.from('courses').select('*').in('id', courseIds);
 
       if (error) {
         return { data: null, error: new Error(error.message) };
@@ -88,11 +79,7 @@ export const coursesApi = {
 
   async getCourseById(id: string): Promise<ApiResponse<Course>> {
     try {
-      const { data, error } = await supabase
-        .from('courses')
-        .select('*')
-        .eq('id', id)
-        .single();
+      const { data, error } = await supabase.from('courses').select('*').eq('id', id).single();
 
       if (error) {
         return { data: null, error: new Error(error.message) };

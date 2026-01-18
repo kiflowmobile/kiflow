@@ -25,8 +25,7 @@ export const useCriteriaStore = create<CriteriaStoreWithCompat>()((set, get) => 
 
       set({ criteria: data || [], isLoading: false });
     } catch (err: unknown) {
-      const errorMessage =
-        err instanceof Error ? err.message : 'Failed to fetch criteria';
+      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch criteria';
       set({ error: errorMessage, isLoading: false });
     }
   },
@@ -39,8 +38,7 @@ export const useCriteriaStore = create<CriteriaStoreWithCompat>()((set, get) => 
 
       set({ criteria: data || [], isLoading: false });
     } catch (err: unknown) {
-      const errorMessage =
-        err instanceof Error ? err.message : 'Failed to fetch criteria';
+      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch criteria';
       set({ error: errorMessage, isLoading: false });
     }
   },

@@ -14,12 +14,8 @@ export function useSkillRatings() {
   const fetchAverage = useUserSkillRatingsStore((state) => state.fetchAverage);
   const fetchSkills = useUserSkillRatingsStore((state) => state.fetchSkills);
   const saveRating = useUserSkillRatingsStore((state) => state.saveRating);
-  const fetchUserAverage = useUserSkillRatingsStore(
-    (state) => state.fetchUserAverage
-  );
-  const fetchUserRatings = useUserSkillRatingsStore(
-    (state) => state.fetchUserRatings
-  );
+  const fetchUserAverage = useUserSkillRatingsStore((state) => state.fetchUserAverage);
+  const fetchUserRatings = useUserSkillRatingsStore((state) => state.fetchUserRatings);
   const clear = useUserSkillRatingsStore((state) => state.clear);
 
   return {

@@ -12,7 +12,7 @@ if (!supabaseUrl || !supabaseAnonKey) {
 // Typed Supabase client
 export const supabase: SupabaseClient<Database> = createClient<Database>(
   supabaseUrl,
-  supabaseAnonKey
+  supabaseAnonKey,
 );
 
 // Re-export types for convenience
@@ -30,7 +30,7 @@ export interface ApiResponse<T> {
 }
 
 export async function handleSupabaseError<T>(
-  promise: Promise<{ data: T | null; error: { message: string } | null }>
+  promise: Promise<{ data: T | null; error: { message: string } | null }>,
 ): Promise<ApiResponse<T>> {
   try {
     const { data, error } = await promise;

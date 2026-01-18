@@ -1,5 +1,1 @@
-export {
-  analytics,
-  initFirebase,
-  getFirebaseAnalytics,
-} from './firebase';
+export { analytics, initFirebase, getFirebaseAnalytics } from './firebase';

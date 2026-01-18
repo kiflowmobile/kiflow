@@ -1,11 +1,5 @@
 import React, { useState } from 'react';
-import {
-  ImageBackground,
-  Modal,
-  Pressable,
-  Text,
-  TouchableOpacity,
-} from 'react-native';
+import { ImageBackground, Modal, Pressable, Text, TouchableOpacity } from 'react-native';
 import { Button, CloseIcon, Image, LogOutIcon, View } from '@/shared/ui';
 
 interface AvatarSectionProps {
@@ -130,10 +124,7 @@ export function AvatarSection({
         onRequestClose={() => setShowConfirm(false)}
       >
         <View className="flex-1 justify-end bg-slate-900/50 px-4">
-          <Pressable
-            className="absolute inset-0"
-            onPress={() => setShowConfirm(false)}
-          />
+          <Pressable className="absolute inset-0" onPress={() => setShowConfirm(false)} />
 
           <View className="mb-9 w-full rounded-3xl bg-white px-6 py-6">
             <Text className="mb-3 text-center text-lg font-semibold text-black">

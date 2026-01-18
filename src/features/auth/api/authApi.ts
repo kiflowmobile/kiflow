@@ -8,9 +8,10 @@ export interface AuthApiResponse<T> {
 }
 
 export const authApi = {
-  async signIn({ email, password }: SignInParams): Promise<
-    AuthApiResponse<{ user: User | null; session: Session | null }>
-  > {
+  async signIn({
+    email,
+    password,
+  }: SignInParams): Promise<AuthApiResponse<{ user: User | null; session: Session | null }>> {
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
@@ -30,9 +31,12 @@ export const authApi = {
     }
   },
 
-  async signUp({ email, password, firstName, lastName }: SignUpParams): Promise<
-    AuthApiResponse<{ user: User | null; session: Session | null }>
-  > {
+  async signUp({
+    email,
+    password,
+    firstName,
+    lastName,
+  }: SignUpParams): Promise<AuthApiResponse<{ user: User | null; session: Session | null }>> {
     try {
       const { data, error } = await supabase.auth.signUp({
         email,
@@ -144,7 +148,7 @@ export const authApi = {
 
   async upsertUserProfile(
     userId: string,
-    profile: Partial<Omit<UserProfile, 'id'>>
+    profile: Partial<Omit<UserProfile, 'id'>>,
   ): Promise<AuthApiResponse<UserProfile>> {
     try {
       const { data, error } = await supabase
@@ -170,9 +174,9 @@ export const authApi = {
   },
 
   // Subscribe to auth state changes
-  onAuthStateChange(
-    callback: (event: string, session: Session | null) => void
-  ): { unsubscribe: () => void } {
+  onAuthStateChange(callback: (event: string, session: Session | null) => void): {
+    unsubscribe: () => void;
+  } {
     const { data } = supabase.auth.onAuthStateChange((event, session) => {
       callback(event, session);
     });

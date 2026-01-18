@@ -22,4 +22,3 @@ export const formatBubbleScore = (
   if (quizAvg != null) return `${quizAvg}`;
   return '0.0';
 };
-

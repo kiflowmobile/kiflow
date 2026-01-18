@@ -60,10 +60,7 @@ export function Dropdown({ label, items, selected, onSelect, disabled }: Dropdow
   return (
     <View className="my-2.5 z-[1000]">
       <TouchableOpacity
-        className={clsx(
-          'p-3 bg-gray-200 rounded-md',
-          disabled && 'bg-gray-300'
-        )}
+        className={clsx('p-3 bg-gray-200 rounded-md', disabled && 'bg-gray-300')}
         onPress={() => !disabled && setIsOpen(!isOpen)}
       >
         {/* Показываем имя выбранного элемента (если есть), иначе лейбл */}

@@ -24,11 +24,11 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ uri, isActive }) => {
   }, [isActive, status, player]);
 
   return (
-    <Box className='flex-1 items-center justify-center bg-black'>
+    <Box className="flex-1 items-center justify-center bg-black">
       <VideoView
         player={player}
-        className='h-full w-full self-center'
-        contentFit='cover'
+        className="h-full w-full self-center"
+        contentFit="cover"
         allowsFullscreen={false}
       />
     </Box>

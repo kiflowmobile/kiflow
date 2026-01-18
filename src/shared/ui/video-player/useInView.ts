@@ -8,7 +8,7 @@ export function useInView<T extends HTMLElement>(options?: IntersectionObserverI
     if (!ref.current) return;
     const observer = new window.IntersectionObserver(
       ([entry]) => setInView(entry.isIntersecting),
-      options
+      options,
     );
     observer.observe(ref.current);
     const observedNode = ref.current;

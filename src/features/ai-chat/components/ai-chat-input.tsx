@@ -34,7 +34,7 @@ export const AIChatInput: React.FC<ChatInputProps> = ({
   slideId,
 }) => {
   const analyticsStore = useAnalytics();
-  const hasTrackedInputRef = useRef(false); 
+  const hasTrackedInputRef = useRef(false);
 
   const handleFocus = () => {
     onFocus?.();
@@ -81,14 +81,9 @@ export const AIChatInput: React.FC<ChatInputProps> = ({
           slideId={slideId}
         />
         <TouchableOpacity onPress={onSend} disabled={loading || isLocked}>
-          <Icon
-            as={Send}
-            size={24}
-            color={loading || isLocked ? '#94a3b8' : '#0f172a'}
-          />
+          <Icon as={Send} size={24} color={loading || isLocked ? '#94a3b8' : '#0f172a'} />
         </TouchableOpacity>
       </View>
     </View>
   );
 };
-

@@ -21,8 +21,7 @@ export const useLessonsStore = create<LessonsStore>()((set, get) => ({
         error: null,
       });
     } catch (error: unknown) {
-      const errorMessage =
-        error instanceof Error ? error.message : 'Failed to fetch lessons';
+      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch lessons';
       set({
         error: errorMessage,
         isLoading: false,

@@ -31,18 +31,14 @@ export interface ProgressState {
 export interface ProgressActions {
   initFromLocal: () => Promise<void>;
   fetchUserProgress: (userId: string) => Promise<void>;
-  setCourseProgress: (
-    courseId: string,
-    progress: number,
-    lastSlideId?: string | null
-  ) => void;
+  setCourseProgress: (courseId: string, progress: number, lastSlideId?: string | null) => void;
   getCourseProgress: (courseId: string) => number;
   setModuleProgressSafe: (
     courseId: string,
     moduleId: string,
     currentSlideIndex: number,
     totalSlides: number,
-    lastSlideId?: string | null
+    lastSlideId?: string | null,
   ) => Promise<void>;
   getModuleProgress: (courseId: string, moduleId: string) => number;
   syncProgressToDB: () => Promise<void>;

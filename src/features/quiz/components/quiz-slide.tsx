@@ -23,7 +23,6 @@ export const QuizSlide: React.FC<QuizProps> = ({ id, title, subtitle, quiz, cour
   const isAnswered = selectedAnswer !== null;
   const { trackEvent } = useAnalytics();
 
-
   const STORAGE_KEY = `quiz-progress-${courseId}`;
 
   useEffect(() => {
@@ -65,7 +64,6 @@ export const QuizSlide: React.FC<QuizProps> = ({ id, title, subtitle, quiz, cour
       console.error('Error saving quiz progress:', err);
     }
   };
-
 
   return (
     <View className="flex-1 bg-surface px-4 justify-center items-center">
@@ -118,4 +116,3 @@ export const QuizSlide: React.FC<QuizProps> = ({ id, title, subtitle, quiz, cour
     </View>
   );
 };
-

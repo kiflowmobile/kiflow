@@ -107,12 +107,11 @@ export async function POST(request: Request) {
     if (userStats.skills && userStats.skills.length > 0) {
       try {
         const keys = Array.from(
-          new Set(userStats.skills.map((s) => s.key).filter((k): k is string => Boolean(k)))
+          new Set(userStats.skills.map((s) => s.key).filter((k): k is string => Boolean(k))),
         );
         if (keys.length > 0) {
-          const { data: criterias, error: criteriasError } = await ratingsApi.fetchCriteriaByKeys(
-            keys
-          );
+          const { data: criterias, error: criteriasError } =
+            await ratingsApi.fetchCriteriaByKeys(keys);
           if (!criteriasError && criterias && Array.isArray(criterias) && criterias.length > 0) {
             const nameByKey = new Map<string, string>();
             criterias.forEach((c) => {
@@ -287,8 +286,8 @@ moduleId: ${moduleId ?? 'n/a'}`,
                 <p style="font-size:12px; color:#666;">Адміністраторська копія. userEmail: ${escapeHtml(
                   userEmail,
                 )}<br/>userId: ${escapeHtml(userId ?? 'n/a')}<br/>moduleId: ${escapeHtml(
-              moduleId ?? 'n/a',
-            )}</p>
+                  moduleId ?? 'n/a',
+                )}</p>
               </div>
             `,
           });

@@ -11,9 +11,7 @@ export const lessonsApi = {
   /**
    * Get all lessons for a module, ordered by lesson_order
    */
-  fetchLessonsByModule: async (
-    moduleId: string
-  ): Promise<ApiResponse<Lesson[]>> => {
+  fetchLessonsByModule: async (moduleId: string): Promise<ApiResponse<Lesson[]>> => {
     const { data, error } = await supabase
       .from('lessons')
       .select('*')
@@ -27,11 +25,7 @@ export const lessonsApi = {
    * Get a lesson by ID
    */
   getLessonById: async (lessonId: string): Promise<ApiResponse<Lesson>> => {
-    const { data, error } = await supabase
-      .from('lessons')
-      .select('*')
-      .eq('id', lessonId)
-      .single();
+    const { data, error } = await supabase.from('lessons').select('*').eq('id', lessonId).single();
 
     return { data, error };
   },
@@ -39,9 +33,7 @@ export const lessonsApi = {
   /**
    * Get lesson ID from a slide ID
    */
-  getLessonIdBySlideId: async (
-    slideId: string
-  ): Promise<ApiResponse<{ lesson_id: string }>> => {
+  getLessonIdBySlideId: async (slideId: string): Promise<ApiResponse<{ lesson_id: string }>> => {
     const { data, error } = await supabase
       .from('slides')
       .select('lesson_id')
@@ -55,14 +47,14 @@ export const lessonsApi = {
    * Get lesson order from a slide ID
    */
   getLessonOrderBySlideId: async (
-    slideId: string
+    slideId: string,
   ): Promise<ApiResponse<{ lesson_order: number }>> => {
     // First get the lesson_id from the slide
-    const slideRes = await supabase
+    const slideRes = (await supabase
       .from('slides')
       .select('lesson_id')
       .eq('id', slideId)
-      .single() as { data: { lesson_id: string } | null; error: any };
+      .single()) as { data: { lesson_id: string } | null; error: any };
 
     if (slideRes.error || !slideRes.data) {
       return { data: null, error: slideRes.error };
@@ -73,7 +65,7 @@ export const lessonsApi = {
     if (!lessonId) {
       return { data: null, error: new Error('Lesson ID not found') };
     }
-    
+
     const { data, error } = await supabase
       .from('lessons')
       .select('lesson_order')
@@ -87,7 +79,7 @@ export const lessonsApi = {
    * Get lesson counts for multiple modules
    */
   fetchLessonCountsByModuleIds: async (
-    moduleIds: string[]
+    moduleIds: string[],
   ): Promise<ApiResponse<Record<string, number>>> => {
     if (!moduleIds || moduleIds.length === 0) {
       return { data: {}, error: null };

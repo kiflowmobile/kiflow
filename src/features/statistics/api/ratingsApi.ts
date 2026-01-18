@@ -12,7 +12,7 @@ export const ratingsApi = {
    */
   fetchRatings: async (
     userId: string,
-    moduleId: string
+    moduleId: string,
   ): Promise<ApiResponse<Array<{ criteria_key: string; rating: number }>>> => {
     const { data, error } = await supabase
       .from('user_skill_ratings')
@@ -29,7 +29,7 @@ export const ratingsApi = {
   fetchRating: async (
     userId: string,
     moduleId: string,
-    key: string
+    key: string,
   ): Promise<ApiResponse<{ rating: number }>> => {
     const { data, error } = await supabase
       .from('user_skill_ratings')
@@ -49,7 +49,7 @@ export const ratingsApi = {
     userId: string,
     rating: number,
     moduleId: string,
-    key: string
+    key: string,
   ): Promise<ApiResponse<RatingItem[]>> => {
     const value = Number(rating);
     if (!Number.isFinite(value)) {
@@ -70,7 +70,7 @@ export const ratingsApi = {
             criteria_key: key,
           },
         ] as any,
-        { onConflict: 'user_id,module_id,criteria_key' }
+        { onConflict: 'user_id,module_id,criteria_key' },
       )
       .select();
 
@@ -86,19 +86,16 @@ export const ratingsApi = {
       .select('id, user_id, module_id, criteria_key, rating')
       .eq('user_id', userId);
 
-    return { data: data as RatingItem[] || [], error };
+    return { data: (data as RatingItem[]) || [], error };
   },
 
   /**
    * Fetch criteria by keys
    */
   fetchCriteriaByKeys: async (
-    keys: string[]
+    keys: string[],
   ): Promise<ApiResponse<Array<{ key: string; name: string }>>> => {
-    const { data, error } = await supabase
-      .from('criteria')
-      .select('key, name')
-      .in('key', keys);
+    const { data, error } = await supabase.from('criteria').select('key, name').in('key', keys);
 
     return { data: data || [], error };
   },
@@ -108,7 +105,7 @@ export const ratingsApi = {
    */
   getAverageUserRating: async (
     userId: string,
-    moduleId: string
+    moduleId: string,
   ): Promise<ApiResponse<{ rating: number } | null>> => {
     const { data, error } = await ratingsApi.fetchRatings(userId, moduleId);
 
@@ -134,12 +131,9 @@ export const ratingsApi = {
    */
   getUserSkillsSummary: async (
     userId: string,
-    moduleId: string
+    moduleId: string,
   ): Promise<ApiResponse<SkillSummaryItem[]>> => {
-    const { data: ratings, error: ratingsError } = await ratingsApi.fetchRatings(
-      userId,
-      moduleId
-    );
+    const { data: ratings, error: ratingsError } = await ratingsApi.fetchRatings(userId, moduleId);
 
     if (ratingsError) {
       return { data: null, error: ratingsError };
@@ -149,12 +143,9 @@ export const ratingsApi = {
       return { data: [], error: null };
     }
 
-    const keys = Array.from(
-      new Set(ratings.map((r) => r.criteria_key).filter(Boolean))
-    );
+    const keys = Array.from(new Set(ratings.map((r) => r.criteria_key).filter(Boolean)));
 
-    const { data: criteria, error: criteriaError } =
-      await ratingsApi.fetchCriteriaByKeys(keys);
+    const { data: criteria, error: criteriaError } = await ratingsApi.fetchCriteriaByKeys(keys);
 
     if (criteriaError) {
       return { data: null, error: criteriaError };

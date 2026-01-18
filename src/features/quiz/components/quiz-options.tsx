@@ -45,4 +45,3 @@ export const QuizOptions: React.FC<Props> = ({
     </View>
   );
 };
-

@@ -18,7 +18,7 @@ export const usePromptsStore = create<PromptsStore>()((set, get) => ({
 
   fetchPromptBySlide: async (slideId: string) => {
     if (!slideId) return;
-    
+
     // Check if already fetched
     if (get().prompt[slideId]) return;
 
@@ -39,8 +39,7 @@ export const usePromptsStore = create<PromptsStore>()((set, get) => ({
         set({ isLoading: false });
       }
     } catch (err: unknown) {
-      const errorMessage =
-        err instanceof Error ? err.message : 'Failed to fetch prompt';
+      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch prompt';
       console.error('PromptsStore: Error fetching prompt:', err);
       set({ error: errorMessage, isLoading: false });
     }
@@ -71,8 +70,7 @@ export const usePromptsStore = create<PromptsStore>()((set, get) => ({
         set({ isLoading: false });
       }
     } catch (err: unknown) {
-      const errorMessage =
-        err instanceof Error ? err.message : 'Failed to fetch prompts';
+      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch prompts';
       console.error('PromptsStore: Error fetching prompts:', err);
       set({ error: errorMessage, isLoading: false });
     }

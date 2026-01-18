@@ -1,9 +1,5 @@
 import React from 'react';
-import {
-  ScrollView as RNScrollView,
-  ScrollViewProps,
-  RefreshControl,
-} from 'react-native';
+import { ScrollView as RNScrollView, ScrollViewProps, RefreshControl } from 'react-native';
 
 interface ScrollViewLayoutProps extends ScrollViewProps {
   className?: string;

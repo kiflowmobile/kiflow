@@ -8,7 +8,7 @@ const STORAGE_KEY = (userId: string) => `progress_${userId}`;
  */
 export const saveProgressLocal = async (
   userId: string,
-  courses: UserCourseSummary[]
+  courses: UserCourseSummary[],
 ): Promise<void> => {
   try {
     await AsyncStorage.setItem(STORAGE_KEY(userId), JSON.stringify(courses));
@@ -20,9 +20,7 @@ export const saveProgressLocal = async (
 /**
  * Load progress data from local storage
  */
-export const loadProgressLocal = async (
-  userId: string
-): Promise<UserCourseSummary[]> => {
+export const loadProgressLocal = async (userId: string): Promise<UserCourseSummary[]> => {
   try {
     const data = await AsyncStorage.getItem(STORAGE_KEY(userId));
     return data ? JSON.parse(data) : [];

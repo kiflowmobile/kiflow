@@ -10,9 +10,7 @@ export const slidesApi = {
   /**
    * Get all slides for given lessons, ordered by slide_order
    */
-  fetchSlidesByLessons: async (
-    lessons: Lesson[]
-  ): Promise<ApiResponse<Slide[]>> => {
+  fetchSlidesByLessons: async (lessons: Lesson[]): Promise<ApiResponse<Slide[]>> => {
     if (!lessons || lessons.length === 0) {
       return { data: [], error: null };
     }
@@ -32,11 +30,7 @@ export const slidesApi = {
    * Get a single slide by ID
    */
   getSlideById: async (slideId: string): Promise<ApiResponse<Slide>> => {
-    const { data, error } = await supabase
-      .from('slides')
-      .select('*')
-      .eq('id', slideId)
-      .single();
+    const { data, error } = await supabase.from('slides').select('*').eq('id', slideId).single();
 
     return { data: (data ?? null) as Slide | null, error };
   },
@@ -44,9 +38,7 @@ export const slidesApi = {
   /**
    * Get slides for a specific lesson
    */
-  fetchSlidesByLesson: async (
-    lessonId: string
-  ): Promise<ApiResponse<Slide[]>> => {
+  fetchSlidesByLesson: async (lessonId: string): Promise<ApiResponse<Slide[]>> => {
     const { data, error } = await supabase
       .from('slides')
       .select('*')
@@ -59,9 +51,7 @@ export const slidesApi = {
   /**
    * Get slide count for a lesson
    */
-  getSlideCountByLesson: async (
-    lessonId: string
-  ): Promise<ApiResponse<number>> => {
+  getSlideCountByLesson: async (lessonId: string): Promise<ApiResponse<number>> => {
     const { count, error } = await supabase
       .from('slides')
       .select('*', { count: 'exact', head: true })

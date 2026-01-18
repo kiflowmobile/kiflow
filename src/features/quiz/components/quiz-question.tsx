@@ -14,4 +14,3 @@ export const QuizQuestion: React.FC<Props> = ({ question, subtitle }) => {
     </View>
   );
 };
-

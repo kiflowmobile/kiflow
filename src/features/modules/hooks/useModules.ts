@@ -11,12 +11,8 @@ export function useModules() {
   const isLoading = useModulesStore((state) => state.isLoading);
   const error = useModulesStore((state) => state.error);
 
-  const fetchModulesByCourse = useModulesStore(
-    (state) => state.fetchModulesByCourse
-  );
-  const fetchModulesByCourses = useModulesStore(
-    (state) => state.fetchModulesByCourses
-  );
+  const fetchModulesByCourse = useModulesStore((state) => state.fetchModulesByCourse);
+  const fetchModulesByCourses = useModulesStore((state) => state.fetchModulesByCourses);
   const setCurrentModule = useModulesStore((state) => state.setCurrentModule);
   const clearError = useModulesStore((state) => state.clearError);
   const clearModules = useModulesStore((state) => state.clearModules);
@@ -61,9 +57,7 @@ export function useModule(moduleId: string | undefined) {
 export function useModulesByCourse(courseId: string | undefined) {
   const modules = useModulesStore((state) => state.modules);
 
-  const courseModules = courseId
-    ? modules.filter((m) => m.course_id === courseId)
-    : [];
+  const courseModules = courseId ? modules.filter((m) => m.course_id === courseId) : [];
 
   return { modules: courseModules };
 }

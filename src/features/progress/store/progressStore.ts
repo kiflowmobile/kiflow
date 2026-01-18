@@ -4,11 +4,9 @@ import { saveProgressLocal, loadProgressLocal } from '../utils/progressStorage';
 import type { UserCourseSummary, ProgressStore } from '../types';
 
 // Lazy imports to avoid circular dependencies
-const getAuthStore = () =>
-  import('@/features/auth').then((m) => m.useAuthStore);
+const getAuthStore = () => import('@/features/auth').then((m) => m.useAuthStore);
 
-const getSlidesStore = () =>
-  import('@/features/lessons').then((m) => m.useSlidesStore);
+const getSlidesStore = () => import('@/features/lessons').then((m) => m.useSlidesStore);
 
 const persistCourses = async (courses: UserCourseSummary[]) => {
   const authStore = await getAuthStore();
@@ -46,8 +44,7 @@ export const useUserProgressStore = create<ProgressStore>((set, get) => ({
       if (error) throw error;
       // Note: The view data could be used to update the store if needed
     } catch (err: unknown) {
-      const errorMessage =
-        err instanceof Error ? err.message : 'Failed to fetch progress';
+      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch progress';
       set({ error: errorMessage });
     } finally {
       set({ isLoading: false });
@@ -78,7 +75,7 @@ export const useUserProgressStore = create<ProgressStore>((set, get) => ({
     moduleId,
     currentSlideIndex,
     totalSlides,
-    lastSlideId
+    lastSlideId,
   ) => {
     if (!courseId || !moduleId) return;
 
@@ -133,12 +130,7 @@ export const useUserProgressStore = create<ProgressStore>((set, get) => ({
     // 2. Sync to DB
     if (user) {
       try {
-        await progressApi.upsertModuleProgress(
-          user.id,
-          moduleId,
-          percent,
-          sanitizedLastSlideId
-        );
+        await progressApi.upsertModuleProgress(user.id, moduleId, percent, sanitizedLastSlideId);
       } catch (err) {
         console.error('Failed to sync module progress:', err);
       }
@@ -167,7 +159,7 @@ export const useUserProgressStore = create<ProgressStore>((set, get) => ({
           user.id,
           mod.module_id,
           mod.progress,
-          mod.last_slide_id
+          mod.last_slide_id,
         );
       }
     }
@@ -199,7 +191,7 @@ export const useUserProgressStore = create<ProgressStore>((set, get) => ({
 
     set((state) => {
       const updatedCourses = state.courses.map((c) =>
-        c.course_id === courseId ? { ...c, progress: 0, modules: [] } : c
+        c.course_id === courseId ? { ...c, progress: 0, modules: [] } : c,
       );
       saveProgressLocal(user.id, updatedCourses);
       return { courses: updatedCourses };

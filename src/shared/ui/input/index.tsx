@@ -113,7 +113,7 @@ export const Input = forwardRef<TextInput, InputProps>(
       focused && 'border-primary',
       !focused && !hasError && 'border-gray-300',
       hasError && 'border-error',
-      isDisabled && 'opacity-40'
+      isDisabled && 'opacity-40',
     );
 
     const containerStyles: StyleProp<ViewStyle> = [containerWithoutMargins];
@@ -145,10 +145,7 @@ export const Input = forwardRef<TextInput, InputProps>(
             />
 
             {renderCustomPlaceholder && !hasText ? (
-              <View
-                pointerEvents="none"
-                className="absolute inset-0 justify-center px-4"
-              >
+              <View pointerEvents="none" className="absolute inset-0 justify-center px-4">
                 {renderCustomPlaceholder({ focused, hasError, disabled: isDisabled })}
               </View>
             ) : null}
@@ -169,9 +166,7 @@ export const Input = forwardRef<TextInput, InputProps>(
           ) : null}
         </View>
 
-        {errorMessage ? (
-          <Text className="mt-1 ml-1 text-xs text-error">{errorMessage}</Text>
-        ) : null}
+        {errorMessage ? <Text className="mt-1 ml-1 text-xs text-error">{errorMessage}</Text> : null}
       </View>
     );
   },

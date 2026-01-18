@@ -249,7 +249,7 @@ export const Button: React.FC<ButtonProps> = ({
               isDisabled && variant === 'dark' && 'bg-gray-400 border-gray-400',
               isDisabled && variant === 'light' && 'bg-gray-200',
               isDisabled && variant === 'accent' && 'bg-blue-400',
-              isDisabled && 'opacity-40'
+              isDisabled && 'opacity-40',
             )}
             style={[
               sizeTheme.container,
@@ -270,7 +270,7 @@ export const Button: React.FC<ButtonProps> = ({
                   variant === 'light' && (isDisabled ? 'text-gray-500' : 'text-black'),
                   variant === 'accent' && (isDisabled ? 'text-gray-800' : 'text-black'),
                   variant === 'outline' && (isDisabled ? 'text-white/60' : 'text-white'),
-                  isDisabled && 'opacity-60'
+                  isDisabled && 'opacity-60',
                 )}
                 style={[
                   sizeTheme.text,

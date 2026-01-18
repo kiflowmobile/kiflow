@@ -4,8 +4,7 @@ import { getCurrentUser } from '@/src/features/auth';
 import type { Course, CourseStore } from '../types';
 
 // Lazy import to avoid circular dependencies
-const getProfileApi = () =>
-  import('@/features/profile').then((m) => m.profileApi);
+const getProfileApi = () => import('@/features/profile').then((m) => m.profileApi);
 
 export const useCourseStore = create<CourseStore>((set, get) => ({
   courses: [],
@@ -42,9 +41,7 @@ export const useCourseStore = create<CourseStore>((set, get) => ({
 
               // Merge unique courses
               const existingIds = new Set(allCourses.map((c) => c.id));
-              const uniqueCompanyCourses = companyCourses.filter(
-                (c) => !existingIds.has(c.id)
-              );
+              const uniqueCompanyCourses = companyCourses.filter((c) => !existingIds.has(c.id));
               allCourses = [...allCourses, ...uniqueCompanyCourses];
             }
           }
@@ -60,8 +57,7 @@ export const useCourseStore = create<CourseStore>((set, get) => ({
         error: null,
       });
     } catch (error: unknown) {
-      const errorMessage =
-        error instanceof Error ? error.message : 'Failed to fetch courses';
+      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch courses';
       set({
         error: errorMessage,
         isLoading: false,
@@ -78,8 +74,7 @@ export const useCourseStore = create<CourseStore>((set, get) => ({
       set({ currentCourse: data, isLoading: false, error: null });
       return data || null;
     } catch (error: unknown) {
-      const errorMessage =
-        error instanceof Error ? error.message : 'Failed to fetch course';
+      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch course';
       set({ error: errorMessage, isLoading: false });
       return null;
     }

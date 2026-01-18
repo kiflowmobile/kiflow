@@ -10,9 +10,7 @@ export const criteriaApi = {
   /**
    * Get criteria by course ID (or all criteria if not specified)
    */
-  getCriteriaByCourse: async (
-    courseId?: string
-  ): Promise<ApiResponse<Criteria[]>> => {
+  getCriteriaByCourse: async (courseId?: string): Promise<ApiResponse<Criteria[]>> => {
     let query = supabase.from('criteria').select('*');
 
     if (courseId) {
@@ -20,7 +18,7 @@ export const criteriaApi = {
     }
 
     const { data, error } = await query;
-    return { data: data as Criteria[] || [], error };
+    return { data: (data as Criteria[]) || [], error };
   },
 
   /**
@@ -39,14 +37,9 @@ export const criteriaApi = {
   /**
    * Get criteria by module ID
    */
-  getCriteriaByModule: async (
-    moduleId: string
-  ): Promise<ApiResponse<Criteria[]>> => {
-    const { data, error } = await supabase
-      .from('criteria')
-      .select('*')
-      .eq('module_id', moduleId);
+  getCriteriaByModule: async (moduleId: string): Promise<ApiResponse<Criteria[]>> => {
+    const { data, error } = await supabase.from('criteria').select('*').eq('module_id', moduleId);
 
-    return { data: data as Criteria[] || [], error };
+    return { data: (data as Criteria[]) || [], error };
   },
 };

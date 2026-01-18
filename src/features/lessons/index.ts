@@ -4,12 +4,7 @@ export { useSlidesStore } from './store/slidesStore';
 
 // Hooks
 export { useLessons, useLesson, useLessonsByModule } from './hooks/useLessons';
-export {
-  useSlides,
-  useSlideAnswers,
-  useSlide,
-  useSlideNavigation,
-} from './hooks/useSlides';
+export { useSlides, useSlideAnswers, useSlide, useSlideNavigation } from './hooks/useSlides';
 
 // API
 export { lessonsApi } from './api/lessonsApi';
@@ -34,7 +29,11 @@ export type {
 } from './types';
 
 // Slide type interfaces (renamed to avoid component name conflicts)
-export type { TextSlide as TextSlideType, QuizSlide as QuizSlideType, DashboardSlide as DashboardSlideType } from './types';
+export type {
+  TextSlide as TextSlideType,
+  QuizSlide as QuizSlideType,
+  DashboardSlide as DashboardSlideType,
+} from './types';
 
 // Components
 export { LessonSlide } from './components/lesson';

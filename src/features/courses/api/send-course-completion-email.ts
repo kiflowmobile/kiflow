@@ -1,6 +1,12 @@
 import nodemailer from 'nodemailer';
 import { ratingsApi } from '@/features/statistics';
-import { dedupeSkills, escapeHtml, normalizeScore, type Skill, type ClientSkill } from '../utils/email-utils';
+import {
+  dedupeSkills,
+  escapeHtml,
+  normalizeScore,
+  type Skill,
+  type ClientSkill,
+} from '../utils/email-utils';
 
 export type { ClientSkill } from '../utils/email-utils';
 
@@ -70,8 +76,8 @@ export async function POST(request: Request) {
     const payloadExtraEmails = Array.isArray(extraRecipients)
       ? extraRecipients
       : extraRecipients
-      ? [extraRecipients]
-      : [];
+        ? [extraRecipients]
+        : [];
 
     let normalizedModules = modules;
     if (Array.isArray(modules) && modules.length > 0) {
@@ -83,8 +89,7 @@ export async function POST(request: Request) {
 
           const moduleSkills = m.skills.map((s) => {
             const key = s.criterion_key ?? s.criterion_id ?? undefined;
-            const name =
-              s.criterion_name ?? s.criterion_id ?? s.criterion_key ?? 'Без названия';
+            const name = s.criterion_name ?? s.criterion_id ?? s.criterion_key ?? 'Без названия';
 
             let score = 0;
             if (typeof s.average_score === 'number') score = s.average_score;
@@ -103,7 +108,7 @@ export async function POST(request: Request) {
 
           try {
             const keys = Array.from(
-              new Set(deduped.map((s) => s.key).filter((k): k is string => Boolean(k)))
+              new Set(deduped.map((s) => s.key).filter((k): k is string => Boolean(k))),
             );
             if (keys.length > 0) {
               const { data: criterias, error: criteriasError } =
@@ -160,8 +165,7 @@ export async function POST(request: Request) {
     if (Array.isArray(skills) && skills.length > 0) {
       const globalSkills = skills.map((s) => {
         const key = s.criterion_key ?? s.criterion_id ?? undefined;
-        const name =
-          s.criterion_name ?? s.criterion_id ?? s.criterion_key ?? 'Без названия';
+        const name = s.criterion_name ?? s.criterion_id ?? s.criterion_key ?? 'Без названия';
 
         let score = 0;
         if (typeof s.average_score === 'number') score = s.average_score;
@@ -180,17 +184,12 @@ export async function POST(request: Request) {
 
       try {
         const keys = Array.from(
-          new Set(deduped.map((s) => s.key).filter((k): k is string => Boolean(k)))
+          new Set(deduped.map((s) => s.key).filter((k): k is string => Boolean(k))),
         );
         if (keys.length > 0) {
           const { data: criterias, error: criteriasError } =
             await ratingsApi.fetchCriteriaByKeys(keys);
-          if (
-            !criteriasError &&
-            criterias &&
-            Array.isArray(criterias) &&
-            criterias.length > 0
-          ) {
+          if (!criteriasError && criterias && Array.isArray(criterias) && criterias.length > 0) {
             const nameByKey = new Map<string, string>();
             criterias.forEach((c) => {
               if (c?.key) {
@@ -201,7 +200,8 @@ export async function POST(request: Request) {
             normalizedGlobalSkills = deduped.map((s) => ({
               criterion_id: s.key,
               criterion_key: s.key,
-              criterion_name: (s.key && nameByKey.has(s.key) ? nameByKey.get(s.key)! : s.name) ?? '',
+              criterion_name:
+                (s.key && nameByKey.has(s.key) ? nameByKey.get(s.key)! : s.name) ?? '',
               average_score: s.score,
             })) as NormalizedGlobalSkills[];
           }

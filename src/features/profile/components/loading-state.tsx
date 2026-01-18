@@ -5,7 +5,7 @@ interface LoadingStateProps {
   message?: string;
 }
 
-export function LoadingState({ message = "Завантаження профілю..." }: LoadingStateProps) {
+export function LoadingState({ message = 'Завантаження профілю...' }: LoadingStateProps) {
   return (
     <SafeAreaView className="flex-1 bg-background">
       <View className="flex-1 items-center justify-center">

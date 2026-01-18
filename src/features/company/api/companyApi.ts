@@ -67,7 +67,7 @@ export const companyApi = {
   addUserToCompany: async (
     userId: string,
     companyId: string,
-    joinedViaCode: string
+    joinedViaCode: string,
   ): Promise<ApiResponse<CompanyMember>> => {
     try {
       const { data, error } = await supabase
@@ -92,7 +92,7 @@ export const companyApi = {
    */
   isUserMemberOfCompany: async (
     userId: string,
-    companyId: string
+    companyId: string,
   ): Promise<ApiResponse<CompanyMember>> => {
     try {
       const { data, error } = await supabase
@@ -116,7 +116,8 @@ export const companyApi = {
     try {
       const { data, error } = await supabase
         .from('company_members')
-        .select(`
+        .select(
+          `
           company_id,
           companies (
             id,
@@ -125,15 +126,15 @@ export const companyApi = {
             service_standards,
             created_at
           )
-        `)
+        `,
+        )
         .eq('user_id', userId);
 
       if (error) {
         return { data: null, error };
       }
 
-      const companies =
-        data?.map((item: any) => item.companies).filter(Boolean) || [];
+      const companies = data?.map((item: any) => item.companies).filter(Boolean) || [];
 
       return { data: companies as unknown as Company[], error: null };
     } catch (err) {
@@ -154,16 +155,17 @@ export const companyApi = {
       }
 
       // Find company by code
-      const { data: company, error: companyError } =
-        await companyApi.getCompanyByCode(code);
+      const { data: company, error: companyError } = await companyApi.getCompanyByCode(code);
 
       if (companyError || !company) {
         return { success: false, error: 'Company not found' };
       }
 
       // Check if user is already a member
-      const { data: existingMember, error: checkError } =
-        await companyApi.isUserMemberOfCompany(user.id, company.id);
+      const { data: existingMember, error: checkError } = await companyApi.isUserMemberOfCompany(
+        user.id,
+        company.id,
+      );
 
       if (checkError) {
         console.error('Error checking existing membership:', checkError);
@@ -175,11 +177,7 @@ export const companyApi = {
       }
 
       // Add user to company
-      const { error: addError } = await companyApi.addUserToCompany(
-        user.id,
-        company.id,
-        code
-      );
+      const { error: addError } = await companyApi.addUserToCompany(user.id, company.id, code);
 
       if (addError) {
         return { success: false, error: addError };
@@ -197,7 +195,7 @@ export const companyApi = {
    */
   updateCompanyServiceStandards: async (
     companyId: string,
-    standards: any
+    standards: any,
   ): Promise<ApiResponse<Company>> => {
     try {
       const resp = await supabase

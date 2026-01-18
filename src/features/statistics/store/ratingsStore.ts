@@ -20,8 +20,7 @@ export const useUserSkillRatingsStore = create<SkillRatingsStore>((set, get) => 
 
       set({ average: avg, isLoading: false });
     } catch (err: unknown) {
-      const errorMessage =
-        err instanceof Error ? err.message : 'Failed to fetch average';
+      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch average';
       set({ error: errorMessage, isLoading: false });
     }
   },
@@ -31,13 +30,12 @@ export const useUserSkillRatingsStore = create<SkillRatingsStore>((set, get) => 
     try {
       const { data: ratings, error: ratingsError } = await ratingsApi.fetchRatings(
         userId,
-        moduleId
+        moduleId,
       );
       if (ratingsError) throw ratingsError;
 
       const keys = ratings?.map((r) => r.criteria_key) ?? [];
-      const { data: criteria, error: criteriaError } =
-        await ratingsApi.fetchCriteriaByKeys(keys);
+      const { data: criteria, error: criteriaError } = await ratingsApi.fetchCriteriaByKeys(keys);
       if (criteriaError) throw criteriaError;
 
       const skills: SkillSummaryItem[] =
@@ -52,8 +50,7 @@ export const useUserSkillRatingsStore = create<SkillRatingsStore>((set, get) => 
 
       set({ skills, isLoading: false });
     } catch (err: unknown) {
-      const errorMessage =
-        err instanceof Error ? err.message : 'Failed to fetch skills';
+      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch skills';
       set({ error: errorMessage, isLoading: false });
     }
   },
@@ -63,7 +60,7 @@ export const useUserSkillRatingsStore = create<SkillRatingsStore>((set, get) => 
       const { data: existing, error: fetchError } = await ratingsApi.fetchRating(
         userId,
         moduleId,
-        key
+        key,
       );
       if (fetchError && (fetchError as any).code !== 'PGRST116') throw fetchError;
 
@@ -75,8 +72,7 @@ export const useUserSkillRatingsStore = create<SkillRatingsStore>((set, get) => 
       await get().fetchAverage(userId, moduleId);
       await get().fetchSkills(userId, moduleId);
     } catch (err: unknown) {
-      const errorMessage =
-        err instanceof Error ? err.message : 'Failed to save rating';
+      const errorMessage = err instanceof Error ? err.message : 'Failed to save rating';
       set({ error: errorMessage });
     }
   },
@@ -92,8 +88,7 @@ export const useUserSkillRatingsStore = create<SkillRatingsStore>((set, get) => 
 
       set({ average: avg, isLoading: false });
     } catch (err: unknown) {
-      const errorMessage =
-        err instanceof Error ? err.message : 'Failed to fetch user average';
+      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch user average';
       set({ error: errorMessage, isLoading: false });
     }
   },
@@ -106,8 +101,7 @@ export const useUserSkillRatingsStore = create<SkillRatingsStore>((set, get) => 
 
       set({ ratings: data || [], isLoading: false });
     } catch (err: unknown) {
-      const errorMessage =
-        err instanceof Error ? err.message : 'Failed to fetch user ratings';
+      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch user ratings';
       set({ error: errorMessage, isLoading: false });
     }
   },

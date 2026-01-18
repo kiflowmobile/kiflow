@@ -24,8 +24,7 @@ export const useSlidesStore = create<SlidesStore>((set, get) => ({
         error: null,
       });
     } catch (error: unknown) {
-      const errorMessage =
-        error instanceof Error ? error.message : 'Failed to fetch slides';
+      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch slides';
       console.error('SlidesStore: Error fetching slides:', error);
       set({
         error: errorMessage,
@@ -83,7 +82,7 @@ export const useSlidesStore = create<SlidesStore>((set, get) => ({
   clearAnsweredSlides: () => {
     set((state) => ({
       answeredBySlideId: Object.fromEntries(
-        Object.keys(state.answeredBySlideId).map((key) => [key, false])
+        Object.keys(state.answeredBySlideId).map((key) => [key, false]),
       ),
     }));
   },

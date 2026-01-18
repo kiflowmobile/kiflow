@@ -7,13 +7,10 @@ export function PaginationDots({ total, currentIndex }: { total: number; current
         <View
           key={i}
           className={`rounded-full ${
-            i === currentIndex
-              ? 'w-4 h-4 bg-black'
-              : 'w-2.5 h-2.5 bg-gray-300'
+            i === currentIndex ? 'w-4 h-4 bg-black' : 'w-2.5 h-2.5 bg-gray-300'
           }`}
         />
       ))}
     </View>
   );
 }
-

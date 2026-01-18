@@ -8,9 +8,7 @@ export function useLessons() {
   const isLoading = useLessonsStore((state) => state.isLoading);
   const error = useLessonsStore((state) => state.error);
 
-  const fetchLessonsByModule = useLessonsStore(
-    (state) => state.fetchLessonsByModule
-  );
+  const fetchLessonsByModule = useLessonsStore((state) => state.fetchLessonsByModule);
   const setLessons = useLessonsStore((state) => state.setLessons);
   const clearError = useLessonsStore((state) => state.clearError);
   const clearLessons = useLessonsStore((state) => state.clearLessons);
@@ -46,9 +44,7 @@ export function useLesson(lessonId: string | undefined) {
 export function useLessonsByModule(moduleId: string | undefined) {
   const lessons = useLessonsStore((state) => state.lessons);
 
-  const moduleLessons = moduleId
-    ? lessons.filter((l) => l.module_id === moduleId)
-    : [];
+  const moduleLessons = moduleId ? lessons.filter((l) => l.module_id === moduleId) : [];
 
   return { lessons: moduleLessons };
 }

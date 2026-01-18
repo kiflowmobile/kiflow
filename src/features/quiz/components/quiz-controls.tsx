@@ -45,4 +45,3 @@ export const QuizControls: React.FC<Props> = ({
     </View>
   );
 };
-

@@ -6,7 +6,7 @@ type IHStackProps = React.ComponentPropsWithoutRef<'div'> & VariantProps<typeof 
 
 const HStack = React.forwardRef<React.ComponentRef<'div'>, IHStackProps>(function HStack(
   { className, space, reversed, ...props },
-  ref
+  ref,
 ) {
   return (
     <div className={hstackStyle({ space, reversed, class: className })} {...props} ref={ref} />

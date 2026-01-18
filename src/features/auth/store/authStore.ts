@@ -7,9 +7,9 @@ import type { AuthStore } from '../types';
 import { asyncStorageUtils } from '@/src/shared/hooks/useAsyncStorage';
 
 // Lazy imports to avoid circular dependencies
-const getProgressStore = () => import('@/features/progress').then(m => m.useUserProgressStore);
-const getQuizStore = () => import('@/features/quiz').then(m => m.useQuizStore);
-const getAnalyticsService = () => import('@/features/analytics').then(m => m.analyticsService);
+const getProgressStore = () => import('@/features/progress').then((m) => m.useUserProgressStore);
+const getQuizStore = () => import('@/features/quiz').then((m) => m.useQuizStore);
+const getAnalyticsService = () => import('@/features/analytics').then((m) => m.analyticsService);
 
 export const useAuthStore = create<AuthStore>()((set, get) => ({
   user: null,
@@ -41,14 +41,13 @@ export const useAuthStore = create<AuthStore>()((set, get) => ({
       }
 
       // Sync data from DB to local storage
-      const [quizStore, progressStore] = await Promise.all([
-        getQuizStore(),
-        getProgressStore(),
-      ]);
-      await Promise.all([
-        quizStore.getState().syncQuizFromDBToLocalStorage?.(),
-        progressStore.getState().syncProgressFromDBToLocalStorage?.(),
-      ].filter(Boolean));
+      const [quizStore, progressStore] = await Promise.all([getQuizStore(), getProgressStore()]);
+      await Promise.all(
+        [
+          quizStore.getState().syncQuizFromDBToLocalStorage?.(),
+          progressStore.getState().syncProgressFromDBToLocalStorage?.(),
+        ].filter(Boolean),
+      );
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Sign in failed';
       set({
@@ -116,14 +115,13 @@ export const useAuthStore = create<AuthStore>()((set, get) => ({
       }
 
       // Sync local data to DB before signing out
-      const [progressStore, quizStore] = await Promise.all([
-        getProgressStore(),
-        getQuizStore(),
-      ]);
-      await Promise.all([
-        progressStore.getState().syncProgressToDB?.(),
-        quizStore.getState().syncQuizToDB?.(),
-      ].filter(Boolean));
+      const [progressStore, quizStore] = await Promise.all([getProgressStore(), getQuizStore()]);
+      await Promise.all(
+        [
+          progressStore.getState().syncProgressToDB?.(),
+          quizStore.getState().syncQuizToDB?.(),
+        ].filter(Boolean),
+      );
 
       // Clear local user data
       await asyncStorageUtils.clearUserLocalData();

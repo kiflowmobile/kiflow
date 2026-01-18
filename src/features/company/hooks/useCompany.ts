@@ -20,8 +20,7 @@ export function useCompany() {
       if (apiError) throw apiError;
       setCompanies(data || []);
     } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : 'Failed to fetch companies';
+      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch companies';
       setError(errorMessage);
     } finally {
       setIsLoading(false);
@@ -37,16 +36,13 @@ export function useCompany() {
 
       if (!result.success && result.error) {
         const errorMessage =
-          result.error instanceof Error
-            ? result.error.message
-            : String(result.error);
+          result.error instanceof Error ? result.error.message : String(result.error);
         setError(errorMessage);
       }
 
       return result;
     } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : 'Failed to join company';
+      const errorMessage = err instanceof Error ? err.message : 'Failed to join company';
       setError(errorMessage);
       return { success: false, error: errorMessage };
     } finally {
@@ -64,8 +60,7 @@ export function useCompany() {
       setCurrentCompany(data);
       return data;
     } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : 'Failed to fetch company';
+      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch company';
       setError(errorMessage);
       return null;
     } finally {

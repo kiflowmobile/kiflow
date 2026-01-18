@@ -93,7 +93,7 @@ function dedupeClientSkills(rawSkills: any[] | undefined) {
 
   return result;
 }
-  
+
 export function ModuleScreen() {
   const { moduleId, courseId, slideId } = useLocalSearchParams<{
     moduleId?: string;
@@ -101,7 +101,12 @@ export function ModuleScreen() {
     slideId?: string;
   }>();
 
-  const { lessons, isLoading: isLoadingLessons, error: errorLessons, fetchLessonsByModule } = useLessonsStore();
+  const {
+    lessons,
+    isLoading: isLoadingLessons,
+    error: errorLessons,
+    fetchLessonsByModule,
+  } = useLessonsStore();
   const { slides, isLoading, error, fetchSlidesByLessons } = useSlidesStore();
   const router = useRouter();
   const { user } = useAuthStore();
@@ -213,7 +218,7 @@ export function ModuleScreen() {
     },
     [moduleId, courseId, user, slides, updateUrl, setModuleProgressSafe],
   );
-  
+
   useEffect(() => {
     if (!moduleId || slides.length === 0) return;
 
@@ -240,100 +245,100 @@ export function ModuleScreen() {
   }, [slides, slideId, router]);
 
   const triggerLastSlideEmail = useCallback(
-      async (index: number) => {
-        const isLastSlide = index === slides.length - 1;
-        const currentSlide = slides[index];
-  
-        if (!isLastSlide || emailSentRef.current || !user?.email || !currentSlide) {
-          return;
-        }
-  
-        emailSentRef.current = true;
-  
+    async (index: number) => {
+      const isLastSlide = index === slides.length - 1;
+      const currentSlide = slides[index];
+
+      if (!isLastSlide || emailSentRef.current || !user?.email || !currentSlide) {
+        return;
+      }
+
+      emailSentRef.current = true;
+
+      try {
+        const modulesState = useModulesStore.getState();
+        const coursesState = useCourseStore.getState();
+
+        const resolvedModuleTitle =
+          (modulesState.currentModule &&
+            modulesState.currentModule.id === moduleId &&
+            modulesState.currentModule.title) ||
+          (moduleId ? modulesState.getModule(moduleId)?.title : undefined) ||
+          currentSlide.slide_title ||
+          'Модуль без назви';
+
+        const resolvedCourseTitle =
+          (coursesState.currentCourse &&
+            coursesState.currentCourse.id === courseId &&
+            coursesState.currentCourse.title) ||
+          (courseId
+            ? coursesState.courses.find((course) => course.id === courseId)?.title
+            : undefined);
+
+        const uniqueSkills = dedupeClientSkills(skills);
+
+        console.log('[ModuleScreen] sendLastSlideEmail payload will be:', {
+          userId: user.id,
+          userEmail: user.email,
+          courseId,
+          moduleId,
+          averageScore: average,
+          skillsCountRaw: Array.isArray(skills) ? skills.length : 0,
+          skillsCountUnique: uniqueSkills.length,
+          moduleTitle: resolvedModuleTitle,
+          courseTitle: resolvedCourseTitle,
+          slideId: currentSlide.id,
+        });
+
+        const emailData = {
+          userId: user.id,
+          userName:
+            (user?.user_metadata &&
+              (user.user_metadata.full_name || user.user_metadata.first_name)) ||
+            user.email ||
+            undefined,
+          userEmail: user.email,
+          moduleId,
+          moduleTitle: resolvedModuleTitle,
+          courseTitle: resolvedCourseTitle,
+          slide: currentSlide,
+          averageScore: average ?? undefined,
+          skills: uniqueSkills,
+        };
+
         try {
-          const modulesState = useModulesStore.getState();
-          const coursesState = useCourseStore.getState();
-  
-          const resolvedModuleTitle =
-            (modulesState.currentModule &&
-              modulesState.currentModule.id === moduleId &&
-              modulesState.currentModule.title) ||
-            (moduleId ? modulesState.getModule(moduleId)?.title : undefined) ||
-            currentSlide.slide_title ||
-            'Модуль без назви';
-  
-          const resolvedCourseTitle =
-            (coursesState.currentCourse &&
-              coursesState.currentCourse.id === courseId &&
-              coursesState.currentCourse.title) ||
-            (courseId
-              ? coursesState.courses.find((course) => course.id === courseId)?.title
-              : undefined);
-  
-          const uniqueSkills = dedupeClientSkills(skills);
-  
-          console.log('[ModuleScreen] sendLastSlideEmail payload will be:', {
-            userId: user.id,
-            userEmail: user.email,
-            courseId,
-            moduleId,
-            averageScore: average,
-            skillsCountRaw: Array.isArray(skills) ? skills.length : 0,
-            skillsCountUnique: uniqueSkills.length,
-            moduleTitle: resolvedModuleTitle,
-            courseTitle: resolvedCourseTitle,
-            slideId: currentSlide.id,
-          });
-  
-          const emailData = {
-            userId: user.id,
-            userName:
-              (user?.user_metadata &&
-                (user.user_metadata.full_name || user.user_metadata.first_name)) ||
-              user.email ||
-              undefined,
-            userEmail: user.email,
-            moduleId,
-            moduleTitle: resolvedModuleTitle,
-            courseTitle: resolvedCourseTitle,
-            slide: currentSlide,
-            averageScore: average ?? undefined,
-            skills: uniqueSkills,
-          };
-  
-          try {
-            if (courseId) {
-              const key = `quiz-progress-${courseId}`;
-              const stored = await AsyncStorage.getItem(key);
-              if (stored) {
-                const parsed = JSON.parse(stored);
-                const entries = Object.values(parsed || {});
-                if (Array.isArray(entries)) {
-                  const total = entries.length;
-                  if (total > 0) {
-                    const correct = entries.filter(
-                      (q: any) => q.selectedAnswer === q.correctAnswer,
-                    ).length;
-                    const rating = (correct / total) * 5;
-                    (emailData as any).quizScore = Math.round(rating * 10) / 10;
-                  }
+          if (courseId) {
+            const key = `quiz-progress-${courseId}`;
+            const stored = await AsyncStorage.getItem(key);
+            if (stored) {
+              const parsed = JSON.parse(stored);
+              const entries = Object.values(parsed || {});
+              if (Array.isArray(entries)) {
+                const total = entries.length;
+                if (total > 0) {
+                  const correct = entries.filter(
+                    (q: any) => q.selectedAnswer === q.correctAnswer,
+                  ).length;
+                  const rating = (correct / total) * 5;
+                  (emailData as any).quizScore = Math.round(rating * 10) / 10;
                 }
               }
             }
-          } catch (e) {
-            console.warn('[ModuleScreen] Failed to read quiz progress for email payload', e);
-          }
-  
-          const result = await sendLastSlideEmail(emailData);
-          if (!result.success) {
-            console.error('Failed to send last slide email:', result.error);
           }
         } catch (e) {
-          console.error('Error sending last slide email', e);
+          console.warn('[ModuleScreen] Failed to read quiz progress for email payload', e);
         }
-      },
-      [average, courseId, moduleId, skills, slides, user],
-    );
+
+        const result = await sendLastSlideEmail(emailData);
+        if (!result.success) {
+          console.error('Failed to send last slide email:', result.error);
+        }
+      } catch (e) {
+        console.error('Error sending last slide email', e);
+      }
+    },
+    [average, courseId, moduleId, skills, slides, user],
+  );
 
   const onScroll = useAnimatedScrollHandler({
     onScroll: (event) => {
@@ -366,40 +371,40 @@ export function ModuleScreen() {
           y: index * pageH,
           animated: false,
         });
-          setCurrentSlideId(slideId);
-        }
+        setCurrentSlideId(slideId);
       }
-    }, [slides, pageH, slideId]);
+    }
+  }, [slides, pageH, slideId]);
 
   if (error || errorLessons)
-      return (
-        <View className="flex-1 justify-center items-center p-5">
-          <Text className="text-red-500 text-center mb-2.5 text-base">Помилка: {error}</Text>
-          <Text
-            className="text-blue-500 text-center underline text-base"
-            onPress={() => {
-              // clearError();
-              // if (moduleId) fetchSlidesByModule(moduleId);
-            }}
-          >
-            Спробувати знову
-          </Text>
-        </View>
-      );
+    return (
+      <View className="flex-1 justify-center items-center p-5">
+        <Text className="text-red-500 text-center mb-2.5 text-base">Помилка: {error}</Text>
+        <Text
+          className="text-blue-500 text-center underline text-base"
+          onPress={() => {
+            // clearError();
+            // if (moduleId) fetchSlidesByModule(moduleId);
+          }}
+        >
+          Спробувати знову
+        </Text>
+      </View>
+    );
 
-    if (isLoading || isLoadingLessons)
-      return (
-        <View className="flex-1 justify-center items-center">
-          <ActivityIndicator size="large" />
-        </View>
-      );
+  if (isLoading || isLoadingLessons)
+    return (
+      <View className="flex-1 justify-center items-center">
+        <ActivityIndicator size="large" />
+      </View>
+    );
 
-    if (slides.length === 0)
-      return (
-        <View className="flex-1 justify-center items-center">
-          <Text className="text-gray-600 text-center text-base">Слайди не знайдено</Text>
-        </View>
-      );
+  if (slides.length === 0)
+    return (
+      <View className="flex-1 justify-center items-center">
+        <Text className="text-gray-600 text-center text-base">Слайди не знайдено</Text>
+      </View>
+    );
 
   return (
     <View className="flex-1">

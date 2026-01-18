@@ -22,7 +22,7 @@ const MappedHeading = memo(
       highlight,
       ...props
     },
-    ref
+    ref,
   ) {
     return (
       <Text
@@ -41,13 +41,13 @@ const MappedHeading = memo(
         ref={ref}
       />
     );
-  })
+  }),
 );
 
 const Heading = memo(
   forwardRef<Text, IHeadingProps>(function Heading(
     { className, size = 'lg', as: AsComp, ...props },
-    ref
+    ref,
   ) {
     const { isTruncated, bold, underline, strikeThrough, sub, italic, highlight } = props;
 
@@ -71,7 +71,7 @@ const Heading = memo(
     }
 
     return <MappedHeading className={className} size={size} ref={ref} {...props} />;
-  })
+  }),
 );
 
 Heading.displayName = 'Heading';

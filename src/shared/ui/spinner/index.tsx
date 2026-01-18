@@ -58,7 +58,7 @@ const Spinner = React.forwardRef<React.ComponentRef<typeof ActivityIndicator>, S
       'aria-label': ariaLabel = 'loading',
       ...props
     },
-    ref
+    ref,
   ) {
     // Using the properly typed size value
     const sizeValue = size;
@@ -72,7 +72,7 @@ const Spinner = React.forwardRef<React.ComponentRef<typeof ActivityIndicator>, S
         className={spinnerStyle({ size: sizeValue, colorScheme, class: className })}
       />
     );
-  }
+  },
 );
 
 Spinner.displayName = 'Spinner';

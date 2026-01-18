@@ -10,4 +10,3 @@ export const AIChatHeader: React.FC<ChatHeaderProps> = ({ title }) => (
     <Text className="text-xl font-bold text-slate-900 flex-shrink">{title}</Text>
   </View>
 );
-

@@ -25,7 +25,7 @@ export const initAmplitude = (): void => {
  */
 export const logAmplitudeEvent = (
   eventName: string,
-  eventProps: Record<string, any> = {}
+  eventProps: Record<string, any> = {},
 ): void => {
   amplitude.track(eventName, eventProps);
 };
@@ -41,9 +41,7 @@ export const setAmplitudeUserId = (userId: string): void => {
 /**
  * Set user properties in Amplitude
  */
-export const setAmplitudeUserProperties = (
-  properties: Record<string, any>
-): void => {
+export const setAmplitudeUserProperties = (properties: Record<string, any>): void => {
   const identify = new amplitude.Identify();
   Object.entries(properties).forEach(([key, value]) => {
     identify.set(key, value);

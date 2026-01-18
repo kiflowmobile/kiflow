@@ -34,7 +34,9 @@ export const ExampleSlide: React.FC<ContentWithExampleProps> = ({
             {tips.map((tip, index) => (
               <View key={index} className="flex-row items-start mb-2">
                 <Icon as={CheckCircle} size={20} color="#111" className="mt-0.5" />
-                <Text className="flex-1 flex-shrink ml-2 text-base text-black leading-5">{tip}</Text>
+                <Text className="flex-1 flex-shrink ml-2 text-base text-black leading-5">
+                  {tip}
+                </Text>
               </View>
             ))}
           </View>
@@ -51,4 +53,3 @@ export const ExampleSlide: React.FC<ContentWithExampleProps> = ({
     </View>
   );
 };
-

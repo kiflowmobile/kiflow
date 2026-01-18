@@ -10,27 +10,13 @@ export function useUserProgress() {
   const error = useUserProgressStore((state) => state.error);
 
   const initFromLocal = useUserProgressStore((state) => state.initFromLocal);
-  const fetchUserProgress = useUserProgressStore(
-    (state) => state.fetchUserProgress
-  );
-  const setCourseProgress = useUserProgressStore(
-    (state) => state.setCourseProgress
-  );
-  const getCourseProgress = useUserProgressStore(
-    (state) => state.getCourseProgress
-  );
-  const setModuleProgressSafe = useUserProgressStore(
-    (state) => state.setModuleProgressSafe
-  );
-  const getModuleProgress = useUserProgressStore(
-    (state) => state.getModuleProgress
-  );
-  const syncProgressToDB = useUserProgressStore(
-    (state) => state.syncProgressToDB
-  );
-  const resetCourseProgress = useUserProgressStore(
-    (state) => state.resetCourseProgress
-  );
+  const fetchUserProgress = useUserProgressStore((state) => state.fetchUserProgress);
+  const setCourseProgress = useUserProgressStore((state) => state.setCourseProgress);
+  const getCourseProgress = useUserProgressStore((state) => state.getCourseProgress);
+  const setModuleProgressSafe = useUserProgressStore((state) => state.setModuleProgressSafe);
+  const getModuleProgress = useUserProgressStore((state) => state.getModuleProgress);
+  const syncProgressToDB = useUserProgressStore((state) => state.syncProgressToDB);
+  const resetCourseProgress = useUserProgressStore((state) => state.resetCourseProgress);
 
   return {
     // State
@@ -83,9 +69,7 @@ export function useCourseProgress(courseId: string) {
  * Hook to get module progress
  */
 export function useModuleProgress(courseId: string, moduleId: string) {
-  const getModuleProgress = useUserProgressStore(
-    (state) => state.getModuleProgress
-  );
+  const getModuleProgress = useUserProgressStore((state) => state.getModuleProgress);
   const courses = useUserProgressStore((state) => state.courses);
 
   const course = courses.find((c) => c.course_id === courseId);

@@ -140,4 +140,3 @@ export function CourseStatisticsScreen() {
     </ScrollView>
   );
 }
-

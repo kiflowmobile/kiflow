@@ -1,6 +1,5 @@
 import type { Message } from '../api/ask-gemini';
 
-
 export function buildPrompt(
   slidePrompt: string,
   isFirstMessage: boolean,

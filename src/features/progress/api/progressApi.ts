@@ -10,9 +10,7 @@ export const progressApi = {
   /**
    * Get user's module progress from DB
    */
-  getUserModuleProgress: async (
-    userId: string
-  ): Promise<ApiResponse<UserModuleProgressDB[]>> => {
+  getUserModuleProgress: async (userId: string): Promise<ApiResponse<UserModuleProgressDB[]>> => {
     const { data, error } = await supabase
       .from('user_module_progress')
       .select('*')
@@ -28,7 +26,7 @@ export const progressApi = {
     userId: string,
     moduleId: string,
     progress: number,
-    lastSlideId: string | null
+    lastSlideId: string | null,
   ): Promise<ApiResponse<UserModuleProgressDB>> => {
     const { data, error } = await supabase
       .from('user_module_progress')
@@ -48,7 +46,7 @@ export const progressApi = {
    * Get user's course progress summary from view
    */
   getUserCourseProgressView: async (
-    userId: string
+    userId: string,
   ): Promise<
     ApiResponse<
       Array<{
@@ -69,10 +67,7 @@ export const progressApi = {
   /**
    * Delete module progress for a specific module
    */
-  deleteModuleProgress: async (
-    userId: string,
-    moduleId: string
-  ): Promise<ApiResponse<null>> => {
+  deleteModuleProgress: async (userId: string, moduleId: string): Promise<ApiResponse<null>> => {
     const { error } = await supabase
       .from('user_module_progress')
       .delete()
@@ -87,7 +82,7 @@ export const progressApi = {
    */
   deleteProgressForCourse: async (
     userId: string,
-    moduleIds: string[]
+    moduleIds: string[],
   ): Promise<ApiResponse<null>> => {
     if (moduleIds.length === 0) {
       return { data: null, error: null };

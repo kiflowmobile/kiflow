@@ -9,17 +9,21 @@ import { Icon } from '@/shared/ui';
 interface AudioRecorderProps {
   onAudioProcessed: (text: string) => void;
   disabled: boolean;
-  id: string;  
+  id: string;
   slideId?: string;
 }
 
-export const AudioRecorder: React.FC<AudioRecorderProps> = ({ onAudioProcessed, disabled , id, slideId}) => {
+export const AudioRecorder: React.FC<AudioRecorderProps> = ({
+  onAudioProcessed,
+  disabled,
+  id,
+  slideId,
+}) => {
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const analyticsStore = useAnalytics();
-
 
   const handleStartRecording = async () => {
     setError(null);
@@ -111,4 +115,3 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({ onAudioProcessed, 
     </View>
   );
 };
-
