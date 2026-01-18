@@ -3,7 +3,7 @@ import { View, Text, Image, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
 
 import { SafeAreaView, ScrollView } from '@/shared/ui';
-import { useCourseStore } from '@/features/courses';
+import { useCourseStore } from '../store/coursesStore';
 import { useAnalytics } from '@/features/analytics';
 import { CourseCard } from './course-card';
 

@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text } from 'react-native';
-import type { Skill } from '@/features/statistics';
+import type { Skill } from '../types';
 
 interface Props {
   skill: Skill;

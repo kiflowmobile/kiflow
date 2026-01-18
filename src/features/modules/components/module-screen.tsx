@@ -11,12 +11,14 @@ import {
 import Animated, { useAnimatedScrollHandler, runOnJS } from 'react-native-reanimated';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-import { useAuthStore } from '@/features/auth';
+import { useAuthStore } from '@/features/auth/store/authStore';
 import { useCourseStore } from '@/features/courses';
-import { LessonSlide, useLessonsStore, useSlidesStore } from '@/features/lessons';
-import { useModulesStore } from '@/features/modules';
+import { LessonSlide } from '@/features/lessons/components/lesson';
+import { useLessonsStore } from '@/features/lessons/store/lessonsStore';
+import { useSlidesStore } from '@/features/lessons/store/slidesStore';
+import { useModulesStore } from '../store/modulesStore';
 import { useUserProgressStore } from '@/features/progress';
-import { useMainRatingStore } from '@/features/statistics';
+import { useMainRatingStore } from '@/features/statistics/store/ratingsStore';
 import { useAnalytics } from '@/features/analytics';
 import { PaginationDots } from './pagination-dot';
 

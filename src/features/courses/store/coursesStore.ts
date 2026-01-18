@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { coursesApi } from '../api/coursesApi';
-import { getCurrentUser } from '@/src/features/auth';
+import { getCurrentUser } from '@/features/auth/utils/authUtils';
 import type { Course, CourseStore } from '../types';
 
 // Lazy import to avoid circular dependencies

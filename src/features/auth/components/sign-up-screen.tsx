@@ -4,7 +4,9 @@ import { useRootNavigationState, useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { SafeAreaView, KeyboardAvoidingView, Button, Input } from '@/shared/ui';
-import { useAuth, useAuthStore, emailRegex, normalizeEmail } from '@/features/auth';
+import { useAuth } from '../hooks/useAuth';
+import { useAuthStore } from '../store/authStore';
+import { emailRegex, normalizeEmail } from '../utils/authUtils';
 import { useAnalytics } from '@/features/analytics';
 import BackIcon from '@/src/assets/images/arrow-left.svg';
 import OpenEye from '@/src/assets/images/eye-open.svg';

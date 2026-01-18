@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text } from 'react-native';
 import { SkillRow } from './skill-row';
-import type { Skill } from '@/features/statistics';
+import type { Skill } from '../types';
 
 interface Props {
   module: { id: string; title: string };

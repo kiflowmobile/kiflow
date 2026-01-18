@@ -4,11 +4,12 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-import { useAuthStore } from '@/features/auth';
+import { useAuthStore } from '@/features/auth/store/authStore';
 import { companyApi } from '@/features/company';
 import { profileApi } from '@/features/profile';
-import { useCriteriaStore, useMainRatingStore } from '@/features/statistics';
-import { useSlidesStore } from '@/features/lessons';
+import { useCriteriaStore } from '@/features/statistics/store/criteriaStore';
+import { useMainRatingStore } from '@/features/statistics/store/ratingsStore';
+import { useSlidesStore } from '@/features/lessons/store/slidesStore';
 import { useAnalytics } from '@/features/analytics';
 
 import { askGemini, type Message } from '../api/ask-gemini';

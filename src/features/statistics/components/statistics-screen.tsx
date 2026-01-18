@@ -3,11 +3,13 @@ import { Image, Pressable, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 
 import { ScrollView, ProgressBar } from '@/shared/ui';
-import { useAuth } from '@/features/auth';
+import { useAuth } from '@/features/auth/hooks/useAuth';
 import { useAnalytics } from '@/features/analytics';
 import { useCourseStore } from '@/features/courses';
-import { useModulesStore } from '@/features/modules';
-import { useMainRatingStore, useCriteriaStore, type Skill } from '@/features/statistics';
+import { useModulesStore } from '@/features/modules/store/modulesStore';
+import { useMainRatingStore } from '../store/ratingsStore';
+import { useCriteriaStore } from '../store/criteriaStore';
+import type { Skill } from '../types';
 import { useUserProgressStore } from '@/features/progress';
 import { useQuizStore } from '@/features/quiz';
 import { formatBubbleScore } from '@/features/statistics/utils';

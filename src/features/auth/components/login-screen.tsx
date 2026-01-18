@@ -3,7 +3,8 @@ import { Text, TouchableOpacity, View } from 'react-native';
 import { useRootNavigationState, useRouter } from 'expo-router';
 
 import { SafeAreaView, KeyboardAvoidingView, Button, Input } from '@/shared/ui';
-import { useAuth, emailRegex, normalizeEmail, mapAuthErrorToMessage } from '@/features/auth';
+import { useAuth } from '../hooks/useAuth';
+import { emailRegex, normalizeEmail, mapAuthErrorToMessage } from '../utils/authUtils';
 import { useAnalytics } from '@/features/analytics';
 import BackIcon from '@/src/assets/images/arrow-left.svg';
 import DoneIcon from '@/src/assets/images/done.svg';

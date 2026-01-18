@@ -3,11 +3,13 @@ import { Text, View } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 
 import { ScrollView } from '@/shared/ui';
-import { useAuth } from '@/features/auth';
+import { useAuth } from '@/features/auth/hooks/useAuth';
 import { useAnalytics } from '@/features/analytics';
 import { useCourseStore } from '@/features/courses';
-import { modulesApi, type Module } from '@/features/modules';
-import { useMainRatingStore, type Skill } from '@/features/statistics';
+import { modulesApi } from '@/features/modules/api/modulesApi';
+import type { Module } from '@/features/modules/types';
+import { useMainRatingStore } from '../store/ratingsStore';
+import type { Skill } from '../types';
 import { useUserProgressStore } from '@/features/progress';
 import { useQuizStore } from '@/features/quiz';
 

@@ -4,7 +4,7 @@ import { useLocalSearchParams } from 'expo-router';
 
 import { lessonsApi } from '../api/lessonsApi';
 import { useSlidesStore } from '../store/slidesStore';
-import { useModulesStore } from '@/features/modules';
+import { useModulesStore } from '@/features/modules/store/modulesStore';
 import { QuizSlide } from '@/features/quiz';
 import { Spinner } from '@/shared/ui';
 import { VideoPlayer } from '@/shared/ui/video-player';
@@ -12,7 +12,7 @@ import { TextSlide } from './text-slide';
 import { ExampleSlide } from './example-slide';
 import { DashboardSlide } from './dashboard-slide';
 import { MediaPlaceholder } from './media-placeholder';
-import { AIChat } from '@/features/ai-chat';
+import { AIChat } from '@/features/ai-chat/components/ai-chat';
 
 interface CourseSlideProps {
   slideId: string | number;

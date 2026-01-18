@@ -5,9 +5,10 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ProgressBar } from '@/shared/ui';
 import { useAnalytics } from '@/features/analytics';
 import { useCourseStore } from '@/features/courses';
-import { useModulesStore, type Module } from '@/features/modules';
+import { useModulesStore } from '../store/modulesStore';
+import type { Module } from '../types';
 import { useCourseProgress, useUserProgressStore } from '@/features/progress';
-import { lessonsApi } from '@/features/lessons';
+import { lessonsApi } from '@/features/lessons/api/lessonsApi';
 
 const LINE_DEFAULT = '#D9D9D9';
 const LINE_COMPLETED = '#22c55e'; // green-500

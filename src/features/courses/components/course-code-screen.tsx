@@ -16,8 +16,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button, Input } from '@/shared/ui';
 import { companyApi } from '@/features/company';
 import { profileApi } from '@/features/profile';
-import { useCourseStore } from '@/features/courses';
-import { useAuthStore } from '@/features/auth';
+import { useCourseStore } from '../store/coursesStore';
+import { useAuthStore } from '@/features/auth/store/authStore';
 import { useAnalytics } from '@/features/analytics';
 
 export function CourseCodeScreen() {

@@ -5,11 +5,11 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import Svg, { Path } from 'react-native-svg';
 
 import { Button, ProgressBar } from '@/shared/ui';
-import { useAuthStore } from '@/features/auth';
+import { useAuthStore } from '@/features/auth/store/authStore';
 import { useAnalytics } from '@/features/analytics';
 import { useCourseProgress, useUserProgressStore } from '@/features/progress';
-import { navigateToCourse } from '@/features/courses/utils/navigate-to-course';
-import type { Course } from '@/features/courses';
+import { navigateToCourse } from '../utils/navigate-to-course';
+import type { Course } from '../types';
 
 import ArrowRight from '@/src/assets/images/arrow-right.svg';
 

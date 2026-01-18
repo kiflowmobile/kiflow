@@ -3,9 +3,9 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { ScrollView, Text, View } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 
-import { useAuthStore } from '@/features/auth';
-import { useModulesStore } from '@/features/modules';
-import { useMainRatingStore } from '@/features/statistics';
+import { useAuthStore } from '@/features/auth/store/authStore';
+import { useModulesStore } from '@/features/modules/store/modulesStore';
+import { useMainRatingStore } from '@/features/statistics/store/ratingsStore';
 import { SkillsChart } from '@/shared/ui';
 
 interface DashboardSlideProps {
