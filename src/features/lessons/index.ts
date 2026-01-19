@@ -36,7 +36,7 @@ export type {
 } from './types';
 
 // Components
-export { LessonSlide } from './components/lesson';
+export { LessonScreen } from './components/lesson-screen';
 export { TextSlide } from './components/text-slide';
 export { ExampleSlide } from './components/example-slide';
 export { DashboardSlide } from './components/dashboard-slide';

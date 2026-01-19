@@ -11,7 +11,7 @@ import {
 import Animated, { useAnimatedScrollHandler, runOnJS } from 'react-native-reanimated';
 
 import { useAuth } from '@/features/auth';
-import { LessonSlide } from '@/features/lessons/components/lesson';
+import { LessonScreen } from '@/src/features/lessons/components/lesson-screen';
 import { useLessons, useSlides } from '@/features/lessons';
 import { useUserProgress } from '@/features/progress';
 import { useSkillRatings } from '@/features/statistics';
@@ -277,7 +277,7 @@ export function ModuleScreen() {
       >
         {slides.map((slide, i) => (
           <View key={slide.id} style={{ width, height: pageH }}>
-            <LessonSlide
+            <LessonScreen
               slideId={slide.id}
               isActive={currentSlideId === slide.id}
               onComplete={goToNextSlide}

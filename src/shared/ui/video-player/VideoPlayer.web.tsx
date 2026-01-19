@@ -8,7 +8,7 @@ interface VideoPlayerProps {
   thumbnail?: string;
 }
 
-const VideoPlayer: React.FC<VideoPlayerProps> = ({ uri, mux, thumbnail }) => {
+export const VideoPlayer: React.FC<VideoPlayerProps> = ({ uri, mux, thumbnail }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const { ref: viewRef, inView } = useInView<HTMLDivElement>({ threshold: 0.5 });
 
@@ -294,5 +294,3 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ uri, mux, thumbnail }) => {
     </div>
   );
 };
-
-export default VideoPlayer;
