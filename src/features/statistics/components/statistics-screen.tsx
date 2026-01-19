@@ -223,7 +223,7 @@ export function StatisticsScreen() {
                       .filter((c) => c.course_id === course.id)
                       .slice(0, 4)
                       .map((item) => {
-                        const skill = ratings.find((s) => s.criteria_key === item.key);
+                        const skill = ratings.find((s) => s.criteria_id === item.id);
                         const score = Math.round(skill?.rating ?? 0);
 
                         return (

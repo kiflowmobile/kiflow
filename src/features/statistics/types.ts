@@ -18,7 +18,7 @@ export interface RatingItem {
   id: string;
   user_id: string;
   module_id: string;
-  criteria_key: string;
+  criteria_id: string;
   rating: number;
 }
 

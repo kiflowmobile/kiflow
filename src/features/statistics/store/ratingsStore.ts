@@ -34,16 +34,16 @@ export const useUserSkillRatingsStore = create<SkillRatingsStore>((set, get) => 
       );
       if (ratingsError) throw ratingsError;
 
-      const keys = ratings?.map((r) => r.criteria_key) ?? [];
+      const keys = ratings?.map((r) => r.criteria_id) ?? [];
       const { data: criteria, error: criteriaError } = await ratingsApi.fetchCriteriaByKeys(keys);
       if (criteriaError) throw criteriaError;
 
       const skills: SkillSummaryItem[] =
         ratings?.map((r) => {
-          const criterion = criteria?.find((c) => c.key === r.criteria_key);
+          const criterion = criteria?.find((c) => c.key === r.criteria_id);
           return {
-            criterion_id: r.criteria_key,
-            criterion_name: criterion?.name || r.criteria_key,
+            criterion_id: r.criteria_id,
+            criterion_name: criterion?.name || r.criteria_id,
             average_score: r.rating || 0,
           };
         }) ?? [];

@@ -13,10 +13,10 @@ export const ratingsApi = {
   fetchRatings: async (
     userId: string,
     moduleId: string,
-  ): Promise<ApiResponse<Array<{ criteria_key: string; rating: number }>>> => {
+  ): Promise<ApiResponse<Array<{ criteria_id: string; rating: number }>>> => {
     const { data, error } = await supabase
       .from('user_criteria_ratings')
-      .select('criteria_key, rating')
+      .select('criteria_id, rating')
       .eq('user_id', userId)
       .eq('module_id', moduleId);
 
@@ -35,7 +35,7 @@ export const ratingsApi = {
       .from('user_criteria_ratings')
       .select('rating')
       .eq('user_id', userId)
-      .eq('criteria_key', key)
+      .eq('criteria_id', key)
       .eq('module_id', moduleId ?? null)
       .single();
 
@@ -49,13 +49,13 @@ export const ratingsApi = {
     userId: string,
     rating: number,
     moduleId: string,
-    key: string,
+    criteriaId: string,
   ): Promise<ApiResponse<RatingItem[]>> => {
     const value = Number(rating);
     if (!Number.isFinite(value)) {
       return { data: null, error: new Error('Rating is not a number') };
     }
-    if (!userId || !moduleId || !key) {
+    if (!userId || !moduleId || !criteriaId) {
       return { data: null, error: new Error('Missing ids') };
     }
 
@@ -67,10 +67,10 @@ export const ratingsApi = {
             user_id: userId,
             rating: value,
             module_id: moduleId,
-            criteria_key: key,
+            criteria_id: criteriaId,
           },
         ] as any,
-        { onConflict: 'user_id,module_id,criteria_key' },
+        { onConflict: 'user_id,module_id,criteria_id' },
       )
       .select();
 
@@ -83,7 +83,7 @@ export const ratingsApi = {
   fetchAllRatings: async (userId: string): Promise<ApiResponse<RatingItem[]>> => {
     const { data, error } = await supabase
       .from('user_criteria_ratings')
-      .select('id, user_id, module_id, criteria_key, rating')
+      .select('id, user_id, module_id, criteria_id, rating')
       .eq('user_id', userId);
 
     return { data: (data as RatingItem[]) || [], error };
@@ -143,7 +143,7 @@ export const ratingsApi = {
       return { data: [], error: null };
     }
 
-    const keys = Array.from(new Set(ratings.map((r) => r.criteria_key).filter(Boolean)));
+    const keys = Array.from(new Set(ratings.map((r) => r.criteria_id).filter(Boolean)));
 
     const { data: criteria, error: criteriaError } = await ratingsApi.fetchCriteriaByKeys(keys);
 
@@ -160,12 +160,12 @@ export const ratingsApi = {
     const grouped: Record<string, { sum: number; count: number }> = {};
 
     ratings.forEach((item) => {
-      if (!item.criteria_key) return;
-      if (!grouped[item.criteria_key]) {
-        grouped[item.criteria_key] = { sum: 0, count: 0 };
+      if (!item.criteria_id) return;
+      if (!grouped[item.criteria_id]) {
+        grouped[item.criteria_id] = { sum: 0, count: 0 };
       }
-      grouped[item.criteria_key].sum += item.rating ?? 0;
-      grouped[item.criteria_key].count += 1;
+      grouped[item.criteria_id].sum += item.rating ?? 0;
+      grouped[item.criteria_id].count += 1;
     });
 
     const summary = Object.entries(grouped).map(([key, { sum, count }]) => ({
