@@ -1,1 +1,1 @@
-export { default } from '@/src/components/screens/Statistics/CourseModulesScreen';
+export { CourseStatisticsScreen as default } from '@/src/features/statistics';

@@ -1,1 +1,1 @@
-export { default } from '@/src/components/screens/CourseCodeScreen';
+export { CourseCodeScreen as default } from '@/features/courses';

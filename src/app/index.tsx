@@ -1,1 +1,1 @@
-export { default } from '@/src/components/screens/WelcomeScreen';
+export { WelcomeScreen as default } from '@/features/welcome';

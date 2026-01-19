@@ -1,7 +1,1 @@
-export { default } from '@/src/components/screens/Statistics';
-
-
-
-
-
-
+export { StatisticsScreen as default } from '@/features/statistics';

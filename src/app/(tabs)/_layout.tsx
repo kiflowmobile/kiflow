@@ -1,7 +1,8 @@
 import { Tabs } from 'expo-router';
 import { Platform } from 'react-native';
-import CustomHeader from '@/src/components/ui/CustomHeader';
-import { useAnalyticsStore } from '@/src/stores/analyticsStore';
+
+import { useAnalytics } from '@/features/analytics';
+import { Header } from '@/shared/components/header';
 
 import CoursesIconActive from '@/src/assets/images/courses-active.svg';
 import CoursesIconInactive from '@/src/assets/images/courses-inactive.svg';
@@ -13,7 +14,7 @@ import ProfileIconActive from '@/src/assets/images/profile-active.svg';
 import ProfileIconInactive from '@/src/assets/images/profile-inactive.svg';
 
 export default function TabsLayout() {
-  const analyticsStore = useAnalyticsStore.getState();
+  const { trackEvent } = useAnalytics();
 
   return (
     <Tabs
@@ -43,10 +44,10 @@ export default function TabsLayout() {
               <CoursesIconInactive width={24} height={24} />
             ),
           headerShown: true,
-          header: () => <CustomHeader showBackButton={false} title="Courses" />,
+          header: () => <Header showBackButton={false} title="Courses" />,
         }}
         listeners={{
-          focus: () => analyticsStore.trackEvent('tab_bar__courses__click'),
+          focus: () => trackEvent('tab_bar__courses__click'),
         }}
       />
 
@@ -55,7 +56,7 @@ export default function TabsLayout() {
         options={{
           title: 'Progress',
           headerShown: true,
-          header: () => <CustomHeader showBackButton={false} title="Your Progress" />,
+          header: () => <Header showBackButton={false} title="Your Progress" />,
           tabBarIcon: ({ focused }: { focused: boolean; color: string; size: number }) =>
             focused ? (
               <ProgressIconActive width={24} height={24} />
@@ -64,7 +65,7 @@ export default function TabsLayout() {
             ),
         }}
         listeners={{
-          focus: () => analyticsStore.trackEvent('tab_bar__results__click'),
+          focus: () => trackEvent('tab_bar__results__click'),
         }}
       />
 
@@ -80,7 +81,7 @@ export default function TabsLayout() {
             ),
         }}
         listeners={{
-          focus: () => analyticsStore.trackEvent('tab_bar__profile__click'),
+          focus: () => trackEvent('tab_bar__profile__click'),
         }}
       />
     </Tabs>

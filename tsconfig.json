@@ -5,21 +5,18 @@
     "lib": ["esnext", "dom"],
     "paths": {
       "@/*": ["./*"],
+      "@/features/*": ["./src/features/*"],
+      "@/shared/*": ["./src/shared/*"],
       "tailwind.config": ["./tailwind.config.js"],
       "tailwind-variants/dist/config": ["./src/types/tailwind-variants/config.ts"]
     },
     "jsx": "react-jsx",
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
-    "moduleResolution": "nodenext",
-    "module": "nodenext",
-    "types": ["react", "react-native"]
+    "moduleResolution": "bundler",
+    "module": "esnext",
+    "types": ["react", "react-native"],
+    "skipLibCheck": true
   },
-  "include": [
-    "**/*.ts",
-    "**/*.tsx",
-    ".expo/types/**/*.ts",
-    "expo-env.d.ts",
-    "nativewind-env.d.ts"
-  ]
+  "include": ["**/*.ts", "**/*.tsx", ".expo/types/**/*.ts", "expo-env.d.ts", "nativewind-env.d.ts"]
 }

@@ -1,1 +1,1 @@
-export { default } from '@/src/components/screens/ModuleScreen/ModuleScreen';
+export { ModuleScreen as default } from '@/src/features/modules';

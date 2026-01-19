@@ -1,22 +1,34 @@
-/**
- * Learn more about light and dark modes:
- * https://docs.expo.dev/guides/color-schemes/
- */
-
-// import { useColorScheme } from '@/hooks/useColorScheme';
-import { Colors } from '@/src/constants/Colors';
 import { useColorScheme } from './useColorScheme.web';
 
-export function useThemeColor(
-  // props: { light?: string; dark?: string },
-  // colorName: keyof typeof Colors.light & keyof typeof Colors.dark
-) {
-  // const theme = useColorScheme() ?? 'light';
-  const colorFromProps = 'light';
+// Color values from tailwind.config.js
+// These are used for inline styles when className isn't suitable (e.g., dynamic colors)
+const COLORS = {
+  white: '#FFFFFF', // surface
+  black: '#0A0A0A', // black
+  bg: '#F4F4F4', // background
+} as const;
 
-  // if (colorFromProps) {
-    return colorFromProps;
-  // } else {
-  //   return Colors[theme][colorName];
-  // }
+export function useThemeColor(
+  props?: { light?: string; dark?: string },
+  colorName?: string,
+): string {
+  const colorScheme = useColorScheme();
+
+  if (props) {
+    return colorScheme === 'dark'
+      ? props.dark || props.light || COLORS.white
+      : props.light || COLORS.white;
+  }
+
+  // Default colors based on color name
+  const defaultColors: Record<string, { light: string; dark: string }> = {
+    background: { light: COLORS.bg, dark: COLORS.black },
+    text: { light: COLORS.black, dark: COLORS.white },
+  };
+
+  if (colorName && defaultColors[colorName]) {
+    return colorScheme === 'dark' ? defaultColors[colorName].dark : defaultColors[colorName].light;
+  }
+
+  return COLORS.white;
 }

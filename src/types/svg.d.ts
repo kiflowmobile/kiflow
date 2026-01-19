@@ -5,8 +5,3 @@ declare module '*.svg' {
   const content: FC<SvgProps>;
   export default content;
 }
-
-
-
-
-

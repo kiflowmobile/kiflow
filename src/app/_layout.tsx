@@ -1,19 +1,23 @@
 import 'react-native-reanimated';
-import { useAuthStore } from '@/src/stores/authStore';
-import { useFonts } from 'expo-font';
-import { Stack, useRouter, useRootNavigationState } from 'expo-router';
+import '../../global.css';
+
 import { useEffect } from 'react';
+import { Stack, useRouter, useRootNavigationState } from 'expo-router';
+import { useFonts } from 'expo-font';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { useUserProgressStore } from '../stores';
-import CustomHeader from '../components/ui/CustomHeader';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import '../firebase';
-import { initAmplitude } from '../amplitude';
+
+import { useAuth } from '@/features/auth';
+import { useUserProgress } from '@/features/progress';
+import { Header } from '@/shared/components/header';
+
+import { initFirebase } from '@/shared/lib/firebase';
+import { initAmplitude } from '@/shared/lib/amplitude';
 
 export default function RootLayout() {
-  const { initFromLocal } = useUserProgressStore();
-  const { user, isGuest, isLoading } = useAuthStore();
-  const router = useRouter(); 
+  const { initFromLocal } = useUserProgress();
+  const { user, isGuest, isLoading, checkSession } = useAuth();
+  const router = useRouter();
   const navigationState = useRootNavigationState();
   const isNavigationReady = Boolean(navigationState?.key);
 
@@ -22,18 +26,21 @@ export default function RootLayout() {
     Inter: require('../assets/fonts/Inter.ttf'),
   });
 
-  const checkSession = useAuthStore((state) => state.checkSession);
-
   useEffect(() => {
     checkSession();
   }, [checkSession]);
+
+  useEffect(() => {
+    initFirebase();
+    initAmplitude();
+  }, []);
 
   useEffect(() => {
     initFromLocal();
   }, [user, initFromLocal]);
 
   useEffect(() => {
-    if (loaded && !isLoading && isGuest === true && isNavigationReady) {
+    if (loaded && !isLoading && isGuest && isNavigationReady) {
       // Delay navigation to the next tick so the Root navigator has a chance to mount.
       // This avoids "Attempted to navigate before mounting the Root Layout component".
       const id = setTimeout(() => {
@@ -42,10 +49,6 @@ export default function RootLayout() {
       return () => clearTimeout(id);
     }
   }, [isGuest, isLoading, isNavigationReady, loaded, router]);
-
-  useEffect(() => {
-    initAmplitude();
-  }, []);
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
@@ -64,21 +67,18 @@ export default function RootLayout() {
 
           <Stack.Screen
             name="courses/[id]"
-            options={{
-              headerShown: true,
-              header: () => <CustomHeader showBackButton />,
-            }}
+            options={{ headerShown: true, header: () => <Header showBackButton /> }}
           />
 
           <Stack.Screen
             name="statistics/[id]"
             options={{
               headerShown: true,
-              header: () => <CustomHeader showBackButton title="Course progress" />,
+              header: () => <Header showBackButton title="Course progress" />,
             }}
           />
 
-          <Stack.Screen name="instractions" />
+          <Stack.Screen name="instructions" />
         </Stack>
       </SafeAreaProvider>
     </GestureHandlerRootView>
