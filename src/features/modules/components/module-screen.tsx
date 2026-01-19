@@ -9,91 +9,24 @@ import {
   View,
 } from 'react-native';
 import Animated, { useAnimatedScrollHandler, runOnJS } from 'react-native-reanimated';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { useAuth } from '@/features/auth';
-import { useCourses, useCourseStore } from '@/features/courses';
 import { LessonSlide } from '@/features/lessons/components/lesson';
-import { useLessons } from '@/features/lessons';
-import { useSlides } from '@/features/lessons';
-import { useModules, useModulesStore } from '@/features/modules';
+import { useLessons, useSlides } from '@/features/lessons';
 import { useUserProgress } from '@/features/progress';
 import { useSkillRatings } from '@/features/statistics';
 import { useAnalytics } from '@/features/analytics';
 import { PaginationDots } from './pagination-dot';
+import { useLastSlideEmail } from '../hooks/useLastSlideEmail';
 
-// Helper function to send last slide email
-async function sendLastSlideEmail(emailData: {
-  userId: string;
-  userEmail: string;
-  moduleId?: string;
-  moduleTitle: string;
-  courseTitle?: string;
-  slide: any;
-  averageScore?: number;
-  skills?: any[];
-  quizScore?: number;
-  userName?: string;
-}): Promise<{ success: boolean; error?: string }> {
-  try {
-    const response = await fetch('/api/email/send-last-slide', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(emailData),
-    });
-
-    if (!response.ok) {
-      const error = await response.text();
-      return { success: false, error };
-    }
-
-    return { success: true };
-  } catch (error) {
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Failed to send email',
-    };
-  }
-}
-
-// Hook to save progress on leave
 function useSaveProgressOnLeave() {
   const { syncProgressToDB } = useUserProgress();
 
   useEffect(() => {
     return () => {
-      // Sync progress to DB when component unmounts
       syncProgressToDB().catch((err) => console.error('Error syncing progress on leave:', err));
     };
   }, [syncProgressToDB]);
-}
-
-function dedupeClientSkills(rawSkills: any[] | undefined) {
-  if (!Array.isArray(rawSkills)) return [];
-
-  const seen = new Set<string>();
-  const result: any[] = [];
-
-  for (const skill of rawSkills) {
-    const id = (skill.criterion_key || skill.criterion_id || skill.key || skill.name || '')
-      .toString()
-      .trim()
-      .toLowerCase();
-
-    if (!id) {
-      result.push(skill);
-      continue;
-    }
-
-    if (seen.has(id)) continue;
-
-    seen.add(id);
-    result.push(skill);
-  }
-
-  return result;
 }
 
 export function ModuleScreen() {
@@ -116,7 +49,6 @@ export function ModuleScreen() {
   const { average, skills, fetchAverage, fetchSkills } = useSkillRatings();
   const { setModuleProgressSafe } = useUserProgress();
 
-  const emailSentRef = useRef(false);
   const lastScrollIndexRef = useRef<number>(-1);
   const lastSavedIndexRef = useRef<number>(-1);
   const scrollViewRef = useRef<Animated.ScrollView>(null);
@@ -246,100 +178,19 @@ export function ModuleScreen() {
     }, 0);
   }, [slides, slideId, router]);
 
+  const { triggerEmail } = useLastSlideEmail({
+    user,
+    moduleId,
+    courseId,
+    average,
+    skills,
+  });
+
   const triggerLastSlideEmail = useCallback(
-    async (index: number) => {
-      const isLastSlide = index === slides.length - 1;
-      const currentSlide = slides[index];
-
-      if (!isLastSlide || emailSentRef.current || !user?.email || !currentSlide) {
-        return;
-      }
-
-      emailSentRef.current = true;
-
-      try {
-        const modulesState = useModulesStore.getState();
-        const coursesState = useCourseStore.getState();
-
-        const resolvedModuleTitle =
-          (modulesState.currentModule &&
-            modulesState.currentModule.id === moduleId &&
-            modulesState.currentModule.title) ||
-          (moduleId ? modulesState.getModule(moduleId)?.title : undefined) ||
-          currentSlide.slide_title ||
-          'Модуль без назви';
-
-        const resolvedCourseTitle =
-          (coursesState.currentCourse &&
-            coursesState.currentCourse.id === courseId &&
-            coursesState.currentCourse.title) ||
-          (courseId
-            ? coursesState.courses.find((course) => course.id === courseId)?.title
-            : undefined);
-
-        const uniqueSkills = dedupeClientSkills(skills);
-
-        console.log('[ModuleScreen] sendLastSlideEmail payload will be:', {
-          userId: user.id,
-          userEmail: user.email,
-          courseId,
-          moduleId,
-          averageScore: average,
-          skillsCountRaw: Array.isArray(skills) ? skills.length : 0,
-          skillsCountUnique: uniqueSkills.length,
-          moduleTitle: resolvedModuleTitle,
-          courseTitle: resolvedCourseTitle,
-          slideId: currentSlide.id,
-        });
-
-        const emailData = {
-          userId: user.id,
-          userName:
-            (user?.user_metadata &&
-              (user.user_metadata.full_name || user.user_metadata.first_name)) ||
-            user.email ||
-            undefined,
-          userEmail: user.email,
-          moduleId,
-          moduleTitle: resolvedModuleTitle,
-          courseTitle: resolvedCourseTitle,
-          slide: currentSlide,
-          averageScore: average ?? undefined,
-          skills: uniqueSkills,
-        };
-
-        try {
-          if (courseId) {
-            const key = `quiz-progress-${courseId}`;
-            const stored = await AsyncStorage.getItem(key);
-            if (stored) {
-              const parsed = JSON.parse(stored);
-              const entries = Object.values(parsed || {});
-              if (Array.isArray(entries)) {
-                const total = entries.length;
-                if (total > 0) {
-                  const correct = entries.filter(
-                    (q: any) => q.selectedAnswer === q.correctAnswer,
-                  ).length;
-                  const rating = (correct / total) * 5;
-                  (emailData as any).quizScore = Math.round(rating * 10) / 10;
-                }
-              }
-            }
-          }
-        } catch (e) {
-          console.warn('[ModuleScreen] Failed to read quiz progress for email payload', e);
-        }
-
-        const result = await sendLastSlideEmail(emailData);
-        if (!result.success) {
-          console.error('Failed to send last slide email:', result.error);
-        }
-      } catch (e) {
-        console.error('Error sending last slide email', e);
-      }
+    (index: number) => {
+      triggerEmail(index, slides);
     },
-    [average, courseId, moduleId, skills, slides, user],
+    [triggerEmail, slides],
   );
 
   const onScroll = useAnimatedScrollHandler({

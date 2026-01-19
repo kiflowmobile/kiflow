@@ -1,4 +1,4 @@
-import { supabase } from '@/src/shared/lib/supabase';
+import { supabase, type ApiResponse } from '@/src/shared/lib/supabase';
 
 export interface QuizInteractionRow {
   user_id: string;
@@ -23,11 +23,6 @@ export interface QuizInteractionResult {
       };
     };
   };
-}
-
-export interface ApiResponse<T> {
-  data: T | null;
-  error: Error | null;
 }
 
 export const quizApi = {

@@ -1,12 +1,6 @@
-import { supabase } from '@/src/shared/lib/supabase';
+import { supabase, type ApiResponse } from '@/src/shared/lib/supabase';
 import { getCurrentUser } from '@/src/features/auth';
 import type { Company, CompanyMember, JoinCompanyResult } from '../types';
-import type { Database } from '@/src/shared/lib/supabase';
-
-export interface ApiResponse<T> {
-  data: T | null;
-  error: Error | null;
-}
 
 export const companyApi = {
   /**

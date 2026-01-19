@@ -1,4 +1,4 @@
-import { supabase } from '@/shared/lib/supabase';
+import { supabase, type ApiResponse } from '@/shared/lib/supabase';
 
 export interface SlidePrompt {
   id: string;
@@ -7,11 +7,6 @@ export interface SlidePrompt {
   initial_message: string | null;
   created_at: string;
   updated_at: string;
-}
-
-export interface ApiResponse<T> {
-  data: T | null;
-  error: Error | null;
 }
 
 export const promptsApi = {

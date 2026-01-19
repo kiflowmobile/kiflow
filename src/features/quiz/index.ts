@@ -4,7 +4,7 @@ export type { QuizData, QuizState, QuizActions, QuizStore } from './store/quizSt
 
 // API
 export { quizApi } from './api/quizApi';
-export type { QuizInteractionRow, QuizInteractionResult, ApiResponse } from './api/quizApi';
+export type { QuizInteractionRow, QuizInteractionResult } from './api/quizApi';
 
 // Components
 export { QuizSlide } from './components/quiz-slide';

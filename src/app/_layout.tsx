@@ -1,84 +1,54 @@
 import 'react-native-reanimated';
 import '../../global.css';
 
-import { useEffect } from 'react';
-import { Stack, useRouter, useRootNavigationState } from 'expo-router';
-import { useFonts } from 'expo-font';
+import { Stack } from 'expo-router';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
-import { useAuth } from '@/features/auth';
-import { useUserProgress } from '@/features/progress';
 import { Header } from '@/shared/components/header';
+import { useAppInitialization, useNavigationGuard } from './hooks';
 
-import { initFirebase } from '@/shared/lib/firebase';
-import { initAmplitude } from '@/shared/lib/amplitude';
+const SCREEN_NAMES = {
+  INDEX: 'index',
+  COURSE_CODE: 'course-code',
+  INSTRUCTIONS: 'instructions',
+  MODULE: 'module/[moduleId]',
+  AUTH_LOGIN: 'auth/login',
+  AUTH_REGISTRATION: 'auth/registration',
+  COURSE_DETAIL: 'courses/[id]',
+  STATISTICS_DETAIL: 'statistics/[id]',
+  NOT_FOUND: '+not-found',
+} as const;
 
 export default function RootLayout() {
-  const { initFromLocal } = useUserProgress();
-  const { user, isGuest, isLoading, checkSession } = useAuth();
-  const router = useRouter();
-  const navigationState = useRootNavigationState();
-  const isNavigationReady = Boolean(navigationState?.key);
+  const { isReady, isLoading, isGuest } = useAppInitialization();
 
-  const [loaded] = useFonts({
-    RobotoCondensed: require('../assets/fonts/RobotoCondensed.ttf'),
-    Inter: require('../assets/fonts/Inter.ttf'),
-  });
-
-  useEffect(() => {
-    checkSession();
-  }, [checkSession]);
-
-  useEffect(() => {
-    initFirebase();
-    initAmplitude();
-  }, []);
-
-  useEffect(() => {
-    initFromLocal();
-  }, [user, initFromLocal]);
-
-  useEffect(() => {
-    if (loaded && !isLoading && isGuest && isNavigationReady) {
-      // Delay navigation to the next tick so the Root navigator has a chance to mount.
-      // This avoids "Attempted to navigate before mounting the Root Layout component".
-      const id = setTimeout(() => {
-        router.replace('/');
-      }, 0);
-      return () => clearTimeout(id);
-    }
-  }, [isGuest, isLoading, isNavigationReady, loaded, router]);
+  useNavigationGuard({ isReady, isLoading, isGuest });
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
-        <Stack
-          screenOptions={{
-            headerShown: false,
-          }}
-        >
-          <Stack.Screen name="index" />
-          <Stack.Screen name="course-code" />
-          <Stack.Screen name="module/[moduleId]" />
-          <Stack.Screen name="auth/login" />
-          <Stack.Screen name="auth/registration" />
-          <Stack.Screen name="+not-found" />
+        <Stack screenOptions={{ headerShown: false }}>
+          <Stack.Screen name={SCREEN_NAMES.INDEX} />
+          <Stack.Screen name={SCREEN_NAMES.COURSE_CODE} />
+          <Stack.Screen name={SCREEN_NAMES.MODULE} />
+          <Stack.Screen name={SCREEN_NAMES.AUTH_LOGIN} />
+          <Stack.Screen name={SCREEN_NAMES.AUTH_REGISTRATION} />
+          <Stack.Screen name={SCREEN_NAMES.NOT_FOUND} />
+          <Stack.Screen name={SCREEN_NAMES.INSTRUCTIONS} />
 
           <Stack.Screen
-            name="courses/[id]"
+            name={SCREEN_NAMES.COURSE_DETAIL}
             options={{ headerShown: true, header: () => <Header showBackButton /> }}
           />
 
           <Stack.Screen
-            name="statistics/[id]"
+            name={SCREEN_NAMES.STATISTICS_DETAIL}
             options={{
               headerShown: true,
               header: () => <Header showBackButton title="Course progress" />,
             }}
           />
-
-          <Stack.Screen name="instructions" />
         </Stack>
       </SafeAreaProvider>
     </GestureHandlerRootView>

@@ -1,88 +1,62 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
-import { useRootNavigationState, useRouter } from 'expo-router';
+import { useRouter } from 'expo-router';
 
 import { SafeAreaView, KeyboardAvoidingView, Button, Input } from '@/shared/ui';
 import { useAuth } from '../hooks/useAuth';
-import { emailRegex, normalizeEmail, mapAuthErrorToMessage } from '../utils/authUtils';
+import { useAuthForm, authValidators, useAuthRedirect } from '../hooks/useAuthForm';
+import { normalizeEmail, mapAuthErrorToMessage } from '../utils/authUtils';
 import { useAnalytics } from '@/features/analytics';
 import BackIcon from '@/src/assets/images/arrow-left.svg';
 import DoneIcon from '@/src/assets/images/done.svg';
 import OpenEye from '@/src/assets/images/eye-open.svg';
 import ClosedEye from '@/src/assets/images/eye-closed.svg';
 
+type LoginFields = 'email' | 'password';
+
 export function LoginScreen() {
   const router = useRouter();
-  const rootNavigationState = useRootNavigationState();
   const { trackEvent } = useAnalytics();
   const { user, isGuest, isLoading, error, signIn, clearError } = useAuth();
 
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
-  const [touched, setTouched] = useState<{ email?: boolean; password?: boolean }>({});
-  const [formError, setFormError] = useState<string | null>(null);
 
-  // Redirect authenticated users to courses
-  useEffect(() => {
-    if (!rootNavigationState?.key) return;
-    if (user && !isGuest) {
-      router.replace('/courses');
-    }
-  }, [user, isGuest, rootNavigationState, router]);
+  useAuthRedirect(user, isGuest);
 
-  // Track screen load
+  const {
+    form,
+    touched,
+    errors,
+    formError,
+    isValid,
+    setField,
+    handleBlur,
+    validate,
+    setFormError,
+  } = useAuthForm<LoginFields>({
+    fields: ['email', 'password'],
+    validators: {
+      email: authValidators.email,
+      password: authValidators.password,
+    },
+    onClearAuthError: clearError,
+    authError: error,
+  });
+
   useEffect(() => {
     trackEvent('sign_in_screen__load');
   }, [trackEvent]);
 
-  // Clear errors when input changes
-  useEffect(() => {
-    if (formError) setFormError(null);
-    if (error) clearError();
-  }, [email, password, formError, error, clearError]);
-
-  const validate = (nextEmail = email, nextPassword = password) => {
-    const nextErrors: typeof errors = {};
-
-    const normalizedEmail = normalizeEmail(nextEmail);
-    if (!normalizedEmail) {
-      nextErrors.email = 'Email is required';
-    } else if (!emailRegex.test(normalizedEmail)) {
-      nextErrors.email = 'Invalid email format';
-    }
-
-    if (!nextPassword) {
-      nextErrors.password = 'Password is required';
-    }
-
-    setErrors(nextErrors);
-    return Object.keys(nextErrors).length === 0;
-  };
-
-  const isValid = useMemo(() => {
-    return emailRegex.test(normalizeEmail(email)) && !!password;
-  }, [email, password]);
-
   const isEmailValid = useMemo(() => {
-    const normalized = normalizeEmail(email);
-    return !!normalized && emailRegex.test(normalized) && touched.email && !errors.email;
-  }, [email, touched.email, errors.email]);
-
-  const handleBlur = (field: 'email' | 'password') => {
-    setTouched((prev) => ({ ...prev, [field]: true }));
-    validate();
-  };
+    return touched.email && !errors.email && authValidators.email(form.email) === undefined;
+  }, [form.email, touched.email, errors.email]);
 
   const handleLogin = async () => {
     trackEvent('sign_in_screen__submit__click');
-    setTouched({ email: true, password: true });
-
     if (!validate()) return;
 
     try {
-      await signIn(normalizeEmail(email), password);
+      await signIn(normalizeEmail(form.email), form.password);
       router.replace('/courses');
     } catch (err) {
       setFormError(mapAuthErrorToMessage(err as Parameters<typeof mapAuthErrorToMessage>[0]));
@@ -108,10 +82,9 @@ export function LoginScreen() {
           <Text className="text-3xl font-bold mb-8">Log in</Text>
 
           <View className="w-full">
-            {/* Email Input */}
             <Input
-              value={email}
-              onChangeText={setEmail}
+              value={form.email}
+              onChangeText={(v) => setField('email', v)}
               onBlur={() => handleBlur('email')}
               placeholder="Email"
               keyboardType="email-address"
@@ -124,10 +97,9 @@ export function LoginScreen() {
               rightIcon={isEmailValid ? <DoneIcon width={24} height={24} /> : undefined}
             />
 
-            {/* Password Input */}
             <Input
-              value={password}
-              onChangeText={setPassword}
+              value={form.password}
+              onChangeText={(v) => setField('password', v)}
               onBlur={() => handleBlur('password')}
               placeholder="Password"
               secureTextEntry={!showPassword}
