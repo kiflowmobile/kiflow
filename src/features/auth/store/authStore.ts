@@ -21,6 +21,7 @@ export const useAuthStore = create<AuthStore>()((set, get) => ({
 
   signIn: async (email: string, password: string) => {
     set({ isLoading: true, error: null });
+
     try {
       const { data, error } = await authApi.signIn({ email, password });
       if (error) throw error;
@@ -102,6 +103,7 @@ export const useAuthStore = create<AuthStore>()((set, get) => ({
 
   signOut: async () => {
     set({ isLoading: true, error: null });
+
     try {
       const { data: session } = await authApi.getSession();
       if (!session) {
@@ -148,6 +150,7 @@ export const useAuthStore = create<AuthStore>()((set, get) => ({
 
   signInWithGoogle: async () => {
     set({ isLoading: true, error: null });
+
     try {
       const { error } = await authApi.signInWithGoogle();
       if (error) throw error;
@@ -190,6 +193,7 @@ export const useAuthStore = create<AuthStore>()((set, get) => ({
 
   checkSession: async () => {
     set({ isLoading: true, error: null });
+
     try {
       const { data: session, error } = await authApi.getSession();
       if (error) throw error;
@@ -256,6 +260,7 @@ export const useAuthStore = create<AuthStore>()((set, get) => ({
     }
   },
 
+  setJustSignedUp: (justSignedUp: boolean) => set({ justSignedUp }),
   clearError: () => set({ error: null }),
   setUser: (user: User | null) => set({ user }),
   setSession: (session: Session | null) => set({ session }),

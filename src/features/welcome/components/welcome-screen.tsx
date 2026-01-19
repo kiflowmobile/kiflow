@@ -39,14 +39,14 @@ export function WelcomeScreen() {
   return (
     <ImageBackground
       source={require('@/src/assets/images/welcome-screen.png')}
-      className="flex-1 absolute inset-0"
+      className="flex-1 absolute inset-0 [&>div]:!w-full [&>div]:!h-full"
       resizeMode="cover"
     >
       <View className="flex-1 justify-center items-center px-4">
         <View className="items-center mt-96">
           <Image
             source={require('@/src/assets/images/kiflow-logo.jpeg')}
-            className="w-[200px] h-[50px]"
+            className="!w-[200px] !h-[50px]"
             resizeMode="contain"
           />
         </View>

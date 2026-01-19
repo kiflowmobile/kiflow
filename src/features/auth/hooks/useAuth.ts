@@ -10,6 +10,7 @@ export function useAuth() {
   const isGuest = useAuthStore((state) => state.isGuest);
   const error = useAuthStore((state) => state.error);
   const justSignedUp = useAuthStore((state) => state.justSignedUp);
+  const setJustSignedUp = useAuthStore((state) => state.setJustSignedUp);
 
   const signIn = useAuthStore((state) => state.signIn);
   const signUp = useAuthStore((state) => state.signUp);
@@ -41,6 +42,7 @@ export function useAuth() {
     clearError,
     getUserRole,
     changePassword,
+    setJustSignedUp,
   };
 }
 

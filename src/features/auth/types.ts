@@ -22,6 +22,7 @@ export interface AuthActions {
   setSession: (session: Session | null) => void;
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
+  setJustSignedUp: (justSignedUp: boolean) => void;
 }
 
 export type AuthStore = AuthState & AuthActions;

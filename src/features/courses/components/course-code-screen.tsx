@@ -17,7 +17,7 @@ import { Button, Input } from '@/shared/ui';
 import { companyApi } from '@/features/company';
 import { profileApi } from '@/features/profile';
 import { useCourses } from '../hooks/useCourses';
-import { useAuthStore } from '@/features/auth/store/authStore';
+import { useAuth } from '@/features/auth';
 import { useAnalytics } from '@/features/analytics';
 
 export function CourseCodeScreen() {
@@ -29,6 +29,7 @@ export function CourseCodeScreen() {
 
   const router = useRouter();
   const { fetchCourses } = useCourses();
+  const { setJustSignedUp } = useAuth();
   const analytics = useAnalytics();
 
   useEffect(() => {
@@ -112,7 +113,7 @@ export function CourseCodeScreen() {
         'Сталася помилка при приєднанні до компанії. Перевірте підключення до інтернету та спробуйте ще раз.',
       );
     } finally {
-      useAuthStore.setState({ justSignedUp: false });
+      setJustSignedUp(false);
       await AsyncStorage.removeItem('justSignedUp');
       setLoading(false);
     }
@@ -136,7 +137,7 @@ export function CourseCodeScreen() {
       console.error('Error skipping company code:', err);
       showError('Сталася помилка при пропуску. Спробуйте ще раз.');
     } finally {
-      useAuthStore.setState({ justSignedUp: false });
+      setJustSignedUp(false);
       setLoading(false);
       setIsSkipModalVisible(false);
     }

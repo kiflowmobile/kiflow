@@ -1,4 +1,4 @@
-import { useAuthStore } from '@/features/auth';
+import { useAuth } from '@/features/auth';
 import { useAnalytics } from '@/features/analytics';
 import type { User, UserUpdateData } from '../types';
 import { profileApi } from '../api/profileApi';
@@ -13,7 +13,7 @@ import { CompanyCode } from './company-code';
 
 export function ProfileScreen() {
   const router = useRouter();
-  const { user: authUser, isGuest, signOut } = useAuthStore();
+  const { user: authUser, isGuest, signOut } = useAuth();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
