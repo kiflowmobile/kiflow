@@ -4,7 +4,7 @@
     "development": {
       "developmentClient": true,
       "distribution": "internal",
-      "update": { "alias": "development" }
+      "channel": "development"
     },
     "preview": { "distribution": "internal" },
     "production": {}
