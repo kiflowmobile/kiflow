@@ -1,0 +1,43 @@
+@import "tailwindcss";
+@import "uniwind";
+
+@theme {
+  --color-text: oklch(0.1448 0 0);
+  --color-primary: oklch(0.5799 0.1407 268.22);
+  --color-bg: oklch(0.9672 0 0);
+  --color-neutral: oklch(0.4386 0 0);
+
+  --font-title: "RobotoCondensed";
+  --font-body: "Inter";
+}
+
+@layer utilities {
+  .text-title-0 {
+    @apply text-[32px] leading-relaxed font-title font-semibold;
+  }
+
+  .text-title-1 {
+    @apply text-[20px] leading-relaxed font-title font-medium;
+  }
+
+  .text-title-2 {
+    @apply text-[18px] leading-relaxed font-title font-medium;
+  }
+
+  .text-title-3 {
+    @apply text-[16px] leading-relaxed font-title font-medium;
+  }
+
+  .text-body-1 {
+    @apply text-[16px] leading-normal font-body;
+  }
+
+  .text-body-2 {
+    @apply text-[14px] leading-normal font-body;
+  }
+}
+
+:root {
+  color: var(--color-text);
+  font-family: var(--font-body);
+}

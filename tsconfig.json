@@ -1,25 +1,17 @@
 {
-  "extends": "@tsconfig/react-native/tsconfig.json",
+  "extends": "expo/tsconfig.base",
   "compilerOptions": {
     "strict": true,
-    "lib": ["esnext", "dom"],
     "paths": {
-      "@/*": ["./*"],
-      "tailwind.config": ["./tailwind.config.js"],
-      "tailwind-variants/dist/config": ["./src/types/tailwind-variants/config.ts"]
-    },
-    "jsx": "react-jsx",
-    "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true,
-    "moduleResolution": "nodenext",
-    "module": "nodenext",
-    "types": ["react", "react-native"]
+      "@/*": [
+        "./*"
+      ]
+    }
   },
   "include": [
     "**/*.ts",
     "**/*.tsx",
     ".expo/types/**/*.ts",
-    "expo-env.d.ts",
-    "nativewind-env.d.ts"
+    "expo-env.d.ts"
   ]
 }
