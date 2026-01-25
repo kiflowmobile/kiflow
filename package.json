@@ -1,5 +1,5 @@
 {
-  "name": "kiflow-next",
+  "name": "kiflow",
   "main": "expo-router/entry",
   "version": "1.0.0",
   "scripts": {

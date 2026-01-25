@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "kiflow-next",
-    "slug": "kiflow-next",
+    "name": "kiflow",
+    "slug": "kiflow",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -45,6 +45,13 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "f813327c-8a9c-46fe-8551-ba801a49111b"
+      }
+    },
+    "owner": "kiflowmobile"
   }
 }
