@@ -10,7 +10,23 @@ This is an [Expo](https://expo.dev) project created with [`create-expo-app`](htt
    npm install
    ```
 
-2. Start the app
+2. Set up environment variables
+
+   Create a `.env` file in the root directory with your Supabase credentials:
+
+   ```
+   EXPO_PUBLIC_SUPABASE_URL=your_supabase_project_url
+   EXPO_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+   ```
+
+3. Set up the database
+
+   Run the SQL schema from `supabase/schema.sql` in your Supabase SQL editor to create the necessary tables:
+   - `companies` - Stores company information
+   - `user_companies` - Links users to companies (many-to-many)
+   - `courses` - Stores course information (public and company-specific)
+
+4. Start the app
 
    ```bash
    npx expo start
