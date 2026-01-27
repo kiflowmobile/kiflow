@@ -10,6 +10,7 @@ import React, { useCallback, useEffect, useState } from "react";
 import { ActivityIndicator, ScrollView, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useLessonNavigation } from "../context/LessonNavigationContext";
+import { useScrollableSlide } from "../context/ScrollableSlideContext";
 import { SCREEN_HEIGHT, SCREEN_WIDTH } from "../styles";
 
 interface CaseStudySlideProps {
@@ -21,6 +22,7 @@ interface CaseStudySlideProps {
 export function CaseStudySlide({ slide, onNext, isActive }: CaseStudySlideProps) {
   const { user } = useAuthStore();
   const { setAllowNext } = useLessonNavigation();
+  const { handleScroll, handleContentSizeChange, handleLayout } = useScrollableSlide();
   const content = slide.content as any;
   const insets = useSafeAreaInsets();
 
@@ -119,8 +121,13 @@ export function CaseStudySlide({ slide, onNext, isActive }: CaseStudySlideProps)
     <View style={{ width: SCREEN_WIDTH, height: SCREEN_HEIGHT, paddingTop: insets.top + 56 }} className="bg-bg">
       <ScrollView
         className="flex-1 p-4"
-        contentContainerClassName="flex-1 items-start"
+        contentContainerClassName="items-start"
         showsVerticalScrollIndicator={false}
+        onScroll={handleScroll}
+        onContentSizeChange={handleContentSizeChange}
+        onLayout={(e) => handleLayout(e.nativeEvent.layout.height)}
+        scrollEventThrottle={16}
+        bounces={false}
       >
         <Label className="mt-3 mb-4">
           <CompassIcon width={16} height={16} />
@@ -164,7 +171,7 @@ export function CaseStudySlide({ slide, onNext, isActive }: CaseStudySlideProps)
           </Label>
 
           <View className="flex-1 w-full bg-white rounded-xl p-4">
-            <ScrollView showsVerticalScrollIndicator={false}>
+            <ScrollView showsVerticalScrollIndicator={false} bounces={false}>
               <Text className="text-body-1 text-text leading-relaxed">
                 {state.evaluation?.feedback || "Evaluation complete."}
               </Text>
