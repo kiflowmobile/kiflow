@@ -2,6 +2,7 @@ import { AverageScore } from "@/components/progress/average-score";
 import { SkillsLevel } from "@/components/progress/skills-level";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { Typography } from "@/components/ui/typography";
+import { useInitialLoad } from "@/hooks/use-initial-load";
 import {
   calculateModuleProgress,
   getAssessmentCriteria,
@@ -33,7 +34,7 @@ export default function CourseProgressScreen() {
   const insets = useSafeAreaInsets();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { user } = useAuthStore();
-  const [loading, setLoading] = useState(true);
+  const { loading, startLoading, finishLoading } = useInitialLoad(`${id}-progress`);
   const [course, setCourse] = useState<Course | null>(null);
   const [modules, setModules] = useState<ModuleWithProgress[]>([]);
   const [criteria, setCriteria] = useState<AssessmentCriterion[]>([]);
@@ -41,10 +42,13 @@ export default function CourseProgressScreen() {
   const [caseStudyScore, setCaseStudyScore] = useState(0);
 
   const loadProgressData = useCallback(async () => {
-    if (!id || !user) return;
+    if (!id || !user) {
+      finishLoading();
+      return;
+    }
 
     try {
-      setLoading(true);
+      startLoading();
 
       const [courseData, criteriaData, { modules: modulesData }, interactions] = await Promise.all([
         getCourseById(id),
@@ -125,9 +129,9 @@ export default function CourseProgressScreen() {
     } catch (error) {
       console.error("Error loading progress data:", error);
     } finally {
-      setLoading(false);
+      finishLoading();
     }
-  }, [id, user, router]);
+  }, [id, user, router, startLoading, finishLoading]);
 
   useEffect(() => {
     loadProgressData();

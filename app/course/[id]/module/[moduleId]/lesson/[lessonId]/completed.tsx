@@ -4,6 +4,7 @@ import { SkillsLevel } from "@/components/progress/skills-level";
 import { Button } from "@/components/ui/button";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { Typography } from "@/components/ui/typography";
+import { useInitialLoad } from "@/hooks/use-initial-load";
 import {
   getAssessmentCriteria,
   getLessonCriteriaScores,
@@ -43,17 +44,20 @@ export default function LessonCompletedScreen() {
     lessonId: string;
   }>();
   const { user } = useAuthStore();
-  const [loading, setLoading] = useState(true);
+  const { loading, startLoading, finishLoading } = useInitialLoad(`${courseId}-${moduleId}-${lessonId}-completed`);
   const [nextLessonId, setNextLessonId] = useState<string | null>(null);
   const [criteria, setCriteria] = useState<AssessmentCriterion[]>([]);
   const [criteriaScores, setCriteriaScores] = useState<UserLessonCriteriaScore[]>([]);
   const [quizScores, setQuizScores] = useState<{ score: number }[]>([]);
 
   const loadNextLesson = useCallback(async () => {
-    if (!moduleId || !lessonId || !courseId || !user) return;
+    if (!moduleId || !lessonId || !courseId || !user) {
+      finishLoading();
+      return;
+    }
 
     try {
-      setLoading(true);
+      startLoading();
 
       // Get all lessons in the module
       const [lessons, criteriaData, criteriaScores, quizScoresData] = await Promise.all([
@@ -104,9 +108,9 @@ export default function LessonCompletedScreen() {
     } catch (error) {
       console.error("Error loading next lesson:", error);
     } finally {
-      setLoading(false);
+      finishLoading();
     }
-  }, [moduleId, lessonId, courseId, user]);
+  }, [moduleId, lessonId, courseId, user, startLoading, finishLoading]);
 
   useEffect(() => {
     loadNextLesson();

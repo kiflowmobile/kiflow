@@ -55,9 +55,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
       set({ initialized: true, loading: false });
 
-      // Listen for auth changes
+      // Listen for auth changes (including TOKEN_REFRESHED when returning from background)
       supabase.auth.onAuthStateChange(async (event, session) => {
-        if (event === "SIGNED_IN" && session?.user) {
+        if ((event === "SIGNED_IN" || event === "TOKEN_REFRESHED" || event === "INITIAL_SESSION") && session?.user) {
           set({ user: session.user, session });
           await get().checkHasEnrollments();
         } else if (event === "SIGNED_OUT") {

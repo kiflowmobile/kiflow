@@ -21,6 +21,7 @@ import { useSharedValue } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { LessonNavigationProvider, useLessonNavigation } from "@/components/lesson/context/LessonNavigationContext";
+import { useInitialLoad } from "@/hooks/use-initial-load";
 
 function LessonViewerContent() {
   const router = useRouter();
@@ -42,7 +43,7 @@ function LessonViewerContent() {
   const [slides, setSlides] = useState<Slide[]>([]);
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
   const [initialSlideIndex, setInitialSlideIndex] = useState(0);
-  const [loading, setLoading] = useState(true);
+  const { loading, startLoading, finishLoading } = useInitialLoad(`${courseId}-${moduleId}-${lessonId}`);
   const [hasNextLesson, setHasNextLesson] = useState(true);
   const flashListRef = useRef<FlashListRef<Slide>>(null);
   const currentIndexRef = useRef(0);
@@ -70,11 +71,17 @@ function LessonViewerContent() {
   // Track vertical scroll for progress bar animation
   const scrollY = useSharedValue(0);
 
-  const loadLessonData = useCallback(async () => {
-    if (!lessonId || !user) return;
+  const loadLessonData = useCallback(async (isInitialLoad = true) => {
+    if (!lessonId || !user) {
+      finishLoading();
+      return;
+    }
 
     try {
-      setLoading(true);
+      // Only show loading state on initial load, not on refetches
+      if (isInitialLoad) {
+        startLoading();
+      }
 
       const lessonData = await getLessonById(lessonId);
       if (!lessonData) {
@@ -135,13 +142,18 @@ function LessonViewerContent() {
     } catch (error) {
       console.error("Error loading lesson:", error);
     } finally {
-      setLoading(false);
+      finishLoading();
     }
-  }, [lessonId, user, router, courseId, moduleId, scrollY]);
+  }, [lessonId, user, router, courseId, moduleId, scrollY, startLoading, finishLoading]);
+
+  // Track which lesson we've loaded to distinguish initial load from refetches
+  const loadedLessonRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (lessonId && user) {
-      loadLessonData();
+      const isInitialLoad = loadedLessonRef.current !== lessonId;
+      loadLessonData(isInitialLoad);
+      loadedLessonRef.current = lessonId;
     }
   }, [lessonId, user, loadLessonData]);
 

@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { ProgressBar } from "@/components/ui/progress-bar";
+import { useInitialLoad } from "@/hooks/use-initial-load";
 import { calculateCourseProgress, getCourses, getLessonCountByCourseId } from "@/lib/database";
 import { Course } from "@/lib/types";
 import { useAuthStore } from "@/store/auth-store";
@@ -95,13 +96,16 @@ const CoursesList = ({ courses }: { courses: CourseWithProgress[] }) => {
 export default function CoursesScreen() {
   const { user } = useAuthStore();
   const [courses, setCourses] = useState<CourseWithProgress[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { loading, startLoading, finishLoading } = useInitialLoad(user?.id || "");
 
   const loadCourses = useCallback(async () => {
-    if (!user) return;
+    if (!user) {
+      finishLoading();
+      return;
+    }
 
     try {
-      setLoading(true);
+      startLoading();
       const allCourses = await getCourses(user.id);
 
       // Calculate progress and lesson count for each course
@@ -123,9 +127,9 @@ export default function CoursesScreen() {
     } catch (error) {
       console.error("Error loading courses:", error);
     } finally {
-      setLoading(false);
+      finishLoading();
     }
-  }, [user]);
+  }, [user, startLoading, finishLoading]);
 
   useEffect(() => {
     loadCourses();
