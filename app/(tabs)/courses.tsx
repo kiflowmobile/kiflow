@@ -85,7 +85,7 @@ const CoursesList = ({ courses }: { courses: CourseWithProgress[] }) => {
               </Text>
             )}
 
-            <Button className="mt-4">{course.progress === 0 ? "Start course" : "Continue"}</Button>
+            <Button onPress={() => handleCoursePress(course.id)} className="mt-4">{course.progress === 0 ? "Start course" : "Continue"}</Button>
           </View>
         </TouchableOpacity>
       ))}
