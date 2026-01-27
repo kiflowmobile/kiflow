@@ -1,5 +1,6 @@
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { ProgressBar } from "@/components/ui/progress-bar";
+import { useInitialLoad } from "@/hooks/use-initial-load";
 import { calculateModuleProgress, getCourseWithModulesAndLessons, getUserProgress } from "@/lib/database";
 import { Course, Lesson, Module, Slide } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -24,13 +25,16 @@ export default function CourseDetailScreen() {
   const { user } = useAuthStore();
   const [course, setCourse] = useState<Course | null>(null);
   const [modules, setModules] = useState<ModuleWithLessons[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { loading, startLoading, finishLoading } = useInitialLoad(`${id}-course`);
 
   const loadCourseData = useCallback(async () => {
-    if (!id || !user) return;
+    if (!id || !user) {
+      finishLoading();
+      return;
+    }
 
     try {
-      setLoading(true);
+      startLoading();
       const { course: courseData, modules: modulesData } = await getCourseWithModulesAndLessons(id);
 
       if (!courseData) {
@@ -51,9 +55,9 @@ export default function CourseDetailScreen() {
     } catch (error) {
       console.error("Error loading course:", error);
     } finally {
-      setLoading(false);
+      finishLoading();
     }
-  }, [id, user, router]);
+  }, [id, user, router, startLoading, finishLoading]);
 
   useEffect(() => {
     if (id && user) {

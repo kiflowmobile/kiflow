@@ -13,18 +13,15 @@ import {
 } from "@/lib/database";
 import { Lesson, Module, Slide } from "@/lib/types";
 import { useAuthStore } from "@/store/auth-store";
+import { FlashList, FlashListRef } from "@shopify/flash-list";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { ActivityIndicator, TouchableOpacity, View, ViewToken } from "react-native";
-import Animated, { useAnimatedScrollHandler, useSharedValue } from "react-native-reanimated";
+import { ActivityIndicator, NativeScrollEvent, NativeSyntheticEvent, TouchableOpacity, View } from "react-native";
+import { useSharedValue } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { LessonNavigationProvider, useLessonNavigation } from "@/components/lesson/context/LessonNavigationContext";
-
-interface ViewableItemsChanged {
-  viewableItems: ViewToken[];
-  changed: ViewToken[];
-}
+import { useInitialLoad } from "@/hooks/use-initial-load";
 
 function LessonViewerContent() {
   const router = useRouter();
@@ -46,13 +43,14 @@ function LessonViewerContent() {
   const [slides, setSlides] = useState<Slide[]>([]);
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
   const [initialSlideIndex, setInitialSlideIndex] = useState(0);
-  const [loading, setLoading] = useState(true);
+  const { loading, startLoading, finishLoading } = useInitialLoad(`${courseId}-${moduleId}-${lessonId}`);
   const [hasNextLesson, setHasNextLesson] = useState(true);
-  const flatListRef = useRef<Animated.FlatList<Slide>>(null);
+  const flashListRef = useRef<FlashListRef<Slide>>(null);
   const currentIndexRef = useRef(0);
   const slidesRef = useRef<Slide[]>([]);
   const userRef = useRef(user);
   const courseIdRef = useRef(courseId);
+  const isScrollingRef = useRef(false);
 
   useEffect(() => {
     slidesRef.current = slides;
@@ -70,14 +68,20 @@ function LessonViewerContent() {
     currentIndexRef.current = currentSlideIndex;
   }, [currentSlideIndex]);
 
-  // Track vertical scroll
+  // Track vertical scroll for progress bar animation
   const scrollY = useSharedValue(0);
 
-  const loadLessonData = useCallback(async () => {
-    if (!lessonId || !user) return;
+  const loadLessonData = useCallback(async (isInitialLoad = true) => {
+    if (!lessonId || !user) {
+      finishLoading();
+      return;
+    }
 
     try {
-      setLoading(true);
+      // Only show loading state on initial load, not on refetches
+      if (isInitialLoad) {
+        startLoading();
+      }
 
       const lessonData = await getLessonById(lessonId);
       if (!lessonData) {
@@ -113,6 +117,8 @@ function LessonViewerContent() {
 
       setInitialSlideIndex(startIndex);
       setCurrentSlideIndex(startIndex);
+      // Initialize scrollY to match the start index
+      scrollY.value = startIndex * SCREEN_HEIGHT;
 
       // Check if there is a next lesson
       if (moduleId && courseId) {
@@ -136,32 +142,64 @@ function LessonViewerContent() {
     } catch (error) {
       console.error("Error loading lesson:", error);
     } finally {
-      setLoading(false);
+      finishLoading();
     }
-  }, [lessonId, user, router, courseId, moduleId]);
+  }, [lessonId, user, router, courseId, moduleId, scrollY, startLoading, finishLoading]);
+
+  // Track which lesson we've loaded to distinguish initial load from refetches
+  const loadedLessonRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (lessonId && user) {
-      loadLessonData();
+      const isInitialLoad = loadedLessonRef.current !== lessonId;
+      loadLessonData(isInitialLoad);
+      loadedLessonRef.current = lessonId;
     }
   }, [lessonId, user, loadLessonData]);
 
-  const handleViewableItemsChanged = useRef(({ viewableItems }: ViewableItemsChanged) => {
-    if (viewableItems.length > 0 && viewableItems[0].index !== null) {
-      const newIndex = viewableItems[0].index;
-      setCurrentSlideIndex(newIndex);
-    }
-  }).current;
-
-  const scrollHandler = useAnimatedScrollHandler({
-    onScroll: (event) => {
-      scrollY.value = event.contentOffset.y;
+  // Handle scroll events to update scrollY for progress bar
+  const handleScroll = useCallback(
+    (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+      scrollY.value = event.nativeEvent.contentOffset.y;
     },
-  });
+    [scrollY]
+  );
 
-  const viewabilityConfig = useRef({
-    itemVisiblePercentThreshold: 50,
-  }).current;
+  // Handle momentum scroll end to snap to nearest slide and prevent multi-page jumps
+  const handleMomentumScrollEnd = useCallback(
+    (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+      const offsetY = event.nativeEvent.contentOffset.y;
+      const targetIndex = Math.round(offsetY / SCREEN_HEIGHT);
+      const currentIndex = currentIndexRef.current;
+
+      // Clamp to only allow 1 page jump max
+      let newIndex = targetIndex;
+      if (targetIndex > currentIndex + 1) {
+        newIndex = currentIndex + 1;
+      } else if (targetIndex < currentIndex - 1) {
+        newIndex = currentIndex - 1;
+      }
+
+      // Clamp to valid range
+      newIndex = Math.max(0, Math.min(newIndex, slides.length - 1));
+
+      if (newIndex !== targetIndex || newIndex !== currentIndex) {
+        flashListRef.current?.scrollToIndex({
+          index: newIndex,
+          animated: true,
+        });
+      }
+
+      setCurrentSlideIndex(newIndex);
+      isScrollingRef.current = false;
+    },
+    [slides.length]
+  );
+
+  // Handle scroll begin to track scrolling state
+  const handleScrollBeginDrag = useCallback(() => {
+    isScrollingRef.current = true;
+  }, []);
 
   const handleNext = useCallback(() => {
     const currentIndex = currentIndexRef.current;
@@ -177,10 +215,11 @@ function LessonViewerContent() {
         updateUserProgress(user.id, courseId, nextSlide.id);
       }
 
-      flatListRef.current?.scrollToIndex({
+      flashListRef.current?.scrollToIndex({
         index: nextIndex,
         animated: true,
       });
+      setCurrentSlideIndex(nextIndex);
     } else {
       if (hasNextLesson) {
         router.replace(`/course/${courseId}/module/${moduleId}/lesson/${lessonId}/completed`);
@@ -193,10 +232,12 @@ function LessonViewerContent() {
   const handlePrevious = useCallback(() => {
     const currentIndex = currentIndexRef.current;
     if (currentIndex > 0) {
-      flatListRef.current?.scrollToIndex({
-        index: currentIndex - 1,
+      const prevIndex = currentIndex - 1;
+      flashListRef.current?.scrollToIndex({
+        index: prevIndex,
         animated: true,
       });
+      setCurrentSlideIndex(prevIndex);
     }
   }, []);
 
@@ -232,29 +273,19 @@ function LessonViewerContent() {
 
   return (
     <View className="flex-1 bg-black">
-      <Animated.FlatList
-        ref={flatListRef}
+      <FlashList
+        ref={flashListRef}
         data={slides}
         renderItem={renderSlide}
         keyExtractor={(item) => item.id}
-        horizontal={false}
-        pagingEnabled={false}
-        scrollEnabled={allowNext}
+        scrollEnabled={false}
         showsVerticalScrollIndicator={false}
-        onViewableItemsChanged={handleViewableItemsChanged}
-        viewabilityConfig={viewabilityConfig}
-        onScroll={scrollHandler}
+        onScroll={handleScroll}
+        onMomentumScrollEnd={handleMomentumScrollEnd}
+        onScrollBeginDrag={handleScrollBeginDrag}
         scrollEventThrottle={16}
-        snapToInterval={SCREEN_HEIGHT}
-        snapToAlignment="start"
-        decelerationRate="fast"
-        disableIntervalMomentum={true}
         initialScrollIndex={initialSlideIndex}
-        getItemLayout={(_, index) => ({
-          length: SCREEN_HEIGHT,
-          offset: SCREEN_HEIGHT * index,
-          index,
-        })}
+        getItemType={(item) => item.type}
       />
 
       <TouchableOpacity

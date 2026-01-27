@@ -92,10 +92,10 @@ export default function CompanyCodeScreen() {
         visible={showSkipDialog}
         title="Are you sure you want to skip?"
         message="If you continue without an access code, you will only see public courses"
-        primaryButtonText="Skip"
-        secondaryButtonText="Enter code"
-        onPrimaryPress={handleConfirmSkip}
-        onSecondaryPress={() => setShowSkipDialog(false)}
+        primaryButtonText="Enter code"
+        secondaryButtonText="Skip"
+        onPrimaryPress={() => setShowSkipDialog(false)}
+        onSecondaryPress={handleConfirmSkip}
         onDismiss={() => setShowSkipDialog(false)}
       />
     </View>

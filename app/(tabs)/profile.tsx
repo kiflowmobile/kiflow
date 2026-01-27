@@ -1,18 +1,25 @@
 import { LogoutIcon } from "@/components/icons/logout-icon";
 import { SCREEN_WIDTH } from "@/components/lesson/styles";
 import { Button } from "@/components/ui/button";
+import { Dialog } from "@/components/ui/dialog";
 import { useAuthStore } from "@/store/auth-store";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import { ScrollView, Text, TouchableOpacity, View } from "react-native";
 
 export default function ProfileScreen() {
   const router = useRouter();
   const { user, signOut, hasEnrollments } = useAuthStore();
+  const [showLogoutDialog, setShowLogoutDialog] = useState(false);
   // const [developerMode, setDeveloperMode] = useState(false);
 
-  const handleSignOut = async () => {
+  const handleSignOut = () => {
+    setShowLogoutDialog(true);
+  };
+
+  const handleConfirmLogout = async () => {
+    setShowLogoutDialog(false);
     await signOut();
     router.replace("/welcome");
   };
@@ -131,6 +138,17 @@ export default function ProfileScreen() {
           <Text className="text-body-2 text-text">{translations.profile.developerMode}</Text>
         </View> */}
       </View>
+
+      <Dialog
+        visible={showLogoutDialog}
+        title="Are you sure you want to logout?"
+        message="You will need to sign in again to access your account"
+        primaryButtonText="Cancel"
+        secondaryButtonText="Logout"
+        onPrimaryPress={() => setShowLogoutDialog(false)}
+        onSecondaryPress={handleConfirmLogout}
+        onDismiss={() => setShowLogoutDialog(false)}
+      />
     </ScrollView>
   );
 }

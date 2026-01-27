@@ -23,23 +23,14 @@ export default function RegisterScreen() {
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
 
-    if (!firstName) newErrors.firstName = "Це поле обов'язкове";
-    if (!lastName) newErrors.lastName = "Це поле обов'язкове";
-    if (!email) {
-      newErrors.email = "Це поле обов'язкове";
-    } else if (!validateEmail(email)) {
-      newErrors.email = "Невірний формат email";
-    }
-    if (!password) {
-      newErrors.password = "Це поле обов'язкове";
-    } else if (password.length < 6) {
-      newErrors.password = "Пароль має бути мінімум 6 символів";
-    }
-    if (!confirmPassword) {
-      newErrors.confirmPassword = "Це поле обов'язкове";
-    } else if (password !== confirmPassword) {
-      newErrors.confirmPassword = "Паролі не співпадають";
-    }
+    if (!firstName) newErrors.firstName = "This field is required";
+    if (!lastName) newErrors.lastName = "This field is required";
+    if (!email) newErrors.email = "This field is required";
+    if (!validateEmail(email)) newErrors.email = "Invalid email format";
+    if (!password) newErrors.password = "This field is required";
+    if (password.length < 6) newErrors.password = "Password must be at least 6 characters";
+    if (!confirmPassword) newErrors.confirmPassword = "This field is required";
+    if (password !== confirmPassword) newErrors.confirmPassword = "Passwords do not match";
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -53,8 +44,8 @@ export default function RegisterScreen() {
     const result = await signUp(email, password, firstName, lastName);
 
     if (!result.success) {
-      const errorMessage = result.error || "Щось пішло не так. Спробуйте ще раз";
-      setGeneralError(errorMessage.includes("already registered") ? "Цей email вже використовується" : errorMessage);
+      const errorMessage = result.error || "Something went wrong. Please try again";
+      setGeneralError(errorMessage.includes("already registered") ? "This email is already in use" : errorMessage);
       return;
     }
 

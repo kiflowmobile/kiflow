@@ -2,7 +2,8 @@ import { Lesson, Module, Slide } from "@/lib/types";
 import React, { memo } from "react";
 import { View } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
-import { SharedValue } from "react-native-reanimated";
+import { runOnJS, SharedValue } from "react-native-reanimated";
+import { ScrollableSlideProvider, useScrollableSlide } from "../context/ScrollableSlideContext";
 import { SCREEN_HEIGHT } from "../styles";
 import { SlideComponent } from "./SlideComponent";
 
@@ -18,17 +19,33 @@ export interface SlideWrapperProps {
   isActive?: boolean;
 }
 
-export const SlideWrapper = memo(function SlideWrapper({ onNext, onPrevious, ...props }: SlideWrapperProps) {
+function SlideWrapperInner({ onNext, onPrevious, ...props }: SlideWrapperProps) {
+  const { isAtTop, isAtBottom, isScrollable } = useScrollableSlide();
+
   const swipeGesture = Gesture.Pan()
     .onEnd((event) => {
+      "worklet";
       const { translationY, velocityY } = event;
       const SWIPE_THRESHOLD = 50;
       const VELOCITY_THRESHOLD = 500;
 
-      if (translationY < -SWIPE_THRESHOLD || velocityY < -VELOCITY_THRESHOLD) {
-        onNext();
-      } else if (translationY > SWIPE_THRESHOLD || velocityY > VELOCITY_THRESHOLD) {
-        onPrevious();
+      const isSwipingUp = translationY < -SWIPE_THRESHOLD || velocityY < -VELOCITY_THRESHOLD;
+      const isSwipingDown = translationY > SWIPE_THRESHOLD || velocityY > VELOCITY_THRESHOLD;
+
+      // If slide has scrollable content, only allow page navigation at boundaries
+      if (isScrollable.value) {
+        if (isSwipingUp && isAtBottom.value) {
+          runOnJS(onNext)();
+        } else if (isSwipingDown && isAtTop.value) {
+          runOnJS(onPrevious)();
+        }
+      } else {
+        // Non-scrollable slide - allow normal navigation
+        if (isSwipingUp) {
+          runOnJS(onNext)();
+        } else if (isSwipingDown) {
+          runOnJS(onPrevious)();
+        }
       }
     })
     .activeOffsetY([-10, 10]);
@@ -39,5 +56,13 @@ export const SlideWrapper = memo(function SlideWrapper({ onNext, onPrevious, ...
         <SlideComponent onNext={onNext} {...props} />
       </View>
     </GestureDetector>
+  );
+}
+
+export const SlideWrapper = memo(function SlideWrapper(props: SlideWrapperProps) {
+  return (
+    <ScrollableSlideProvider>
+      <SlideWrapperInner {...props} />
+    </ScrollableSlideProvider>
   );
 });

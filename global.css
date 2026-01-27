@@ -13,19 +13,19 @@
 
 @layer utilities {
   .text-title-0 {
-    @apply text-[32px] leading-relaxed font-title font-semibold;
+    @apply text-[32px] leading-normal font-title font-semibold;
   }
 
   .text-title-1 {
-    @apply text-[20px] leading-relaxed font-title font-medium;
+    @apply text-[20px] leading-normal font-title font-medium;
   }
 
   .text-title-2 {
-    @apply text-[18px] leading-relaxed font-title font-medium;
+    @apply text-[18px] leading-normal font-title font-medium;
   }
 
   .text-title-3 {
-    @apply text-[16px] leading-relaxed font-title font-medium;
+    @apply text-[16px] leading-normal font-title font-medium;
   }
 
   .text-body-1 {

@@ -2,6 +2,7 @@ import { AverageScore } from "@/components/progress/average-score";
 import { SkillsLevel } from "@/components/progress/skills-level";
 import { Button } from "@/components/ui/button";
 import { Typography } from "@/components/ui/typography";
+import { useInitialLoad } from "@/hooks/use-initial-load";
 import {
   calculateCourseProgress,
   getAssessmentCriteria,
@@ -32,13 +33,16 @@ export default function ProgressScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const [courses, setCourses] = useState<CourseWithProgress[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { loading, startLoading, finishLoading } = useInitialLoad(user?.id || "");
 
   const loadProgress = useCallback(async () => {
-    if (!user) return;
+    if (!user) {
+      finishLoading();
+      return;
+    }
 
     try {
-      setLoading(true);
+      startLoading();
       const allCourses = await getCourses(user.id);
 
       // Calculate progress and details for each course
@@ -87,9 +91,9 @@ export default function ProgressScreen() {
     } catch (error) {
       console.error("Error loading progress:", error);
     } finally {
-      setLoading(false);
+      finishLoading();
     }
-  }, [user]);
+  }, [user, startLoading, finishLoading]);
 
   useEffect(() => {
     loadProgress();

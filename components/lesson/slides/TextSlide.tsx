@@ -1,4 +1,5 @@
 import { ScrollView, Text, View } from "react-native";
+import { useScrollableSlide } from "../context/ScrollableSlideContext";
 import { SCREEN_HEIGHT, SCREEN_WIDTH } from "../styles";
 
 interface TextSlideProps {
@@ -12,6 +13,7 @@ interface TextSlideProps {
 }
 
 export function TextSlide({ slide }: TextSlideProps) {
+  const { handleScroll, handleContentSizeChange, handleLayout } = useScrollableSlide();
   const content = slide.content;
 
   if (!content) {
@@ -20,7 +22,14 @@ export function TextSlide({ slide }: TextSlideProps) {
 
   return (
     <View style={{ width: SCREEN_WIDTH, height: SCREEN_HEIGHT }} className="bg-bg px-4 pt-[56px]">
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        onScroll={handleScroll}
+        onContentSizeChange={handleContentSizeChange}
+        onLayout={(e) => handleLayout(e.nativeEvent.layout.height)}
+        scrollEventThrottle={16}
+        bounces={false}
+      >
         <Text className="text-title-2 text-text mt-3">{content?.mainPoint || "Title"}</Text>
 
         {content.tips && content.tips.length > 0 && (
@@ -38,7 +47,7 @@ export function TextSlide({ slide }: TextSlideProps) {
         )}
 
         {content.example && content.example.length > 0 && (
-          <View className="mt-6">
+          <View className="mt-6 mb-6">
             <View className="bg-primary rounded-t-lg px-4 py-1.5 self-start">
               <Text className="title-3 text-white">Example</Text>
             </View>

@@ -1,39 +1,35 @@
+import { cn } from "@/lib/utils";
 import { View } from "react-native";
 import Animated, {
-  useAnimatedReaction,
+  SharedValue,
   useAnimatedStyle,
-  useSharedValue,
+  useDerivedValue,
+  withTiming,
 } from "react-native-reanimated";
-import { SCREEN_HEIGHT } from "../styles";
-import { cn } from "@/lib/utils";
 
 interface StoriesProgressBarProps {
   index: number;
   currentIndex: number;
-  scrollY: Animated.SharedValue<number>;
+  scrollY: SharedValue<number>;
   isDark: boolean;
 }
 
 export function StoriesProgressBar({
   index,
   currentIndex,
-  scrollY,
   isDark,
 }: StoriesProgressBarProps) {
-  const progress = useSharedValue(0);
-
-  useAnimatedReaction(
-    () => scrollY.value,
-    (currentScroll) => {
-      const slideStart = index * SCREEN_HEIGHT;
-      if (index < currentIndex) progress.value = 1;
-      else if (index > currentIndex) progress.value = 0;
-      else {
-        const p = (currentScroll - slideStart) / SCREEN_HEIGHT;
-        progress.value = Math.max(0, Math.min(1, p));
-      }
-    },
-  );
+  // Calculate progress based on current index
+  const progress = useDerivedValue(() => {
+    if (index < currentIndex) {
+      return withTiming(1, { duration: 200 });
+    } else if (index > currentIndex) {
+      return withTiming(0, { duration: 200 });
+    } else {
+      // Current slide - show as complete
+      return withTiming(1, { duration: 200 });
+    }
+  }, [currentIndex]);
 
   const animatedStyle = useAnimatedStyle(() => ({
     width: `${progress.value * 100}%`,

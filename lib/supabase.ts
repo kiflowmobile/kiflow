@@ -2,7 +2,7 @@ import 'react-native-url-polyfill/auto'
 
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { createClient } from '@supabase/supabase-js'
-import { Platform } from 'react-native'
+import { AppState, Platform } from 'react-native'
 import { Database } from './types'
 
 const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL
@@ -22,3 +22,15 @@ export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
     detectSessionInUrl: false,
   },
 })
+
+// Handle app state changes to keep Supabase auth in sync
+// This ensures session is refreshed when app comes back from background
+if (Platform.OS !== "web") {
+  AppState.addEventListener("change", (state) => {
+    if (state === "active") {
+      supabase.auth.startAutoRefresh()
+    } else {
+      supabase.auth.stopAutoRefresh()
+    }
+  })
+}

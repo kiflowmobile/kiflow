@@ -10,6 +10,7 @@ import { useAuthStore } from "@/store/auth-store";
 import React, { useEffect, useState } from "react";
 import { ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useScrollableSlide } from "../context/ScrollableSlideContext";
 import { SCREEN_HEIGHT, SCREEN_WIDTH } from "../styles";
 
 import { useLessonNavigation } from "../context/LessonNavigationContext";
@@ -29,6 +30,7 @@ type QuizSlideState = {
 export function QuizSlide({ slide, onNext, isActive }: QuizSlideProps) {
   const { user } = useAuthStore();
   const { setAllowNext } = useLessonNavigation();
+  const { handleScroll, handleContentSizeChange, handleLayout } = useScrollableSlide();
   const insets = useSafeAreaInsets();
   const [state, setState] = useState<QuizSlideState>({ checked: false });
 
@@ -84,7 +86,16 @@ export function QuizSlide({ slide, onNext, isActive }: QuizSlideProps) {
 
   return (
     <View style={{ width: SCREEN_WIDTH, height: SCREEN_HEIGHT, paddingTop: insets.top + 56 }} className="bg-bg">
-      <ScrollView className="flex-1 p-4" contentContainerClassName="flex-1 pb-4" showsVerticalScrollIndicator={false}>
+      <ScrollView
+        className="flex-1 p-4"
+        contentContainerClassName="pb-4"
+        showsVerticalScrollIndicator={false}
+        onScroll={handleScroll}
+        onContentSizeChange={handleContentSizeChange}
+        onLayout={(e) => handleLayout(e.nativeEvent.layout.height)}
+        scrollEventThrottle={16}
+        bounces={false}
+      >
         <Label className="mt-3 mb-6 self-center">
           <CompassIcon width={16} height={16} />
 

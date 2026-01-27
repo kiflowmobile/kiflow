@@ -69,8 +69,8 @@ export function VideoSlide({ slide, isActive }: VideoSlideProps) {
         style={{ width: SCREEN_WIDTH, height: SCREEN_HEIGHT }}
         player={player}
         contentFit="cover"
-        allowsFullscreen
-        allowsPictureInPicture
+        allowsFullscreen={false}
+        allowsPictureInPicture={false}
         nativeControls={false}
       />
 

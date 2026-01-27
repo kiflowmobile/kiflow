@@ -1,6 +1,8 @@
 import { cn } from "@/lib/utils";
 import React, { useState } from "react";
 import { Text, TextInput, TextInputProps, TouchableOpacity, View, ViewStyle } from "react-native";
+import { EyeIcon } from "../icons/eye-icon";
+import { EyeClosedIcon } from "../icons/eye-closed-icon";
 
 export type InputState = "Default" | "Focused" | "Error";
 
@@ -34,8 +36,6 @@ export function Input({
     Error: "border-[#C10007]",
   };
 
-  const showEyeIcon = showPasswordToggle;
-
   return (
     <View style={containerStyle} className={cn("w-full", className)}>
       <View
@@ -54,9 +54,9 @@ export function Input({
           {...props}
         />
 
-        {showEyeIcon && (
+        {showPasswordToggle && (
           <TouchableOpacity onPress={() => setIsPasswordVisible(!isPasswordVisible)}>
-            <Text className="text-xl leading-0">👁</Text>
+            {isPasswordVisible ? <EyeIcon width={24} height={24} /> : <EyeClosedIcon width={24} height={24} />}
           </TouchableOpacity>
         )}
       </View>
