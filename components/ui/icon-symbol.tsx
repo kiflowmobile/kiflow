@@ -1,14 +1,11 @@
 // Fallback for using MaterialIcons on Android and web.
 
-import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import { SymbolViewProps, SymbolWeight } from "expo-symbols";
-import { ComponentProps } from "react";
-import { OpaqueColorValue, type StyleProp, type TextStyle } from "react-native";
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+import { SymbolViewProps, SymbolWeight } from 'expo-symbols';
+import { ComponentProps } from 'react';
+import { OpaqueColorValue, type StyleProp, type TextStyle } from 'react-native';
 
-type IconMapping = Record<
-  SymbolViewProps["name"],
-  ComponentProps<typeof MaterialIcons>["name"]
->;
+type IconMapping = Record<SymbolViewProps['name'], ComponentProps<typeof MaterialIcons>['name']>;
 type IconSymbolName = keyof typeof MAPPING;
 
 /**
@@ -17,24 +14,26 @@ type IconSymbolName = keyof typeof MAPPING;
  * - see SF Symbols in the [SF Symbols](https://developer.apple.com/sf-symbols/) app.
  */
 const MAPPING = {
-  "house.fill": "home",
-  "paperplane.fill": "send",
-  "chevron.left.forwardslash.chevron.right": "code",
-  "chevron.left": "chevron-left",
-  "chevron.right": "chevron-right",
-  "book.fill": "book",
-  "chart.bar.fill": "bar-chart",
-  "person.fill": "person",
-  "arrow.right": "arrow-forward",
-  "checkmark.circle.fill": "check-circle",
-  "chevron.up": "keyboard-arrow-up",
-  "chevron.down": "keyboard-arrow-down",
-  xmark: "close",
-  "info.circle.fill": "info",
-  "exclamationmark.circle.fill": "error",
-  "speaker.slash.fill": "volume-mute",
-  "speaker.wave.2.fill": "volume-up",
-  "play.circle.fill": "play-circle",
+  'house.fill': 'home',
+  'paperplane.fill': 'send',
+  'chevron.left.forwardslash.chevron.right': 'code',
+  'chevron.left': 'chevron-left',
+  'chevron.right': 'chevron-right',
+  'book.fill': 'book',
+  'chart.bar.fill': 'bar-chart',
+  'person.fill': 'person',
+  'arrow.right': 'arrow-forward',
+  'checkmark.circle.fill': 'check-circle',
+  'chevron.up': 'keyboard-arrow-up',
+  'chevron.down': 'keyboard-arrow-down',
+  xmark: 'close',
+  'info.circle.fill': 'info',
+  'exclamationmark.circle.fill': 'error',
+  'speaker.slash.fill': 'volume-mute',
+  'speaker.wave.2.fill': 'volume-up',
+  'play.circle.fill': 'play-circle',
+  'mic.fill': 'mic',
+  'stop.fill': 'stop',
 } as IconMapping;
 
 /**
@@ -54,12 +53,5 @@ export function IconSymbol({
   style?: StyleProp<TextStyle>;
   weight?: SymbolWeight;
 }) {
-  return (
-    <MaterialIcons
-      color={color}
-      size={size}
-      name={MAPPING[name]}
-      style={style}
-    />
-  );
+  return <MaterialIcons color={color} size={size} name={MAPPING[name]} style={style} />;
 }
