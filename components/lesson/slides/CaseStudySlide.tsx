@@ -7,7 +7,6 @@ import { getCaseResponse } from '@/lib/database';
 import { supabase } from '@/lib/supabase';
 import { Slide } from '@/lib/types';
 import { useAuthStore } from '@/store/auth-store';
-import { File } from 'expo-file-system';
 import React, { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -27,6 +26,18 @@ interface CaseStudySlideProps {
   onNext: () => void;
   isActive?: boolean;
 }
+
+const blobToBase64 = (blob: Blob): Promise<string> =>
+  new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const result = reader.result as string;
+      const base64 = result.split(',')[1];
+      resolve(base64);
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
 
 export function CaseStudySlide({ slide, onNext, isActive }: CaseStudySlideProps) {
   const { user } = useAuthStore();
@@ -163,15 +174,14 @@ export function CaseStudySlide({ slide, onNext, isActive }: CaseStudySlideProps)
   const transcribeAudio = async (uri: string) => {
     setIsTranscribing(true);
     try {
-      console.log('Transcribing audio from URI:', uri);
-
-      const file = new File(uri);
-      const base64String = file.base64Sync();
+      const response = await fetch(uri);
+      const blob = await response.blob();
+      const base64String = await blobToBase64(blob);
 
       const { data, error } = await supabase.functions.invoke('transcribe-audio', {
         body: {
           audio_base64: base64String,
-          mime_type: 'audio/m4a',
+          mime_type: 'audio/webm',
         },
       });
 
