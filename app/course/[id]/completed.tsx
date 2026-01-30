@@ -1,10 +1,11 @@
-import { CheckmarkIcon } from "@/components/icons/checkmark-icon";
-import { Button } from "@/components/ui/button";
-import { IconSymbol } from "@/components/ui/icon-symbol";
-import { useLocalSearchParams, useRouter } from "expo-router";
-import React from "react";
-import { Text, TouchableOpacity, View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { CheckmarkIcon } from '@/components/icons/checkmark-icon';
+import { Button } from '@/components/ui/button';
+import { IconSymbol } from '@/components/ui/icon-symbol';
+import { sendCourseCompletionEmail } from '@/lib/api';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import React, { useEffect } from 'react';
+import { Text, TouchableOpacity, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const WavyCheckmark = () => (
   <View className="w-[148px] h-[146px] mb-8 relative justify-center items-center">
@@ -31,6 +32,14 @@ export default function CourseCompletedScreen() {
   const insets = useSafeAreaInsets();
   const { id: courseId } = useLocalSearchParams<{ id: string }>();
 
+  useEffect(() => {
+    if (courseId) {
+      sendCourseCompletionEmail(courseId).catch((err) => {
+        console.error('Failed to send completion email:', err);
+      });
+    }
+  }, [courseId]);
+
   const handleReviewResults = () => {
     if (courseId) {
       router.push(`/course/${courseId}/progress`);
@@ -53,7 +62,9 @@ export default function CourseCompletedScreen() {
       <View className="flex-1 justify-center items-center px-4">
         <WavyCheckmark />
 
-        <Text className="text-title-1 text-center mb-4">Congratulations!{"\n"}You’ve completed the course!</Text>
+        <Text className="text-title-1 text-center mb-4">
+          Congratulations!{'\n'}You’ve completed the course!
+        </Text>
 
         <Text className="text-body-1 text-[#525252] text-center">
           Review your results and explore the skills you’ve built.
