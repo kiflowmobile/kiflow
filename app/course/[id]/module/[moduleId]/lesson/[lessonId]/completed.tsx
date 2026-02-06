@@ -1,10 +1,10 @@
-import { CheckmarkIcon } from "@/components/icons/checkmark-icon";
-import { AverageScore } from "@/components/progress/average-score";
-import { SkillsLevel } from "@/components/progress/skills-level";
-import { Button } from "@/components/ui/button";
-import { IconSymbol } from "@/components/ui/icon-symbol";
-import { Typography } from "@/components/ui/typography";
-import { useInitialLoad } from "@/hooks/use-initial-load";
+import { CheckmarkIcon } from '@/components/icons/checkmark-icon';
+import { AverageScore } from '@/components/progress/average-score';
+import { SkillsLevel } from '@/components/progress/skills-level';
+import { Button } from '@/components/ui/button';
+import { IconSymbol } from '@/components/ui/icon-symbol';
+import { Typography } from '@/components/ui/typography';
+import { useInitialLoad } from '@/hooks/use-initial-load';
 import {
   getAssessmentCriteria,
   getLessonCriteriaScores,
@@ -13,19 +13,22 @@ import {
   getModulesByCourseId,
   getSlidesByLessonId,
   updateUserProgress,
-} from "@/lib/database";
-import { AssessmentCriterion, UserLessonCriteriaScore } from "@/lib/types";
-import { useAuthStore } from "@/store/auth-store";
-import { useLocalSearchParams, useRouter } from "expo-router";
-import React, { useCallback, useEffect, useState } from "react";
-import { ActivityIndicator, ScrollView, TouchableOpacity, View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+} from '@/lib/database';
+import { AssessmentCriterion, UserLessonCriteriaScore } from '@/lib/types';
+import { useAuthStore } from '@/store/auth-store';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import React, { useCallback, useEffect, useState } from 'react';
+import { ActivityIndicator, ScrollView, TouchableOpacity, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const HeaderBg = ({ className }: { className?: string }) => {
   return (
     <View className={className}>
       <svg width="100%" height="100%" viewBox="0 0 390 200" fill="none" preserveAspectRatio="none">
-        <path d="M0 0H390V176.5C390 176.5 292.5 200 195 200C97.5 200 0 176.5 0 176.5V0Z" fill="#5EA500" />
+        <path
+          d="M0 0H390V176.5C390 176.5 292.5 200 195 200C97.5 200 0 176.5 0 176.5V0Z"
+          fill="#5EA500"
+        />
       </svg>
     </View>
   );
@@ -44,7 +47,9 @@ export default function LessonCompletedScreen() {
     lessonId: string;
   }>();
   const { user } = useAuthStore();
-  const { loading, startLoading, finishLoading } = useInitialLoad(`${courseId}-${moduleId}-${lessonId}-completed`);
+  const { loading, startLoading, finishLoading } = useInitialLoad(
+    `${courseId}-${moduleId}-${lessonId}-completed`,
+  );
   const [nextLessonId, setNextLessonId] = useState<string | null>(null);
   const [criteria, setCriteria] = useState<AssessmentCriterion[]>([]);
   const [criteriaScores, setCriteriaScores] = useState<UserLessonCriteriaScore[]>([]);
@@ -106,7 +111,7 @@ export default function LessonCompletedScreen() {
         await updateUserProgress(user.id, courseId, targetNextSlideId);
       }
     } catch (error) {
-      console.error("Error loading next lesson:", error);
+      console.error('Error loading next lesson:', error);
     } finally {
       finishLoading();
     }
@@ -133,26 +138,32 @@ export default function LessonCompletedScreen() {
   const averageScore = (() => {
     const allScores = [...criteriaScores.map((s) => s.score), ...quizScores.map((s) => s.score)];
 
-    if (allScores.length === 0) return "0.0";
+    if (allScores.length === 0) return '0.0';
 
     return (allScores.reduce((acc, curr) => acc + curr, 0) / allScores.length).toFixed(1);
   })();
 
   if (loading) {
     return (
-      <View className="flex-1 bg-[#F4F4F4] justify-center items-center">
-        <ActivityIndicator size="large" color="#5EA500" />
+      <View className="flex-1 bg-bg justify-center items-center">
+        <ActivityIndicator size="large" color="#5774CD" />
       </View>
     );
   }
 
   return (
-    <View className="flex-1 bg-[#F4F4F4]">
+    <View className="flex-1 bg-bg">
       <ScrollView className="flex-1">
         <View className="pb-10 mb-8 relative">
           <HeaderBg className="absolute inset-0" />
 
-          <View style={{ paddingTop: insets.top + 16, paddingLeft: insets.left + 16, paddingRight: insets.right + 16 }}>
+          <View
+            style={{
+              paddingTop: insets.top + 16,
+              paddingLeft: insets.left + 16,
+              paddingRight: insets.right + 16,
+            }}
+          >
             <TouchableOpacity
               onPress={() => router.push(`/course/${courseId}`)}
               hitSlop={{ top: 20, bottom: 20, left: 20, right: 20 }}
@@ -179,7 +190,7 @@ export default function LessonCompletedScreen() {
 
           <SkillsLevel
             scores={criteriaScores.map((s) => ({
-              title: criteria.find((c) => c.id === s.criterion_id)?.title || "Skill",
+              title: criteria.find((c) => c.id === s.criterion_id)?.title || 'Skill',
               score: s.score,
             }))}
             title="Skills level"
@@ -194,8 +205,11 @@ export default function LessonCompletedScreen() {
           paddingRight: insets.right + 16,
         }}
       >
-        <Button size="big" onPress={nextLessonId ? handleNextLesson : () => router.replace("/(tabs)/courses")}>
-          {nextLessonId ? "Next lesson" : "Back to Courses"}
+        <Button
+          size="big"
+          onPress={nextLessonId ? handleNextLesson : () => router.replace('/(tabs)/courses')}
+        >
+          {nextLessonId ? 'Next lesson' : 'Back to Courses'}
         </Button>
       </View>
     </View>

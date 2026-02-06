@@ -1,8 +1,8 @@
-import { AverageScore } from "@/components/progress/average-score";
-import { SkillsLevel } from "@/components/progress/skills-level";
-import { IconSymbol } from "@/components/ui/icon-symbol";
-import { Typography } from "@/components/ui/typography";
-import { useInitialLoad } from "@/hooks/use-initial-load";
+import { AverageScore } from '@/components/progress/average-score';
+import { SkillsLevel } from '@/components/progress/skills-level';
+import { IconSymbol } from '@/components/ui/icon-symbol';
+import { Typography } from '@/components/ui/typography';
+import { useInitialLoad } from '@/hooks/use-initial-load';
 import {
   calculateModuleProgress,
   getAssessmentCriteria,
@@ -14,13 +14,13 @@ import {
   getUserCourseSlideInteractions,
   getUserModuleCriteriaScores,
   getUserProgress,
-} from "@/lib/database";
-import { AssessmentCriterion, Course, Lesson, Module, UserModuleCriteriaScore } from "@/lib/types";
-import { useAuthStore } from "@/store/auth-store";
-import { useLocalSearchParams, useRouter } from "expo-router";
-import React, { useCallback, useEffect, useState } from "react";
-import { ActivityIndicator, ScrollView, TouchableOpacity, View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+} from '@/lib/database';
+import { AssessmentCriterion, Course, Lesson, Module, UserModuleCriteriaScore } from '@/lib/types';
+import { useAuthStore } from '@/store/auth-store';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import React, { useCallback, useEffect, useState } from 'react';
+import { ActivityIndicator, ScrollView, TouchableOpacity, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 interface ModuleWithProgress extends Module {
   progress: number;
@@ -71,10 +71,10 @@ export default function CourseProgressScreen() {
       let caseCount = 0;
 
       interactions.forEach((interaction) => {
-        if (interaction.type === "quiz") {
+        if (interaction.type === 'quiz') {
           totalQuizScore += interaction.score;
           quizCount++;
-        } else if (interaction.type === "case_study") {
+        } else if (interaction.type === 'case_study') {
           totalCaseScore += interaction.score;
           caseCount++;
         }
@@ -94,20 +94,20 @@ export default function CourseProgressScreen() {
           const courseProgress = await getUserProgress(user.id, id);
 
           for (const lesson of module.lessons) {
-            // A lesson is considered completed if its progress (based on last_slide_id) 
+            // A lesson is considered completed if its progress (based on last_slide_id)
             // has reached or passed this lesson.
             if (courseProgress?.last_slide_id) {
               const lastSlide = await getSlideById(courseProgress.last_slide_id);
               if (lastSlide) {
                 const lastLesson = await getLessonById(lastSlide.lesson_id);
-                const lastModule = await getModuleById(lastLesson?.module_id || "");
-                
+                const lastModule = await getModuleById(lastLesson?.module_id || '');
+
                 if (lastModule && lastLesson) {
                   const isPastModule = lastModule.order_index > module.order_index;
                   const isSameModule = lastModule.id === module.id;
                   const isPastLesson = lastLesson.order_index > lesson.order_index;
                   const isSameLesson = lastLesson.id === lesson.id;
-                  
+
                   if (isPastModule || (isSameModule && (isPastLesson || isSameLesson))) {
                     completedLessonsCount++;
                   }
@@ -122,12 +122,12 @@ export default function CourseProgressScreen() {
             criteriaScores,
             completedLessonsCount,
           };
-        })
+        }),
       );
 
       setModules(modulesWithProgress);
     } catch (error) {
-      console.error("Error loading progress data:", error);
+      console.error('Error loading progress data:', error);
     } finally {
       finishLoading();
     }
@@ -141,14 +141,14 @@ export default function CourseProgressScreen() {
     const scores = [];
     if (quizScore > 0) scores.push(quizScore);
     if (caseStudyScore > 0) scores.push(caseStudyScore);
-    if (scores.length === 0) return "0.0";
+    if (scores.length === 0) return '0.0';
     return (scores.reduce((a, b) => a + b, 0) / scores.length).toFixed(1);
   })();
 
   if (loading) {
     return (
-      <View className="flex-1 bg-[#F4F4F4] items-center justify-center">
-        <ActivityIndicator size="large" color="#5EA500" />
+      <View className="flex-1 bg-bg items-center justify-center">
+        <ActivityIndicator size="large" color="#5774CD" />
       </View>
     );
   }
@@ -156,7 +156,7 @@ export default function CourseProgressScreen() {
   if (!course) return null;
 
   return (
-    <View className="flex-1 bg-[#F4F4F4]">
+    <View className="flex-1 bg-bg">
       <View style={{ paddingTop: insets.top + 16 }} className="px-4 pb-8 relative">
         <TouchableOpacity
           onPress={() => router.back()}
@@ -167,7 +167,9 @@ export default function CourseProgressScreen() {
           <IconSymbol name="chevron.left" size={24} color="#0A0A0A" />
         </TouchableOpacity>
 
-        <Typography variant="title2" className="text-center">Course progress</Typography>
+        <Typography variant="title2" className="text-center">
+          Course progress
+        </Typography>
       </View>
 
       <ScrollView
@@ -179,7 +181,9 @@ export default function CourseProgressScreen() {
         }}
       >
         <View className="bg-white p-4 rounded-xl mb-4 shadow-sm">
-          <Typography variant="title2" className="mb-6">Course “{course.title}”</Typography>
+          <Typography variant="title2" className="mb-6">
+            Course “{course.title}”
+          </Typography>
 
           <View className="flex-row items-center">
             <AverageScore score={averageScore} />
@@ -188,12 +192,16 @@ export default function CourseProgressScreen() {
 
             <View className="flex-1 gap-3">
               <View className="flex-row justify-between items-center">
-                <Typography variant="body2" className="text-[#525252]">Quiz score</Typography>
+                <Typography variant="body2" className="text-[#525252]">
+                  Quiz score
+                </Typography>
                 <Typography variant="title3">{quizScore.toFixed(1)}</Typography>
               </View>
 
               <View className="flex-row justify-between items-center">
-                <Typography variant="body2" className="text-[#525252]">Case study score</Typography>
+                <Typography variant="body2" className="text-[#525252]">
+                  Case study score
+                </Typography>
                 <Typography variant="title3">{caseStudyScore.toFixed(1)}</Typography>
               </View>
             </View>
@@ -223,11 +231,11 @@ export default function CourseProgressScreen() {
               {module.criteriaScores.length > 0 && (
                 <>
                   <View className="h-px bg-[#E0E0E0] my-4" />
-                  <SkillsLevel 
-                    scores={module.criteriaScores.map(s => ({
-                      title: criteria.find(c => c.id === s.criterion_id)?.title || "Skill",
-                      score: s.score
-                    }))} 
+                  <SkillsLevel
+                    scores={module.criteriaScores.map((s) => ({
+                      title: criteria.find((c) => c.id === s.criterion_id)?.title || 'Skill',
+                      score: s.score,
+                    }))}
                   />
                 </>
               )}
