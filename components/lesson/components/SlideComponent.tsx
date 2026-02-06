@@ -31,7 +31,7 @@ export function SlideComponent({ slide, onNext, module, lesson, onClose, isActiv
     case "content":
       return <TextSlide slide={slide} />;
     case "video":
-      return <VideoSlide slide={slide as any} isActive={isActive} />;
+      return <VideoSlide slide={slide as any} isActive={isActive} onNext={onNext} />;
     case "quiz":
       return <QuizSlide slide={slide} onNext={onNext} isActive={isActive} />;
     case "case_study":

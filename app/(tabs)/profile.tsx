@@ -1,12 +1,12 @@
-import { LogoutIcon } from "@/components/icons/logout-icon";
-import { SCREEN_WIDTH } from "@/components/lesson/styles";
-import { Button } from "@/components/ui/button";
-import { Dialog } from "@/components/ui/dialog";
-import { useAuthStore } from "@/store/auth-store";
-import { Image } from "expo-image";
-import { useRouter } from "expo-router";
-import React, { useMemo, useState } from "react";
-import { ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { LogoutIcon } from '@/components/icons/logout-icon';
+import { SCREEN_WIDTH } from '@/components/lesson/styles';
+import { Button } from '@/components/ui/button';
+import { Dialog } from '@/components/ui/dialog';
+import { useAuthStore } from '@/store/auth-store';
+import { Image } from 'expo-image';
+import { useRouter } from 'expo-router';
+import React, { useMemo, useState } from 'react';
+import { ScrollView, Text, TouchableOpacity, View } from 'react-native';
 
 export default function ProfileScreen() {
   const router = useRouter();
@@ -21,20 +21,20 @@ export default function ProfileScreen() {
   const handleConfirmLogout = async () => {
     setShowLogoutDialog(false);
     await signOut();
-    router.replace("/welcome");
+    router.replace('/welcome');
   };
 
   const handleEdit = () => {
-    router.push("/edit-profile");
+    router.push('/edit-profile');
   };
 
   const handleSwitchToCompany = () => {
-    router.push("/company-code");
+    router.push('/company-code');
   };
 
   const initialLetter = useMemo(() => {
-    const firstName = user?.user_metadata?.firstName || "";
-    const lastName = user?.user_metadata?.lastName || "";
+    const firstName = user?.user_metadata?.firstName || '';
+    const lastName = user?.user_metadata?.lastName || '';
 
     if (firstName || lastName) {
       return (firstName[0] || lastName[0]).toUpperCase();
@@ -44,18 +44,18 @@ export default function ProfileScreen() {
       return user.email[0].toUpperCase();
     }
 
-    return "U";
+    return 'U';
   }, [user]);
 
   const fullName = useMemo(() => {
-    const firstName = user?.user_metadata?.firstName || "";
-    const lastName = user?.user_metadata?.lastName || "";
+    const firstName = user?.user_metadata?.firstName || '';
+    const lastName = user?.user_metadata?.lastName || '';
 
     if (firstName && lastName) {
       return `${firstName} ${lastName}`;
     }
 
-    return user?.email || "Mystery User";
+    return user?.email || 'Mystery User';
   }, [user]);
 
   const registrationDate = useMemo(() => {
@@ -63,18 +63,18 @@ export default function ProfileScreen() {
 
     const date = new Date(user.created_at);
     const months = [
-      "January",
-      "February",
-      "March",
-      "April",
-      "May",
-      "June",
-      "July",
-      "August",
-      "September",
-      "October",
-      "November",
-      "December",
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December',
     ];
     const day = date.getDate();
     const month = months[date.getMonth()];
@@ -94,8 +94,11 @@ export default function ProfileScreen() {
           <LogoutIcon width={24} height={24} className="relative left-0.5" />
         </TouchableOpacity>
 
-        <View className="rounded-xl overflow-hidden">
-          <Image source={require("@/assets/images/profile-bg.jpg")} style={{ height: 120, width: SCREEN_WIDTH - 32 }} />
+        <View className="rounded-xl overflow-hidden w-full">
+          <Image
+            source={require('@/assets/images/profile-bg.jpg')}
+            style={{ height: 120, width: SCREEN_WIDTH - 32 }}
+          />
         </View>
 
         <View className="-mt-[50px] mx-auto mb-3 w-[100px] h-[100px] rounded-full bg-white justify-center items-center">
@@ -114,7 +117,11 @@ export default function ProfileScreen() {
           </View>
         )}
 
-        <Button onPress={handleEdit} className="min-w-[124px] bg-[#CCD7F1] mb-10" textClassName="text-text">
+        <Button
+          onPress={handleEdit}
+          className="min-w-[124px] bg-[#CCD7F1] mb-10"
+          textClassName="text-text"
+        >
           Edit
         </Button>
 
@@ -123,7 +130,8 @@ export default function ProfileScreen() {
             <Text className="text-title-2 mb-1">Access</Text>
 
             <Text className="text-body-2 mb-3">
-              You&apos;re viewing public courses only. Switch to company courses tailored for your team.
+              You&apos;re viewing public courses only. Switch to company courses tailored for your
+              team.
             </Text>
 
             <TouchableOpacity onPress={handleSwitchToCompany}>

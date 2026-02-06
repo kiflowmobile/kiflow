@@ -1,9 +1,9 @@
-import { IconSymbol } from "@/components/ui/icon-symbol";
-import { useVideoPlayer, VideoView } from "expo-video";
-import React, { useEffect, useState } from "react";
-import { TouchableOpacity, View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { SCREEN_HEIGHT, SCREEN_WIDTH } from "../styles";
+import { IconSymbol } from '@/components/ui/icon-symbol';
+import { useVideoPlayer, VideoView } from 'expo-video';
+import React, { useEffect, useState } from 'react';
+import { TouchableOpacity, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SCREEN_HEIGHT, SCREEN_WIDTH } from '../styles';
 
 interface VideoSlideProps {
   slide: {
@@ -14,9 +14,10 @@ interface VideoSlideProps {
     };
   };
   isActive?: boolean;
+  onNext?: () => void;
 }
 
-export function VideoSlide({ slide, isActive }: VideoSlideProps) {
+export function VideoSlide({ slide, isActive, onNext }: VideoSlideProps) {
   const videoUrl = `https://stream.mux.com/${slide.content?.video?.mux}.m3u8`;
   const insets = useSafeAreaInsets();
   const [isPlaying, setIsPlaying] = useState(false);
@@ -37,14 +38,21 @@ export function VideoSlide({ slide, isActive }: VideoSlideProps) {
   }, [isActive, player]);
 
   useEffect(() => {
-    const subscription = player.addListener("playingChange", (event) => {
+    const subscription = player.addListener('playingChange', (event) => {
       setIsPlaying(event.isPlaying);
+    });
+
+    const endSubscription = player.addListener('playToEnd', () => {
+      if (isActive && onNext) {
+        onNext();
+      }
     });
 
     return () => {
       subscription.remove();
+      endSubscription.remove();
     };
-  }, [player]);
+  }, [player, isActive, onNext]);
 
   const togglePlay = () => {
     if (player.playing) {
@@ -80,10 +88,18 @@ export function VideoSlide({ slide, isActive }: VideoSlideProps) {
         onPress={toggleMute}
         hitSlop={{ top: 20, bottom: 20, left: 20, right: 20 }}
       >
-        <IconSymbol name={isMuted ? "speaker.slash.fill" : "speaker.wave.2.fill"} size={24} color="#FFFFFF" />
+        <IconSymbol
+          name={isMuted ? 'speaker.slash.fill' : 'speaker.wave.2.fill'}
+          size={24}
+          color="#FFFFFF"
+        />
       </TouchableOpacity>
 
-      <TouchableOpacity className="absolute inset-0 justify-center items-center" onPress={togglePlay} activeOpacity={1}>
+      <TouchableOpacity
+        className="absolute inset-0 justify-center items-center"
+        onPress={togglePlay}
+        activeOpacity={1}
+      >
         {!isPlaying && <IconSymbol name="play.circle.fill" size={64} color="#FFFFFF" />}
       </TouchableOpacity>
     </View>
