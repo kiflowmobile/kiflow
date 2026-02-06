@@ -3,6 +3,7 @@ import React, { memo } from "react";
 import { View } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import { runOnJS, SharedValue } from "react-native-reanimated";
+import { useLessonNavigation } from "../context/LessonNavigationContext";
 import { ScrollableSlideProvider, useScrollableSlide } from "../context/ScrollableSlideContext";
 import { SCREEN_HEIGHT } from "../styles";
 import { SlideComponent } from "./SlideComponent";
@@ -21,6 +22,19 @@ export interface SlideWrapperProps {
 
 function SlideWrapperInner({ onNext, onPrevious, ...props }: SlideWrapperProps) {
   const { isAtTop, isAtBottom, isScrollable } = useScrollableSlide();
+  const { isNavigationLocked } = useLessonNavigation();
+
+  const handleNext = () => {
+    if (!isNavigationLocked) {
+      onNext();
+    }
+  };
+
+  const handlePrevious = () => {
+    if (!isNavigationLocked) {
+      onPrevious();
+    }
+  };
 
   const swipeGesture = Gesture.Pan()
     .onEnd((event) => {
@@ -35,16 +49,16 @@ function SlideWrapperInner({ onNext, onPrevious, ...props }: SlideWrapperProps) 
       // If slide has scrollable content, only allow page navigation at boundaries
       if (isScrollable.value) {
         if (isSwipingUp && isAtBottom.value) {
-          runOnJS(onNext)();
+          runOnJS(handleNext)();
         } else if (isSwipingDown && isAtTop.value) {
-          runOnJS(onPrevious)();
+          runOnJS(handlePrevious)();
         }
       } else {
         // Non-scrollable slide - allow normal navigation
         if (isSwipingUp) {
-          runOnJS(onNext)();
+          runOnJS(handleNext)();
         } else if (isSwipingDown) {
-          runOnJS(onPrevious)();
+          runOnJS(handlePrevious)();
         }
       }
     })

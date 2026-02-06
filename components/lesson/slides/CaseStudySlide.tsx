@@ -41,7 +41,7 @@ const blobToBase64 = (blob: Blob): Promise<string> =>
 
 export function CaseStudySlide({ slide, onNext, isActive }: CaseStudySlideProps) {
   const { user } = useAuthStore();
-  const { setAllowNext } = useLessonNavigation();
+  const { setAllowNext, setNavigationLocked } = useLessonNavigation();
   const { handleScroll, handleContentSizeChange, handleLayout } = useScrollableSlide();
   const content = slide.content as any;
   const insets = useSafeAreaInsets();
@@ -55,6 +55,16 @@ export function CaseStudySlide({ slide, onNext, isActive }: CaseStudySlideProps)
   const audioRecorder = useAudioRecorder(RecordingPresets.LOW_QUALITY);
   const recorderState = useAudioRecorderState(audioRecorder);
   const [isTranscribing, setIsTranscribing] = useState(false);
+
+  const showResultOverlay = state.submitted && state.evaluation && !state.evaluating;
+  const showAnalyzingOverlay = state.evaluating;
+
+  useEffect(() => {
+    if (isActive) {
+      setNavigationLocked(showResultOverlay || showAnalyzingOverlay);
+    }
+    return () => setNavigationLocked(false);
+  }, [isActive, showResultOverlay, showAnalyzingOverlay, setNavigationLocked]);
 
   const updateState = useCallback((newState: any) => {
     setState((prev: any) => {
@@ -200,9 +210,6 @@ export function CaseStudySlide({ slide, onNext, isActive }: CaseStudySlideProps)
       setIsTranscribing(false);
     }
   };
-
-  const showResultOverlay = state.submitted && state.evaluation && !state.evaluating;
-  const showAnalyzingOverlay = state.evaluating;
 
   return (
     <View
