@@ -31,14 +31,16 @@ export function PortraitModeGuard() {
   const isAndroid = getMobilePlatform() === 'Android';
 
   if ((isIos || isAndroid) && isLandscape) {
-    <View style={styles.container}>
-      <View style={styles.content}>
-        <IconSymbol name="rotate.left" size={64} color="#0A0A0A" />
-        <Typography variant="title2" style={styles.text}>
-          Please rotate your phone to portrait mode
-        </Typography>
+    return (
+      <View style={styles.container}>
+        <View style={styles.content}>
+          <IconSymbol name="rotate.left" size={64} color="#0A0A0A" />
+          <Typography variant="title2" style={styles.text}>
+            Please rotate your phone to portrait mode
+          </Typography>
+        </View>
       </View>
-    </View>;
+    );
   }
 
   return null;
