@@ -1,23 +1,24 @@
-import "react-native-reanimated";
+import 'react-native-reanimated';
 
-import "@/global.css";
+import '@/global.css';
 
-import { DarkTheme, DefaultTheme, ThemeProvider } from "@react-navigation/native";
-import { useFonts } from "expo-font";
-import { Stack } from "expo-router";
-import { StatusBar } from "expo-status-bar";
-import { useEffect } from "react";
+import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
+import { useFonts } from 'expo-font';
+import { Stack } from 'expo-router';
+import { StatusBar } from 'expo-status-bar';
+import { useEffect } from 'react';
 
-import { useColorScheme } from "@/hooks/use-color-scheme";
-import { useAuthStore } from "@/store/auth-store";
+import { useColorScheme } from '@/hooks/use-color-scheme';
+import { useAuthStore } from '@/store/auth-store';
+import { PortraitModeGuard } from '@/components/ui/portrait-mode-guard';
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
   const { initialize } = useAuthStore();
 
   const [fontsLoaded] = useFonts({
-    RobotoCondensed: require("../assets/fonts/RobotoCondensed.ttf"),
-    Inter: require("../assets/fonts/Inter.ttf"),
+    RobotoCondensed: require('../assets/fonts/RobotoCondensed.ttf'),
+    Inter: require('../assets/fonts/Inter.ttf'),
   });
 
   useEffect(() => {
@@ -29,7 +30,7 @@ export default function RootLayout() {
   }
 
   return (
-    <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
+    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="index" />
         <Stack.Screen name="welcome" />
@@ -42,6 +43,7 @@ export default function RootLayout() {
         <Stack.Screen name="change-password" />
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       </Stack>
+      <PortraitModeGuard />
       <StatusBar style="auto" />
     </ThemeProvider>
   );

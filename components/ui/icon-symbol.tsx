@@ -34,6 +34,7 @@ const MAPPING = {
   'play.circle.fill': 'play-circle',
   'mic.fill': 'mic',
   'stop.fill': 'stop',
+  'rotate.left': 'screen-rotation',
 } as IconMapping;
 
 /**
