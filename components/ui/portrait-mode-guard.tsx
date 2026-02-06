@@ -3,12 +3,32 @@ import { StyleSheet, View, useWindowDimensions, Platform } from 'react-native';
 import { IconSymbol } from './icon-symbol';
 import { Typography } from './typography';
 
+function getMobilePlatform() {
+  const userAgent = navigator.userAgent || navigator.vendor || (window as any).opera;
+
+  // Check for Android
+  if (/android/i.test(userAgent)) {
+    return 'Android';
+  }
+
+  // Check for iOS (iPhone, iPad, iPod)
+  // Note: Modern iPads often report as "MacIntel", so we check for touch points.
+  if (
+    /iPad|iPhone|iPod/.test(userAgent) ||
+    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
+  ) {
+    return 'iOS';
+  }
+
+  return 'Desktop/Other';
+}
+
 export function PortraitModeGuard() {
   const { width, height } = useWindowDimensions();
 
   const isLandscape = width > height;
-  const isIos = Platform.OS === 'ios' && Platform.isPad;
-  const isAndroid = Platform.OS === 'android';
+  const isIos = getMobilePlatform() === 'iOS';
+  const isAndroid = getMobilePlatform() === 'Android';
 
   if ((isIos || isAndroid) && isLandscape) {
     <View style={styles.container}>
