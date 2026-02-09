@@ -11,7 +11,7 @@ export default function WelcomeScreen() {
       <View className="absolute inset-0">
         <Image
           source={require('@/assets/images/welcome-bg.jpg')}
-          className="w-full h-full max-h-full max-w-full"
+          className="w-full h-full max-h-full max-w-full mx-auto"
           resizeMode="cover"
         />
       </View>
