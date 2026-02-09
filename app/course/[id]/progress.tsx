@@ -32,7 +32,7 @@ interface ModuleWithProgress extends Module {
 export default function CourseProgressScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id, fromCompleted } = useLocalSearchParams<{ id: string; fromCompleted?: string }>();
   const { user } = useAuthStore();
   const { loading, startLoading, finishLoading } = useInitialLoad(`${id}-progress`);
   const [course, setCourse] = useState<Course | null>(null);
@@ -159,7 +159,13 @@ export default function CourseProgressScreen() {
     <View className="flex-1 bg-bg">
       <View style={{ paddingTop: insets.top + 16 }} className="px-4 pb-8 relative">
         <TouchableOpacity
-          onPress={() => router.back()}
+          onPress={() => {
+            if (fromCompleted === 'true') {
+              router.replace('/(tabs)/courses');
+            } else {
+              router.back();
+            }
+          }}
           hitSlop={{ top: 20, bottom: 20, left: 20, right: 20 }}
           className="absolute z-10 left-4"
           style={{ top: insets.top + 16 }}

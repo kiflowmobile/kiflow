@@ -42,9 +42,12 @@ export default function CourseCompletedScreen() {
 
   const handleReviewResults = () => {
     if (courseId) {
-      router.push(`/course/${courseId}/progress`);
+      router.push({
+        pathname: '/course/[id]/progress',
+        params: { id: courseId, fromCompleted: 'true' },
+      });
     } else {
-      router.replace(`/(tabs)/courses`);
+      router.replace('/(tabs)/courses');
     }
   };
 
