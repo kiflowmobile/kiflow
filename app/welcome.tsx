@@ -1,19 +1,18 @@
-import { SCREEN_HEIGHT, SCREEN_WIDTH } from "@/components/lesson/styles";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "expo-router";
 import React from "react";
-import { Image, StyleSheet, Text, View } from "react-native";
+import { Image, Text, View } from "react-native";
 
 export default function WelcomeScreen() {
   const router = useRouter();
 
   return (
-    <View style={styles.container} className="relative overflow-hidden bg-primary px-4 pb-4">
+    <View className="flex-1 relative overflow-hidden bg-primary px-4 pb-4">
       <View className="absolute inset-0">
         <Image
           source={require("@/assets/images/welcome-bg.jpg")}
-          style={{ width: SCREEN_WIDTH, height: SCREEN_HEIGHT }}
-          resizeMode="contain"
+          className="w-full h-full"
+          resizeMode="cover"
         />
       </View>
 
@@ -42,10 +41,3 @@ export default function WelcomeScreen() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    height: SCREEN_HEIGHT,
-    width: SCREEN_WIDTH,
-  },
-});
