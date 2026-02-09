@@ -2,7 +2,7 @@ import { Button } from '@/components/ui/button';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { ProgressBar } from '@/components/ui/progress-bar';
 import { useInitialLoad } from '@/hooks/use-initial-load';
-import { calculateCourseProgress, getCourses, getLessonCountByCourseId } from '@/lib/database';
+import { calculateCourseProgress, getCourses, getLessonCountByCourseId, resetCourseProgress } from '@/lib/database';
 import { Course } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/store/auth-store';
@@ -39,11 +39,27 @@ const EmptyCoursesList = () => {
   );
 };
 
-const CoursesList = ({ courses }: { courses: CourseWithProgress[] }) => {
+const CoursesList = ({
+  courses,
+  onResetCourse,
+}: {
+  courses: CourseWithProgress[];
+  onResetCourse: (courseId: string) => Promise<void>;
+}) => {
   const router = useRouter();
+  const [resettingId, setResettingId] = useState<string | null>(null);
 
-  const handleCoursePress = (courseId: string) => {
-    router.push(`/course/${courseId}`);
+  const handleCoursePress = async (courseId: string, progress: number) => {
+    if (progress === 100) {
+      setResettingId(courseId);
+      try {
+        await onResetCourse(courseId);
+      } finally {
+        setResettingId(null);
+      }
+    } else {
+      router.push(`/course/${courseId}`);
+    }
   };
 
   return (
@@ -52,7 +68,7 @@ const CoursesList = ({ courses }: { courses: CourseWithProgress[] }) => {
         <TouchableOpacity
           key={course.id}
           className="rounded-xl overflow-hidden bg-white"
-          onPress={() => handleCoursePress(course.id)}
+          onPress={() => handleCoursePress(course.id, course.progress)}
           activeOpacity={0.9}
         >
           <View className="relative h-[160px] w-full">
@@ -65,9 +81,7 @@ const CoursesList = ({ courses }: { courses: CourseWithProgress[] }) => {
 
             <View className="absolute bottom-4 left-4 flex-row gap-2">
               <View className="bg-primary px-2.5 py-1 rounded-full">
-                <Text className="text-white text-caption font-semibold">
-                  {course.lessonCount} lessons
-                </Text>
+                <Text className="text-white text-caption font-semibold">{course.lessonCount} lessons</Text>
               </View>
 
               {course.progress === 100 && (
@@ -94,11 +108,20 @@ const CoursesList = ({ courses }: { courses: CourseWithProgress[] }) => {
             )}
 
             <Button
-              onPress={() => handleCoursePress(course.id)}
+              onPress={() => handleCoursePress(course.id, course.progress)}
               className={cn('mt-4', course.progress === 100 && 'bg-[#CCD7F1]')}
               textClassName={cn(course.progress === 100 && 'text-text')}
+              disabled={resettingId === course.id}
             >
-              {course.progress === 0 ? 'Start course' : course.progress === 100 ? 'Start again' : 'Continue'}
+              {resettingId === course.id ? (
+                <ActivityIndicator size="small" color="#000000" />
+              ) : course.progress === 0 ? (
+                'Start course'
+              ) : course.progress === 100 ? (
+                'Start again'
+              ) : (
+                'Continue'
+              )}
             </Button>
           </View>
         </TouchableOpacity>
@@ -111,6 +134,7 @@ export default function CoursesScreen() {
   const { user } = useAuthStore();
   const [courses, setCourses] = useState<CourseWithProgress[]>([]);
   const { loading, startLoading, finishLoading } = useInitialLoad(user?.id || '');
+  const router = useRouter();
 
   const loadCourses = useCallback(async () => {
     if (!user) {
@@ -149,6 +173,13 @@ export default function CoursesScreen() {
     loadCourses();
   }, [loadCourses]);
 
+  const handleResetCourse = async (courseId: string) => {
+    if (!user) return;
+    await resetCourseProgress(user.id, courseId);
+    loadCourses(); // Refresh the list
+    router.push(`/course/${courseId}`);
+  };
+
   if (loading) {
     return (
       <View className="flex-1 bg-bg items-center justify-center">
@@ -164,7 +195,11 @@ export default function CoursesScreen() {
           <Text className="text-title-1">Courses</Text>
         </View>
 
-        {courses.length === 0 ? <EmptyCoursesList /> : <CoursesList courses={courses} />}
+        {courses.length === 0 ? (
+          <EmptyCoursesList />
+        ) : (
+          <CoursesList courses={courses} onResetCourse={handleResetCourse} />
+        )}
       </ScrollView>
     </SafeAreaView>
   );
