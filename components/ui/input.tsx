@@ -1,12 +1,12 @@
-import { cn } from "@/lib/utils";
-import React, { useState } from "react";
-import { Text, TextInput, TextInputProps, TouchableOpacity, View, ViewStyle } from "react-native";
-import { EyeIcon } from "../icons/eye-icon";
-import { EyeClosedIcon } from "../icons/eye-closed-icon";
+import { cn } from '@/lib/utils';
+import React, { useState } from 'react';
+import { Text, TextInput, TextInputProps, TouchableOpacity, View, ViewStyle } from 'react-native';
+import { EyeIcon } from '../icons/eye-icon';
+import { EyeClosedIcon } from '../icons/eye-closed-icon';
 
-export type InputState = "Default" | "Focused" | "Error";
+export type InputState = 'Default' | 'Focused' | 'Error';
 
-interface InputProps extends Omit<TextInputProps, "style"> {
+interface InputProps extends Omit<TextInputProps, 'style'> {
   label?: string;
   error?: string;
   state?: InputState;
@@ -17,7 +17,7 @@ interface InputProps extends Omit<TextInputProps, "style"> {
 export function Input({
   label,
   error,
-  state = "Default",
+  state = 'Default',
   showPasswordToggle = false,
   containerStyle,
   className,
@@ -28,24 +28,24 @@ export function Input({
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
 
-  const currentState = state === "Error" ? "Error" : isFocused ? "Focused" : "Default";
+  const currentState = state === 'Error' ? 'Error' : isFocused ? 'Focused' : 'Default';
 
   const stateClasses = {
-    Default: "border-transparent",
-    Focused: "border-primary",
-    Error: "border-[#C10007]",
+    Default: 'border-transparent',
+    Focused: 'border-primary',
+    Error: 'border-[#C10007]',
   };
 
   return (
-    <View style={containerStyle} className={cn("w-full", className)}>
+    <View style={containerStyle} className={cn('w-full', className)}>
       <View
         className={cn(
-          "flex-row items-center min-h-[56px] gap-3 p-4 rounded-lg bg-white border",
-          stateClasses[currentState]
+          'flex-row items-center min-h-[56px] gap-3 p-4 rounded-lg bg-white border',
+          stateClasses[currentState],
         )}
       >
         <TextInput
-          className="flex-1 text-body-2 outline-none"
+          className="flex-1 text-body-2 outline-none text-[16px]!"
           value={value}
           secureTextEntry={secureTextEntry && !isPasswordVisible}
           onFocus={() => setIsFocused(true)}
@@ -56,7 +56,11 @@ export function Input({
 
         {showPasswordToggle && (
           <TouchableOpacity onPress={() => setIsPasswordVisible(!isPasswordVisible)}>
-            {isPasswordVisible ? <EyeIcon width={24} height={24} /> : <EyeClosedIcon width={24} height={24} />}
+            {isPasswordVisible ? (
+              <EyeIcon width={24} height={24} />
+            ) : (
+              <EyeClosedIcon width={24} height={24} />
+            )}
           </TouchableOpacity>
         )}
       </View>
