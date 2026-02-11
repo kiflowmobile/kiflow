@@ -20,6 +20,7 @@ import {
   setAudioModeAsync,
   useAudioRecorderState,
 } from 'expo-audio';
+import Markdown from 'react-native-markdown-display';
 
 interface CaseStudySlideProps {
   slide: Slide;
@@ -294,7 +295,7 @@ export function CaseStudySlide({ slide, onNext, isActive }: CaseStudySlideProps)
           <View className="flex-1 w-full bg-white rounded-xl p-4">
             <ScrollView showsVerticalScrollIndicator={false} bounces={false}>
               <Text className="text-body-1 text-text leading-relaxed">
-                {state.evaluation?.feedback || 'Evaluation complete.'}
+                <Markdown>{state.evaluation?.feedback || 'Evaluation complete.'}</Markdown>
               </Text>
             </ScrollView>
           </View>
