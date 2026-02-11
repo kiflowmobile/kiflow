@@ -338,57 +338,6 @@ export async function updateUserProgress(
   return { success: true };
 }
 
-export async function resetCourseProgress(
-  userId: string,
-  courseId: string
-): Promise<{ success: boolean; error?: string }> {
-  try {
-    // 1. Get all slides for the course to delete interactions
-    const modules = await getModulesByCourseId(courseId);
-    const allSlideIds: string[] = [];
-
-    for (const module of modules) {
-      const lessons = await getLessonsByModuleId(module.id);
-      for (const lesson of lessons) {
-        const slides = await getSlidesByLessonId(lesson.id);
-        allSlideIds.push(...slides.map((s) => s.id));
-      }
-    }
-
-    if (allSlideIds.length > 0) {
-      // Delete quiz interactions
-      await supabase
-        .from("course_quiz_interactions")
-        .delete()
-        .eq("user_id", userId)
-        .in("slide_id", allSlideIds);
-
-      // Delete case study interactions (scores should cascade delete or be handled by database constraints)
-      // Note: If scores don't cascade, we might need to delete them explicitly, but typically interactions are the parent.
-      await supabase
-        .from("course_case_study_interactions")
-        .delete()
-        .eq("user_id", userId)
-        .in("slide_id", allSlideIds);
-    }
-
-    // 2. Delete user progress pointer
-    const { error } = await supabase
-      .from("course_user_progress")
-      .delete()
-      .eq("user_id", userId)
-      .eq("course_id", courseId);
-
-    if (error) {
-      return { success: false, error: error.message };
-    }
-
-    return { success: true };
-  } catch (error: any) {
-    return { success: false, error: error.message || "Failed to reset course progress" };
-  }
-}
-
 export async function calculateCourseProgress(userId: string, courseId: string): Promise<number> {
   // Get all slides for the course in order
   const modules = await getModulesByCourseId(courseId);
