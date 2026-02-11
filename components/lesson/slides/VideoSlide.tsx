@@ -1,6 +1,6 @@
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { useVideoPlayer, VideoView } from 'expo-video';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { SCREEN_HEIGHT, SCREEN_WIDTH } from '../styles';
@@ -22,6 +22,7 @@ export function VideoSlide({ slide, isActive, onNext }: VideoSlideProps) {
   const insets = useSafeAreaInsets();
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
+  const ref = useRef<VideoView>(null);
 
   const player = useVideoPlayer(videoUrl, (player) => {
     if (isActive) {
@@ -44,6 +45,7 @@ export function VideoSlide({ slide, isActive, onNext }: VideoSlideProps) {
 
     const endSubscription = player.addListener('playToEnd', () => {
       if (isActive && onNext) {
+        ref.current?.exitFullscreen();
         onNext();
       }
     });
@@ -74,6 +76,7 @@ export function VideoSlide({ slide, isActive, onNext }: VideoSlideProps) {
   return (
     <View style={{ width: SCREEN_WIDTH, height: SCREEN_HEIGHT }} className="bg-black">
       <VideoView
+        ref={ref}
         style={{ width: SCREEN_WIDTH, height: SCREEN_HEIGHT }}
         player={player}
         contentFit="cover"
