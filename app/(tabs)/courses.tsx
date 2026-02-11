@@ -1,14 +1,14 @@
 import { Button } from '@/components/ui/button';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { ProgressBar } from '@/components/ui/progress-bar';
-import { useInitialLoad } from '@/hooks/use-initial-load';
 import { calculateCourseProgress, getCourses, getLessonCountByCourseId } from '@/lib/database';
 import { Course } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/store/auth-store';
+import { useQuery } from '@tanstack/react-query';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
-import React, { useCallback, useEffect, useState } from 'react';
+import React from 'react';
 import { ActivityIndicator, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -118,17 +118,12 @@ const CoursesList = ({ courses }: { courses: CourseWithProgress[] }) => {
 
 export default function CoursesScreen() {
   const { user } = useAuthStore();
-  const [courses, setCourses] = useState<CourseWithProgress[]>([]);
-  const { loading, startLoading, finishLoading } = useInitialLoad(user?.id || '');
 
-  const loadCourses = useCallback(async () => {
-    if (!user) {
-      finishLoading();
-      return;
-    }
+  const { data: courses = [], isLoading } = useQuery({
+    queryKey: ['courses', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return [];
 
-    try {
-      startLoading();
       const allCourses = await getCourses(user.id);
 
       // Calculate progress and lesson count for each course
@@ -146,19 +141,12 @@ export default function CoursesScreen() {
           };
         }),
       );
-      setCourses(coursesWithData);
-    } catch (error) {
-      console.error('Error loading courses:', error);
-    } finally {
-      finishLoading();
-    }
-  }, [user, startLoading, finishLoading]);
+      return coursesWithData;
+    },
+    enabled: !!user?.id,
+  });
 
-  useEffect(() => {
-    loadCourses();
-  }, [loadCourses]);
-
-  if (loading) {
+  if (isLoading) {
     return (
       <View className="flex-1 bg-bg items-center justify-center">
         <ActivityIndicator size="large" color="#5774CD" />

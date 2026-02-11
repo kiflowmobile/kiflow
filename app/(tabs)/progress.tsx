@@ -2,7 +2,6 @@ import { AverageScore } from '@/components/progress/average-score';
 import { SkillsLevel } from '@/components/progress/skills-level';
 import { Button } from '@/components/ui/button';
 import { Typography } from '@/components/ui/typography';
-import { useInitialLoad } from '@/hooks/use-initial-load';
 import {
   calculateCourseProgress,
   getAssessmentCriteria,
@@ -13,9 +12,10 @@ import {
 } from '@/lib/database';
 import { AssessmentCriterion, Course, UserModuleCriteriaScore } from '@/lib/types';
 import { useAuthStore } from '@/store/auth-store';
+import { useQuery } from '@tanstack/react-query';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
-import React, { useCallback, useEffect, useState } from 'react';
+import React from 'react';
 import { ActivityIndicator, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -32,17 +32,12 @@ export default function ProgressScreen() {
   const { user } = useAuthStore();
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const [courses, setCourses] = useState<CourseWithProgress[]>([]);
-  const { loading, startLoading, finishLoading } = useInitialLoad(user?.id || '');
 
-  const loadProgress = useCallback(async () => {
-    if (!user) {
-      finishLoading();
-      return;
-    }
+  const { data: courses = [], isLoading } = useQuery({
+    queryKey: ['progress', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return [];
 
-    try {
-      startLoading();
       const allCourses = await getCourses(user.id);
 
       // Calculate progress and details for each course
@@ -90,23 +85,16 @@ export default function ProgressScreen() {
         return a.progress - b.progress;
       });
 
-      setCourses(coursesWithProgress);
-    } catch (error) {
-      console.error('Error loading progress:', error);
-    } finally {
-      finishLoading();
-    }
-  }, [user, startLoading, finishLoading]);
-
-  useEffect(() => {
-    loadProgress();
-  }, [loadProgress]);
+      return coursesWithProgress;
+    },
+    enabled: !!user?.id,
+  });
 
   const handleCoursePress = (courseId: string) => {
     router.push(`/course/${courseId}/progress`);
   };
 
-  if (loading) {
+  if (isLoading) {
     return (
       <View className="flex-1 bg-bg items-center justify-center">
         <ActivityIndicator size="large" color="#5774CD" />

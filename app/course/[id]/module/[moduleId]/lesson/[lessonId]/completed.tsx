@@ -4,7 +4,6 @@ import { SkillsLevel } from '@/components/progress/skills-level';
 import { Button } from '@/components/ui/button';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { Typography } from '@/components/ui/typography';
-import { useInitialLoad } from '@/hooks/use-initial-load';
 import {
   getAssessmentCriteria,
   getLessonCriteriaScores,
@@ -14,10 +13,10 @@ import {
   getSlidesByLessonId,
   updateUserProgress,
 } from '@/lib/database';
-import { AssessmentCriterion, UserLessonCriteriaScore } from '@/lib/types';
 import { useAuthStore } from '@/store/auth-store';
+import { useQuery } from '@tanstack/react-query';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, ScrollView, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -47,22 +46,12 @@ export default function LessonCompletedScreen() {
     lessonId: string;
   }>();
   const { user } = useAuthStore();
-  const { loading, startLoading, finishLoading } = useInitialLoad(
-    `${courseId}-${moduleId}-${lessonId}-completed`,
-  );
   const [nextLessonId, setNextLessonId] = useState<string | null>(null);
-  const [criteria, setCriteria] = useState<AssessmentCriterion[]>([]);
-  const [criteriaScores, setCriteriaScores] = useState<UserLessonCriteriaScore[]>([]);
-  const [quizScores, setQuizScores] = useState<{ score: number }[]>([]);
 
-  const loadNextLesson = useCallback(async () => {
-    if (!moduleId || !lessonId || !courseId || !user) {
-      finishLoading();
-      return;
-    }
-
-    try {
-      startLoading();
+  const { data, isLoading } = useQuery({
+    queryKey: ['lesson-completed', lessonId, moduleId, courseId, user?.id],
+    queryFn: async () => {
+      if (!moduleId || !lessonId || !courseId || !user) return null;
 
       // Get all lessons in the module
       const [lessons, criteriaData, criteriaScores, quizScoresData] = await Promise.all([
@@ -71,10 +60,6 @@ export default function LessonCompletedScreen() {
         getLessonCriteriaScores(user.id, lessonId),
         getLessonQuizScores(user.id, lessonId),
       ]);
-
-      setCriteria(criteriaData);
-      setCriteriaScores(criteriaScores);
-      setQuizScores(quizScoresData);
 
       const currentIndex = lessons.findIndex((l) => l.id === lessonId);
       let targetNextLessonId: string | null = null;
@@ -98,7 +83,6 @@ export default function LessonCompletedScreen() {
       }
 
       if (targetNextLessonId) {
-        setNextLessonId(targetNextLessonId);
         // Get the first slide of the next lesson to update progress
         const nextSlides = await getSlidesByLessonId(targetNextLessonId);
         if (nextSlides.length > 0) {
@@ -110,16 +94,26 @@ export default function LessonCompletedScreen() {
       if (targetNextSlideId) {
         await updateUserProgress(user.id, courseId, targetNextSlideId);
       }
-    } catch (error) {
-      console.error('Error loading next lesson:', error);
-    } finally {
-      finishLoading();
-    }
-  }, [moduleId, lessonId, courseId, user, startLoading, finishLoading]);
+
+      return {
+        criteria: criteriaData,
+        criteriaScores: criteriaScores,
+        quizScores: quizScoresData,
+        nextLessonId: targetNextLessonId,
+      };
+    },
+    enabled: !!moduleId && !!lessonId && !!courseId && !!user,
+  });
+
+  const criteria = data?.criteria || [];
+  const criteriaScores = data?.criteriaScores || [];
+  const quizScores = data?.quizScores || [];
 
   useEffect(() => {
-    loadNextLesson();
-  }, [loadNextLesson]);
+    if (data?.nextLessonId) {
+      setNextLessonId(data.nextLessonId);
+    }
+  }, [data?.nextLessonId]);
 
   const handleNextLesson = async () => {
     if (!nextLessonId || !moduleId || !courseId) return;
@@ -143,7 +137,7 @@ export default function LessonCompletedScreen() {
     return (allScores.reduce((acc, curr) => acc + curr, 0) / allScores.length).toFixed(1);
   })();
 
-  if (loading) {
+  if (isLoading) {
     return (
       <View className="flex-1 bg-bg justify-center items-center">
         <ActivityIndicator size="large" color="#5774CD" />

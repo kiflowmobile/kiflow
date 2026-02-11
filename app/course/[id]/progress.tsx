@@ -2,7 +2,6 @@ import { AverageScore } from '@/components/progress/average-score';
 import { SkillsLevel } from '@/components/progress/skills-level';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { Typography } from '@/components/ui/typography';
-import { useInitialLoad } from '@/hooks/use-initial-load';
 import {
   calculateModuleProgress,
   getAssessmentCriteria,
@@ -15,10 +14,11 @@ import {
   getUserModuleCriteriaScores,
   getUserProgress,
 } from '@/lib/database';
-import { AssessmentCriterion, Course, Lesson, Module, UserModuleCriteriaScore } from '@/lib/types';
+import { Lesson, Module, UserModuleCriteriaScore } from '@/lib/types';
 import { useAuthStore } from '@/store/auth-store';
+import { useQuery } from '@tanstack/react-query';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { ActivityIndicator, ScrollView, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -34,21 +34,11 @@ export default function CourseProgressScreen() {
   const insets = useSafeAreaInsets();
   const { id, fromCompleted } = useLocalSearchParams<{ id: string; fromCompleted?: string }>();
   const { user } = useAuthStore();
-  const { loading, startLoading, finishLoading } = useInitialLoad(`${id}-progress`);
-  const [course, setCourse] = useState<Course | null>(null);
-  const [modules, setModules] = useState<ModuleWithProgress[]>([]);
-  const [criteria, setCriteria] = useState<AssessmentCriterion[]>([]);
-  const [quizScore, setQuizScore] = useState(0);
-  const [caseStudyScore, setCaseStudyScore] = useState(0);
 
-  const loadProgressData = useCallback(async () => {
-    if (!id || !user) {
-      finishLoading();
-      return;
-    }
-
-    try {
-      startLoading();
+  const { data, isLoading } = useQuery({
+    queryKey: ['course-progress', id, user?.id],
+    queryFn: async () => {
+      if (!id || !user) return null;
 
       const [courseData, criteriaData, { modules: modulesData }, interactions] = await Promise.all([
         getCourseById(id),
@@ -58,12 +48,8 @@ export default function CourseProgressScreen() {
       ]);
 
       if (!courseData) {
-        router.back();
-        return;
+        return null;
       }
-
-      setCourse(courseData);
-      setCriteria(criteriaData);
 
       let totalQuizScore = 0;
       let quizCount = 0;
@@ -80,8 +66,8 @@ export default function CourseProgressScreen() {
         }
       });
 
-      setQuizScore(quizCount > 0 ? totalQuizScore / quizCount : 0);
-      setCaseStudyScore(caseCount > 0 ? totalCaseScore / caseCount : 0);
+      const quizScore = quizCount > 0 ? totalQuizScore / quizCount : 0;
+      const caseStudyScore = caseCount > 0 ? totalCaseScore / caseCount : 0;
 
       const modulesWithProgress = await Promise.all(
         modulesData.map(async (module) => {
@@ -125,17 +111,28 @@ export default function CourseProgressScreen() {
         }),
       );
 
-      setModules(modulesWithProgress);
-    } catch (error) {
-      console.error('Error loading progress data:', error);
-    } finally {
-      finishLoading();
-    }
-  }, [id, user, router, startLoading, finishLoading]);
+      return {
+        course: courseData,
+        criteria: criteriaData,
+        modules: modulesWithProgress,
+        quizScore,
+        caseStudyScore,
+      };
+    },
+    enabled: !!id && !!user,
+  });
+
+  const course = data?.course;
+  const criteria = data?.criteria || [];
+  const modules = data?.modules || [];
+  const quizScore = data?.quizScore || 0;
+  const caseStudyScore = data?.caseStudyScore || 0;
 
   useEffect(() => {
-    loadProgressData();
-  }, [loadProgressData]);
+    if (!isLoading && data === null && id && user) {
+      router.back();
+    }
+  }, [isLoading, data, id, user, router]);
 
   const averageScore = (() => {
     const scores = [];
@@ -145,7 +142,7 @@ export default function CourseProgressScreen() {
     return (scores.reduce((a, b) => a + b, 0) / scores.length).toFixed(1);
   })();
 
-  if (loading) {
+  if (isLoading) {
     return (
       <View className="flex-1 bg-bg items-center justify-center">
         <ActivityIndicator size="large" color="#5774CD" />

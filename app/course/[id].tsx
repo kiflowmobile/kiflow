@@ -1,16 +1,16 @@
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { ProgressBar } from '@/components/ui/progress-bar';
-import { useInitialLoad } from '@/hooks/use-initial-load';
 import {
   calculateModuleProgress,
   getCourseWithModulesAndLessons,
   getUserProgress,
 } from '@/lib/database';
-import { Course, Lesson, Module, Slide } from '@/lib/types';
+import { Lesson, Module, Slide } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { useAuthStore } from '@/store/auth-store';
+import { useQuery } from '@tanstack/react-query';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { ActivityIndicator, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -18,18 +18,40 @@ interface LessonWithSlides extends Lesson {
   slides: Slide[];
 }
 
-interface ModuleWithLessons extends Module {
-  lessons: LessonWithSlides[];
-  progress: number;
-}
-
 export default function CourseDetailScreen() {
   const router = useRouter();
   const { id, startAgain } = useLocalSearchParams<{ id: string; startAgain?: string }>();
   const { user } = useAuthStore();
-  const [course, setCourse] = useState<Course | null>(null);
-  const [modules, setModules] = useState<ModuleWithLessons[]>([]);
-  const { loading, startLoading, finishLoading } = useInitialLoad(`${id}-course`);
+
+  const { data, isLoading } = useQuery({
+    queryKey: ['course', id, user?.id],
+    queryFn: async () => {
+      if (!id || !user) return null;
+
+      const { course: courseData, modules: modulesData } = await getCourseWithModulesAndLessons(id);
+
+      if (!courseData) {
+        return null;
+      }
+
+      // Fetch progress for each module
+      const modulesWithProgress = await Promise.all(
+        modulesData.map(async (m) => {
+          const progress = await calculateModuleProgress(user.id, m.id);
+          return { ...m, progress };
+        }),
+      );
+
+      return {
+        course: courseData,
+        modules: modulesWithProgress,
+      };
+    },
+    enabled: !!id && !!user,
+  });
+
+  const course = data?.course;
+  const modules = data?.modules || [];
 
   useEffect(() => {
     if (startAgain === 'true' && modules.length > 0) {
@@ -41,43 +63,12 @@ export default function CourseDetailScreen() {
     }
   }, [modules, startAgain, id, router]);
 
-  const loadCourseData = useCallback(async () => {
-    if (!id || !user) {
-      finishLoading();
-      return;
-    }
-
-    try {
-      startLoading();
-      const { course: courseData, modules: modulesData } = await getCourseWithModulesAndLessons(id);
-
-      if (!courseData) {
-        router.back();
-        return;
-      }
-
-      // Fetch progress for each module
-      const modulesWithProgress = await Promise.all(
-        modulesData.map(async (m) => {
-          const progress = await calculateModuleProgress(user.id, m.id);
-          return { ...m, progress };
-        }),
-      );
-
-      setCourse(courseData);
-      setModules(modulesWithProgress);
-    } catch (error) {
-      console.error('Error loading course:', error);
-    } finally {
-      finishLoading();
-    }
-  }, [id, user, router, startLoading, finishLoading]);
-
   useEffect(() => {
-    if (id && user) {
-      loadCourseData();
+    // If we loaded and there's no course data (and no error), user might have been redirected inside queryFn or it's invalid
+    if (!isLoading && data === null && id && user) {
+      router.back();
     }
-  }, [id, user, loadCourseData]);
+  }, [isLoading, data, id, user, router]);
 
   const handleModulePress = async (moduleId: string) => {
     if (!user || !id) return;
@@ -102,7 +93,10 @@ export default function CourseDetailScreen() {
     router.push(`/course/${id}/module/${moduleId}/lesson/${firstLesson.id}`);
   };
 
-  if (loading || (startAgain === 'true' && modules.length > 0 && modules[0]?.lessons.length > 0)) {
+  if (
+    isLoading ||
+    (startAgain === 'true' && modules.length > 0 && modules[0]?.lessons.length > 0)
+  ) {
     return (
       <View className="flex-1 bg-bg items-center justify-center">
         <ActivityIndicator size="large" color="#5774CD" />
