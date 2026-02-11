@@ -44,7 +44,10 @@ export function VideoSlide({ slide, isActive, onNext }: VideoSlideProps) {
     });
 
     const endSubscription = player.addListener('playToEnd', () => {
-      if (isActive && onNext) {
+      // Not available on iOS
+      const supportsExitFullscreen = 'exitFullscreen' in document;
+
+      if (isActive && onNext && supportsExitFullscreen) {
         ref.current?.exitFullscreen();
         onNext();
       }
