@@ -83,6 +83,7 @@ export function VideoSlide({ slide, isActive, onNext }: VideoSlideProps) {
         allowsFullscreen={false}
         allowsPictureInPicture={false}
         nativeControls={false}
+        playsInline={true}
       />
 
       <TouchableOpacity
