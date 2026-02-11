@@ -7,11 +7,12 @@ import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { focusManager, QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useAuthStore } from '@/store/auth-store';
 import { PortraitModeGuard } from '@/components/ui/portrait-mode-guard';
+import { AppState, AppStateStatus, Platform } from 'react-native';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -34,6 +35,18 @@ export default function RootLayout() {
   useEffect(() => {
     initialize();
   }, [initialize]);
+
+  useEffect(() => {
+    function onAppStateChange(status: AppStateStatus) {
+      if (Platform.OS !== 'web') {
+        focusManager.setFocused(status === 'active');
+      }
+    }
+
+    const subscription = AppState.addEventListener('change', onAppStateChange);
+
+    return () => subscription.remove();
+  }, []);
 
   if (!fontsLoaded) {
     return null;
