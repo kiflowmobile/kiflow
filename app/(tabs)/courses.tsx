@@ -43,7 +43,12 @@ const CoursesList = ({ courses }: { courses: CourseWithProgress[] }) => {
   const router = useRouter();
 
   const handleCoursePress = (courseId: string) => {
-    router.push(`/course/${courseId}`);
+    const course = courses.find((c) => c.id === courseId);
+    if (course?.progress === 100) {
+      router.push(`/course/${courseId}?startAgain=true`);
+    } else {
+      router.push(`/course/${courseId}`);
+    }
   };
 
   return (
@@ -98,7 +103,11 @@ const CoursesList = ({ courses }: { courses: CourseWithProgress[] }) => {
               className={cn('mt-4', course.progress === 100 && 'bg-[#CCD7F1]')}
               textClassName={cn(course.progress === 100 && 'text-text')}
             >
-              {course.progress === 0 ? 'Start course' : course.progress === 100 ? 'Start again' : 'Continue'}
+              {course.progress === 0
+                ? 'Start course'
+                : course.progress === 100
+                  ? 'Start again'
+                  : 'Continue'}
             </Button>
           </View>
         </TouchableOpacity>

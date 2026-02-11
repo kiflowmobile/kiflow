@@ -1,14 +1,18 @@
-import { IconSymbol } from "@/components/ui/icon-symbol";
-import { ProgressBar } from "@/components/ui/progress-bar";
-import { useInitialLoad } from "@/hooks/use-initial-load";
-import { calculateModuleProgress, getCourseWithModulesAndLessons, getUserProgress } from "@/lib/database";
-import { Course, Lesson, Module, Slide } from "@/lib/types";
-import { cn } from "@/lib/utils";
-import { useAuthStore } from "@/store/auth-store";
-import { useLocalSearchParams, useRouter } from "expo-router";
-import React, { useCallback, useEffect, useState } from "react";
-import { ActivityIndicator, ScrollView, Text, TouchableOpacity, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { IconSymbol } from '@/components/ui/icon-symbol';
+import { ProgressBar } from '@/components/ui/progress-bar';
+import { useInitialLoad } from '@/hooks/use-initial-load';
+import {
+  calculateModuleProgress,
+  getCourseWithModulesAndLessons,
+  getUserProgress,
+} from '@/lib/database';
+import { Course, Lesson, Module, Slide } from '@/lib/types';
+import { cn } from '@/lib/utils';
+import { useAuthStore } from '@/store/auth-store';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import React, { useCallback, useEffect, useState } from 'react';
+import { ActivityIndicator, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 interface LessonWithSlides extends Lesson {
   slides: Slide[];
@@ -21,11 +25,21 @@ interface ModuleWithLessons extends Module {
 
 export default function CourseDetailScreen() {
   const router = useRouter();
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id, startAgain } = useLocalSearchParams<{ id: string; startAgain?: string }>();
   const { user } = useAuthStore();
   const [course, setCourse] = useState<Course | null>(null);
   const [modules, setModules] = useState<ModuleWithLessons[]>([]);
   const { loading, startLoading, finishLoading } = useInitialLoad(`${id}-course`);
+
+  useEffect(() => {
+    if (startAgain === 'true' && modules.length > 0) {
+      const firstModule = modules[0];
+      if (firstModule.lessons.length > 0) {
+        const firstLesson = firstModule.lessons[0];
+        router.replace(`/course/${id}/module/${firstModule.id}/lesson/${firstLesson.id}`);
+      }
+    }
+  }, [modules, startAgain, id, router]);
 
   const loadCourseData = useCallback(async () => {
     if (!id || !user) {
@@ -47,13 +61,13 @@ export default function CourseDetailScreen() {
         modulesData.map(async (m) => {
           const progress = await calculateModuleProgress(user.id, m.id);
           return { ...m, progress };
-        })
+        }),
       );
 
       setCourse(courseData);
       setModules(modulesWithProgress);
     } catch (error) {
-      console.error("Error loading course:", error);
+      console.error('Error loading course:', error);
     } finally {
       finishLoading();
     }
@@ -88,7 +102,7 @@ export default function CourseDetailScreen() {
     router.push(`/course/${id}/module/${moduleId}/lesson/${firstLesson.id}`);
   };
 
-  if (loading) {
+  if (loading || (startAgain === 'true' && modules.length > 0 && modules[0]?.lessons.length > 0)) {
     return (
       <View className="flex-1 bg-bg items-center justify-center">
         <ActivityIndicator size="large" color="#5774CD" />
@@ -101,7 +115,7 @@ export default function CourseDetailScreen() {
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-bg" edges={["top"]}>
+    <SafeAreaView className="flex-1 bg-bg" edges={['top']}>
       <View className="flex-row items-center justify-between pt-4 px-4">
         <TouchableOpacity
           onPress={() => router.push(`/(tabs)/courses`)}
@@ -121,7 +135,10 @@ export default function CourseDetailScreen() {
 
         <View className="gap-2.5">
           {modules.map((module, index) => {
-            const lessonCount = module.lessons.reduce((total, lesson) => total + lesson.slides.length, 0);
+            const lessonCount = module.lessons.reduce(
+              (total, lesson) => total + lesson.slides.length,
+              0,
+            );
             const isCompleted = module.progress === 100;
             const hasStarted = module.progress > 0 && module.progress < 100;
             const isLast = index === modules.length - 1;
@@ -133,8 +150,8 @@ export default function CourseDetailScreen() {
                     {index > 0 && (
                       <View
                         className={cn(
-                          "absolute w-0.5 left-[11px] -top-6 h-[calc(50%+24px)]",
-                          modules[index - 1].progress === 100 ? "bg-[#65A30D]" : "bg-neutral-200"
+                          'absolute w-0.5 left-[11px] -top-6 h-[calc(50%+24px)]',
+                          modules[index - 1].progress === 100 ? 'bg-[#65A30D]' : 'bg-neutral-200',
                         )}
                       />
                     )}
@@ -142,8 +159,8 @@ export default function CourseDetailScreen() {
                     {!isLast && (
                       <View
                         className={cn(
-                          "absolute w-0.5 left-[11px] bottom-0 h-1/2",
-                          isCompleted ? "bg-[#65A30D]" : "bg-neutral-200"
+                          'absolute w-0.5 left-[11px] bottom-0 h-1/2',
+                          isCompleted ? 'bg-[#65A30D]' : 'bg-neutral-200',
                         )}
                       />
                     )}
@@ -174,7 +191,7 @@ export default function CourseDetailScreen() {
 
                     <View className="bg-primary px-2.5 py-1 rounded-full">
                       <Text className="text-white text-caption font-semibold">
-                        {lessonCount} {lessonCount === 1 ? "lesson" : "lessons"}
+                        {lessonCount} {lessonCount === 1 ? 'lesson' : 'lessons'}
                       </Text>
                     </View>
                   </View>
