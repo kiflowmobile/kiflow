@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, View, useWindowDimensions, Dimensions } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { IconSymbol } from './icon-symbol';
 import { Typography } from './typography';
 
@@ -24,13 +24,11 @@ function getMobilePlatform() {
 }
 
 export function PortraitModeGuard() {
-  useWindowDimensions();
-
-  const { width, height } = Dimensions.get('screen');
-
-  const isLandscape = width > height;
   const isIos = getMobilePlatform() === 'iOS';
   const isAndroid = getMobilePlatform() === 'Android';
+  const isLandscape =
+    screen.orientation.type === 'landscape-primary' ||
+    screen.orientation.type === 'landscape-secondary';
 
   if ((isIos || isAndroid) && isLandscape) {
     return (
