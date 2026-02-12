@@ -1,8 +1,8 @@
-import { getUserEnrollments, redeemInviteCode } from "@/lib/database";
-import { supabase } from "@/lib/supabase";
-import type { Session } from "@supabase/supabase-js";
-import { User } from "@supabase/supabase-js";
-import { create } from "zustand";
+import { getUserEnrollments, redeemInviteCode } from '@/lib/database';
+import { supabase } from '@/lib/supabase';
+import type { Session } from '@supabase/supabase-js';
+import { User } from '@supabase/supabase-js';
+import { create } from 'zustand';
 
 interface AuthState {
   user: User | null;
@@ -17,7 +17,7 @@ interface AuthState {
     email: string,
     password: string,
     firstName: string,
-    lastName: string
+    lastName: string,
   ) => Promise<{ success: boolean; error?: string }>;
   signIn: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
   signOut: () => Promise<void>;
@@ -25,8 +25,17 @@ interface AuthState {
   redeemInviteCode: (code: string) => Promise<{ success: boolean; error?: string }>;
   checkHasEnrollments: () => Promise<void>;
   updateUser: (user: User | null, session: Session | null) => void;
-  updateProfile: (firstName: string, lastName: string, email: string) => Promise<{ success: boolean; error?: string }>;
-  changePassword: (currentPassword: string, newPassword: string) => Promise<{ success: boolean; error?: string }>;
+  updateProfile: (
+    firstName: string,
+    lastName: string,
+    email: string,
+  ) => Promise<{ success: boolean; error?: string }>;
+  changePassword: (
+    currentPassword: string,
+    newPassword: string,
+  ) => Promise<{ success: boolean; error?: string }>;
+  updatePassword: (newPassword: string) => Promise<{ success: boolean; error?: string }>;
+  setSessionFromUrl: (url: string) => Promise<{ success: boolean; error?: string }>;
 }
 
 export const useAuthStore = create<AuthState>((set, get) => ({
@@ -56,16 +65,19 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       set({ initialized: true, loading: false });
 
       // Listen for auth changes (including TOKEN_REFRESHED when returning from background)
-      supabase.auth.onAuthStateChange(async (event, session) => {
-        if ((event === "SIGNED_IN" || event === "TOKEN_REFRESHED" || event === "INITIAL_SESSION") && session?.user) {
+      supabase.auth.onAuthStateChange((event, session) => {
+        if (
+          (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'INITIAL_SESSION') &&
+          session?.user
+        ) {
           set({ user: session.user, session });
-          await get().checkHasEnrollments();
-        } else if (event === "SIGNED_OUT") {
+          get().checkHasEnrollments().catch(console.error);
+        } else if (event === 'SIGNED_OUT') {
           set({ user: null, session: null, hasEnrollments: false });
         }
       });
     } catch (error: any) {
-      console.error("Auth initialization error:", error);
+      console.error('Auth initialization error:', error);
       set({ loading: false, initialized: true });
     }
   },
@@ -135,7 +147,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       await supabase.auth.signOut();
       set({ user: null, session: null, hasEnrollments: false, loading: false });
     } catch (error: any) {
-      console.error("Sign out error:", error);
+      console.error('Sign out error:', error);
       set({ loading: false });
     }
   },
@@ -145,7 +157,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       set({ loading: true });
 
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: undefined, // We'll handle this in-app
+        redirectTo: 'kiflownext://reset-password',
       });
 
       if (error) {
@@ -168,7 +180,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       const user = get().user;
       if (!user) {
         set({ loading: false });
-        return { success: false, error: "Користувач не авторизований" };
+        return { success: false, error: 'User is not authenticated' };
       }
 
       const result = await redeemInviteCode(code);
@@ -198,7 +210,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       const enrollments = await getUserEnrollments(user.id);
       set({ hasEnrollments: enrollments.length > 0 });
     } catch (error) {
-      console.error("Error checking enrollments:", error);
+      console.error('Error checking enrollments:', error);
       set({ hasEnrollments: false });
     }
   },
@@ -214,7 +226,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       const user = get().user;
       if (!user) {
         set({ loading: false });
-        return { success: false, error: "Користувач не авторизований" };
+        return { success: false, error: 'User is not authenticated' };
       }
 
       // Update user metadata
@@ -265,7 +277,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       const user = get().user;
       if (!user || !user.email) {
         set({ loading: false });
-        return { success: false, error: "Користувач не авторизований" };
+        return { success: false, error: 'User is not authenticated' };
       }
 
       // Verify current password by attempting to sign in
@@ -276,7 +288,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
       if (verifyError) {
         set({ loading: false });
-        return { success: false, error: "Невірний поточний пароль" };
+        return { success: false, error: 'Current password is incorrect' };
       }
 
       // Update password
@@ -287,6 +299,84 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       if (updateError) {
         set({ loading: false });
         return { success: false, error: updateError.message };
+      }
+
+      set({ loading: false });
+      return { success: true };
+    } catch (error: any) {
+      set({ loading: false });
+      return { success: false, error: error.message };
+    }
+  },
+  updatePassword: async (newPassword) => {
+    try {
+      set({ loading: true });
+
+      const { error } = await supabase.auth.updateUser({
+        password: newPassword,
+      });
+
+      if (error) {
+        set({ loading: false });
+        return { success: false, error: error.message };
+      }
+
+      set({ loading: false });
+      return { success: true };
+    } catch (error: any) {
+      set({ loading: false });
+      return { success: false, error: error.message };
+    }
+  },
+
+  setSessionFromUrl: async (url: string) => {
+    try {
+      set({ loading: true });
+
+      let fragment = url;
+      if (url.includes('#')) {
+        fragment = url.split('#')[1];
+      }
+
+      if (!fragment) {
+        set({ loading: false });
+        return { success: false, error: 'No session data found in URL' };
+      }
+
+      const params = fragment.split('&').reduce(
+        (acc, current) => {
+          const [key, value] = current.split('=');
+          if (key && value) {
+            acc[key] = decodeURIComponent(value);
+          }
+          return acc;
+        },
+        {} as Record<string, string>,
+      );
+
+      const { access_token, refresh_token } = params;
+
+      if (!access_token || !refresh_token) {
+        set({ loading: false });
+        return { success: false, error: 'Missing tokens in URL' };
+      }
+
+      // Clear any existing session first to avoid conflicts
+      await supabase.auth.signOut();
+
+      const { data, error } = await supabase.auth.setSession({
+        access_token,
+        refresh_token,
+      });
+
+      if (error) {
+        set({ loading: false });
+        return { success: false, error: error.message };
+      }
+
+      if (data.user && data.session) {
+        set({ user: data.user, session: data.session });
+        get().checkHasEnrollments();
       }
 
       set({ loading: false });
