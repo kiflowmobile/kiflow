@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { IconSymbol } from './icon-symbol';
 import { Typography } from './typography';
@@ -26,9 +26,22 @@ function getMobilePlatform() {
 export function PortraitModeGuard() {
   const isIos = getMobilePlatform() === 'iOS';
   const isAndroid = getMobilePlatform() === 'Android';
-  const isLandscape =
-    screen.orientation.type === 'landscape-primary' ||
-    screen.orientation.type === 'landscape-secondary';
+  const [isLandscape, setIsLandscape] = useState(false);
+
+  useEffect(() => {
+    const handleOrientationChange = () => {
+      setIsLandscape(
+        screen.orientation.type === 'landscape-primary' ||
+          screen.orientation.type === 'landscape-secondary',
+      );
+    };
+
+    window.addEventListener('orientationchange', handleOrientationChange);
+
+    return () => {
+      window.removeEventListener('orientationchange', handleOrientationChange);
+    };
+  }, []);
 
   if ((isIos || isAndroid) && isLandscape) {
     return (
