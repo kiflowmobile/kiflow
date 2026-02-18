@@ -98,17 +98,15 @@ const CoursesList = ({ courses }: { courses: CourseWithProgress[] }) => {
               </Text>
             )}
 
-            <Button
-              onPress={() => handleCoursePress(course.id)}
-              className={cn('mt-4', course.progress === 100 && 'bg-[#CCD7F1]')}
-              textClassName={cn(course.progress === 100 && 'text-text')}
-            >
-              {course.progress === 0
-                ? 'Start course'
-                : course.progress === 100
-                  ? 'Start again'
-                  : 'Continue'}
-            </Button>
+            {course.progress < 100 && (
+              <Button
+                onPress={() => handleCoursePress(course.id)}
+                className={cn('mt-4', course.progress === 100 && 'bg-[#CCD7F1]')}
+                textClassName={cn(course.progress === 100 && 'text-text')}
+              >
+                {course.progress === 0 ? 'Start course' : 'Continue'}
+              </Button>
+            )}
           </View>
         </TouchableOpacity>
       ))}
