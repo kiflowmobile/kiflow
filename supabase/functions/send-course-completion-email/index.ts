@@ -135,10 +135,8 @@ serve(async (req) => {
       throw new Error('Course not found');
     }
 
-    const employeeName =
-      (user.user_metadata && (user.user_metadata.full_name || user.user_metadata.name)) ||
-      user.email ||
-      'Learner';
+    const fullName = user.user_metadata?.firstName + ' ' + user.user_metadata?.lastName;
+    const employeeName = fullName || user.email || 'Learner';
 
     const completionDate = new Date().toLocaleDateString('en-GB', {
       day: '2-digit',
@@ -315,8 +313,8 @@ serve(async (req) => {
     );
 
     // 6. Generate Email HTML
-    const APP_URL = Deno.env.get('APP_URL') || 'https://app.kiflow.com';
-    const EMAIL_BG_URL = Deno.env.get('EMAIL_BG_URL') || 'YOUR_DOMAIN/assets/images/email-bg.jpg';
+    const LOGO_URL = 'https://qejhniaccrdgwlzkxftp.supabase.co/storage/v1/object/public/assets/logo.jpg'
+    const EMAIL_BG_URL = 'https://qejhniaccrdgwlzkxftp.supabase.co/storage/v1/object/public/assets/email-bg.jpg'
 
     const modulesHtml = modulesWithData.map((module) =>
       generateModuleCard(
@@ -345,7 +343,7 @@ serve(async (req) => {
             <!-- Logo -->
             <tr>
               <td align="center" style="padding: 32px 24px;">
-                <img src="https://www.figma.com/api/mcp/asset/b6765636-5cf2-4e7a-b6d6-b3a3c5580d13" width="160" height="40" alt="Kiflow" style="display: block; border: 0; outline: none; text-decoration: none;" />
+                <img src="${LOGO_URL}" width="160" height="40" alt="Kiflow" style="display: block; border: 0; outline: none; text-decoration: none;" />
               </td>
             </tr>
 
