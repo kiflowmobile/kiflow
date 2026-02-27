@@ -13,19 +13,48 @@ interface RequestBody {
 // Format score on 0-5 scale to one decimal (aligned with app/course/[id]/progress.tsx)
 const formatScore5 = (score: number) => Math.round(score * 10) / 10;
 
-// Helper function to generate skill progress bar HTML (fluid-friendly)
+// Display score: no ".0" for round numbers (e.g. 2 not 2.0)
+const formatScoreDisplay = (score: number): string =>
+  score % 1 === 0 ? String(Math.round(score)) : score.toFixed(1);
+
+// Helper function to generate skill progress bar HTML
 const generateSkillBar = (rating5: number): string => {
-  const filled = Math.floor(rating5);
+  const filled = Math.round(rating5);
   const bars = [];
+  const barWidth = 24; // Increased for better visibility
+  const barHeight = 8;
+  const spacing = 2; // Subtle spacing as seen in the screenshot
+
   for (let i = 0; i < 5; i++) {
     const isFilled = i < filled;
-    const color = isFilled ? '#5774cd' : '#c2d1ff';
-    const borderRadius = i === 0 ? 'border-top-left-radius: 4px; border-bottom-left-radius: 4px;' : 
-                        i === 4 ? 'border-top-right-radius: 4px; border-bottom-right-radius: 4px;' : '';
-    bars.push(`<td width="16" height="8" style="background-color: ${color}; ${borderRadius}"></td>`);
-    if (i < 4) bars.push('<td width="4"></td>');
+    const color = isFilled ? '#5774cd' : '#e5e7eb';
+    
+    // Logic for pill-shaped rounding:
+    // Only the far left of the first bar and far right of the last bar are rounded.
+    const isFirst = i === 0;
+    const isLast = i === 4;
+    const borderRadius = `${isFirst ? '4px' : '0'} ${isLast ? '4px' : '0'} ${isLast ? '4px' : '0'} ${isFirst ? '4px' : '0'}`;
+
+    bars.push(`
+      <td 
+        width="${barWidth}" 
+        height="${barHeight}" 
+        style="background-color: ${color}; border-radius: ${borderRadius}; line-height: 1px; font-size: 1px;"
+      >
+        &nbsp;
+      </td>
+    `);
+
+    // Add spacing between segments (but not after the last one)
+    if (i < 4) {
+      bars.push(`<td width="${spacing}" style="line-height: 1px; font-size: 1px;">&nbsp;</td>`);
+    }
   }
-  return `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="display: inline-table; vertical-align: middle;"><tr>${bars.join('')}</tr></table>`;
+
+  return `
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="display: inline-table; vertical-align: middle;">
+      <tr>${bars.join('')}</tr>
+    </table>`;
 };
 
 // Helper function to generate module card HTML
@@ -37,55 +66,55 @@ const generateModuleCard = (
 ): string => {
   const skillsHtml = skills
     .map(
-      (skill, index) => `
-                      <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="width: 100%; margin-bottom: 8px;">
-                        <tr>
-                          <td style="font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; font-weight: 400; font-size: 14px; line-height: 20px; color: #0a0a0a; padding-bottom: 4px;">
-                            ${skill.title}
-                          </td>
-                        </tr>
-                        <tr>
-                          <td style="padding-top: 0; padding-bottom: 0;">
-                            ${generateSkillBar(skill.rating5)}
-                            <span style="display: inline-block; width: 8px;"></span>
-                            <span style="font-family: 'Roboto Condensed', Arial, sans-serif; font-weight: 500; font-size: 16px; line-height: 20px; color: #0a0a0a; vertical-align: middle;">
-                              ${Number(skill.rating5).toFixed(1)}/5
-                            </span>
-                          </td>
-                        </tr>
-                      ${index < skills.length - 1 ? '<tr><td style="height: 12px; line-height: 12px;">&nbsp;</td></tr>' : ''}`,
+      (skill) => `
+      <tr>
+        <td valign="middle" style="padding: 6px 0; font-family: 'Inter', Arial, sans-serif; font-size: 14px; line-height: 1.3; color: #0a0a0a; text-align: left; word-break: normal;">
+          ${skill.title}
+        </td>
+        <td width="130" align="right" valign="middle" style="padding: 6px 0 6px 12px; white-space: nowrap;">
+          <span style="display: block; font-family: 'Roboto Condensed', Arial, sans-serif; font-weight: 600; font-size: 15px; color: #0a0a0a; margin-left: 8px; min-width: 25px;">
+            ${skill.rating5}/5
+          </span>
+          ${generateSkillBar(skill.rating5)}
+        </td>
+      </tr>`
     )
     .join('');
 
   return `
-                  <tr>
-                    <td class="module-card" style="background-color: #f4f5f6; border: 1px solid rgba(0, 0, 0, 0.05); border-radius: 12px; padding: 16px;">
-                      <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" class="module-header-table">
-                        <tr>
-                          <td>
-                            <div style="font-family: 'Roboto Condensed', Arial, sans-serif; font-weight: 500; font-size: 18px; line-height: 22px; color: #0a0a0a; margin: 0 0 4px;">
-                              ${moduleTitle}
-                            </div>
-                            <div style="font-family: 'Roboto Condensed', Arial, sans-serif; font-weight: 400; font-size: 14px; line-height: 20px; color: #737373;">
-                              ${completedLessons}/${totalLessons} lessons
-                            </div>
-                          </td>
-                          <td align="right" valign="top">
-                            <span style="display: inline-block; background-color: #5ea500; border-radius: 14px; padding: 4px 10px; font-family: 'Roboto Condensed', Arial, sans-serif; font-weight: 600; font-size: 14px; line-height: 20px; color: #ffffff;">
-                              Completed
-                            </span>
-                          </td>
-                        </tr>
-                      </table>
-                      <div style="border-top: 1px solid rgba(0, 0, 0, 0.05); height: 1px; line-height: 1px; margin: 16px 0;"></div>
-                      ${skills.length > 0 ? `
-                      <div style="font-family: 'Roboto Condensed', Arial, sans-serif; font-weight: 500; font-size: 16px; line-height: 20px; color: #0a0a0a; margin: 0 0 12px;">
-                        Skills level
-                      </div>
-                      ${skillsHtml}` : ''}
-                    </td>
-                  </tr>
-                  <tr><td style="height: 8px; line-height: 8px;">&nbsp;</td></tr>`;
+    <tr>
+      <td class="module-card" style="background-color: #f8f9fa; border: 1px solid #eeeeee; border-radius: 12px; padding: 20px;">
+        <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+          <tr>
+            <td valign="top">
+              <div style="font-family: 'Roboto Condensed', Arial, sans-serif; font-weight: 700; font-size: 18px; line-height: 24px; color: #000000;">
+                ${moduleTitle}
+              </div>
+              <div style="font-family: Arial, sans-serif; font-size: 14px; color: #737373; margin-top: 2px;">
+                ${completedLessons}/${totalLessons} lessons
+              </div>
+            </td>
+            <td align="right" valign="top">
+              <span style="display: inline-block; background-color: #72af26; border-radius: 6px; padding: 4px 12px; font-family: Arial, sans-serif; font-weight: bold; font-size: 12px; color: #ffffff; text-transform: uppercase; letter-spacing: 0.5px;">
+                Completed
+              </span>
+            </td>
+          </tr>
+        </table>
+
+        <div style="margin: 16px 0; border-top: 1px solid #e5e5e5; font-size: 1px; line-height: 1px;">&nbsp;</div>
+
+        ${skills.length > 0 ? `
+          <div style="font-family: 'Roboto Condensed', Arial, sans-serif; font-weight: 700; font-size: 15px; color: #0a0a0a; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.3px;">
+            Skills level
+          </div>
+          <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+            ${skillsHtml}
+          </table>
+        ` : ''}
+      </td>
+    </tr>
+    <tr><td style="height: 12px;">&nbsp;</td></tr>`;
 };
 
 serve(async (req) => {
@@ -187,14 +216,14 @@ serve(async (req) => {
 
     const quizScore = quizCount > 0 ? totalQuizScore / quizCount : 0;
     const caseStudyScore = caseCount > 0 ? totalCaseScore / caseCount : 0;
-    const quizScoreFormatted = formatScore5(quizScore);
-    const caseStudyScoreFormatted = formatScore5(caseStudyScore);
-
     const scoresForAverage: number[] = [];
     if (quizScore > 0) scoresForAverage.push(quizScore);
     if (caseStudyScore > 0) scoresForAverage.push(caseStudyScore);
     const overallScore = scoresForAverage.length === 0 ? 0 : scoresForAverage.reduce((a, b) => a + b, 0) / scoresForAverage.length;
-    const overallScoreFormatted = formatScore5(overallScore);
+
+    const overallScoreDisplay = formatScoreDisplay(overallScore);
+    const quizScoreDisplay = formatScoreDisplay(quizScore);
+    const caseStudyScoreDisplay = formatScoreDisplay(caseStudyScore);
 
     // 5. Fetch Modules with Lessons and Skills
     const { data: modules, error: modulesError } = await supabaseAdmin
@@ -333,6 +362,10 @@ serve(async (req) => {
         .module-header-table tr { display: block !important; }
         .module-header-table td { display: block !important; text-align: left !important; padding-bottom: 8px !important; }
         .module-header-table td:last-child { padding-bottom: 0 !important; }
+        .skill-row { display: block !important; }
+        .skill-row tr { display: block !important; }
+        .skill-title-cell { display: block !important; width: 100% !important; max-width: 100% !important; padding-bottom: 4px !important; }
+        .skill-score-cell { display: block !important; width: 100% !important; text-align: left !important; }
       }
     </style>
   </head>
@@ -386,7 +419,7 @@ serve(async (req) => {
                       <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
                         <tr>
                           <td style="font-family: 'Roboto Condensed', Arial, sans-serif; font-weight: 500; font-size: 20px; line-height: 24px; color: #0a0a0a;">
-                            Overall score: <span style="white-space: nowrap;">${overallScoreFormatted}</span>
+                            Overall score: <span style="white-space: nowrap;">${overallScoreDisplay}</span>
                           </td>
                           <td align="right" style="font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; font-weight: 400; font-size: 14px; line-height: 20px; color: #525252; white-space: nowrap;">
                             Completion date: ${completionDate}
@@ -397,18 +430,12 @@ serve(async (req) => {
                       <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
                         <tr>
                           <td style="font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; font-weight: 400; font-size: 14px; line-height: 20px; color: #0a0a0a;">
-                            Quiz score:
-                          </td>
-                          <td align="left" style="font-family: 'Roboto Condensed', Arial, sans-serif; font-weight: 500; font-size: 16px; line-height: 20px; color: #0a0a0a; width: 80px; white-space: nowrap;">
-                            ${quizScoreFormatted}
+                            Quiz score: <span style="white-space: nowrap; font-weight: 700;">${quizScoreDisplay}</span>
                           </td>
                         </tr>
                         <tr>
                           <td style="font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; font-weight: 400; font-size: 14px; line-height: 20px; color: #0a0a0a; padding-top: 4px;">
-                            Case study score:
-                          </td>
-                          <td align="left" style="font-family: 'Roboto Condensed', Arial, sans-serif; font-weight: 500; font-size: 16px; line-height: 20px; color: #0a0a0a; width: 80px; white-space: nowrap; padding-top: 4px;">
-                            ${caseStudyScoreFormatted}
+                            Case study score: <span style="white-space: nowrap; font-weight: 700;">${caseStudyScoreDisplay}</span>
                           </td>
                         </tr>
                       </table>
