@@ -51,21 +51,24 @@ export function CaseStudySlide({ slide, onNext, isActive }: CaseStudySlideProps)
     answer: '',
     submitted: false,
     evaluating: false,
+    submitError: false,
   });
 
   const audioRecorder = useAudioRecorder(RecordingPresets.LOW_QUALITY);
   const recorderState = useAudioRecorderState(audioRecorder);
   const [isTranscribing, setIsTranscribing] = useState(false);
 
-  const showResultOverlay = state.submitted && state.evaluation && !state.evaluating;
+  const showResultOverlay =
+    state.submitted && state.evaluation && !state.evaluating && !state.submitError;
   const showAnalyzingOverlay = state.evaluating;
+  const showTryAgainOverlay = state.submitted && state.submitError && !state.evaluating;
 
   useEffect(() => {
     if (isActive) {
-      setNavigationLocked(showResultOverlay || showAnalyzingOverlay);
+      setNavigationLocked(showResultOverlay || showAnalyzingOverlay || showTryAgainOverlay);
     }
     return () => setNavigationLocked(false);
-  }, [isActive, showResultOverlay, showAnalyzingOverlay, setNavigationLocked]);
+  }, [isActive, showResultOverlay, showAnalyzingOverlay, showTryAgainOverlay, setNavigationLocked]);
 
   const updateState = useCallback((newState: any) => {
     setState((prev: any) => {
@@ -103,49 +106,61 @@ export function CaseStudySlide({ slide, onNext, isActive }: CaseStudySlideProps)
     fetchCaseData();
   }, [user, slide.id, isActive, setAllowNext, updateState]);
 
+  const evaluateAnswer = useCallback(
+    async (caseAnswer: string) => {
+      updateState({ submitted: true, evaluating: true, submitError: false });
+
+      try {
+        const { data, error } = await supabase.functions.invoke('evaluate-case', {
+          body: {
+            slide_id: slide.id,
+            user_answer: caseAnswer,
+          },
+        });
+
+        if (error) throw error;
+
+        updateState({
+          submitted: true,
+          evaluating: false,
+          submitError: false,
+          evaluation: {
+            feedback: data?.feedback ?? '',
+            average_score: data?.average_score ?? 0,
+          },
+        });
+
+        setAllowNext(true);
+      } catch (error: any) {
+        console.error('Error evaluating case study:', error);
+        updateState({
+          submitted: true,
+          evaluating: false,
+          submitError: true,
+          evaluation: undefined,
+        });
+      }
+    },
+    [slide.id, setAllowNext, updateState]
+  );
+
   const handleSubmit = async () => {
     const caseAnswer = state.answer || '';
     if (!caseAnswer?.trim() || !user) return;
+    await evaluateAnswer(caseAnswer);
+  };
 
-    updateState({ submitted: true, evaluating: true });
-
-    try {
-      const { data, error } = await supabase.functions.invoke('evaluate-case', {
-        body: {
-          slide_id: slide.id,
-          user_answer: caseAnswer,
-        },
-      });
-
-      if (error) throw error;
-
-      updateState({
-        submitted: true,
-        evaluating: false,
-        evaluation: {
-          feedback: data.feedback || '',
-          average_score: data.average_score || 0,
-        },
-      });
-
-      setAllowNext(true);
-    } catch (error: any) {
-      console.error('Error evaluating case study:', error);
-      updateState({
-        submitted: true,
-        evaluating: false,
-        evaluation: {
-          feedback: error.message || 'An error occurred during evaluation',
-          average_score: 0,
-        },
-      });
-    }
+  const handleRetrySubmit = async () => {
+    const caseAnswer = state.answer || '';
+    if (!caseAnswer?.trim() || !user) return;
+    await evaluateAnswer(caseAnswer);
   };
 
   const handleTryAgain = () => {
     updateState({
       submitted: false,
       evaluating: false,
+      submitError: false,
       evaluation: undefined,
     });
   };
@@ -279,6 +294,17 @@ export function CaseStudySlide({ slide, onNext, isActive }: CaseStudySlideProps)
           <ActivityIndicator size="large" color="#0A0A0A" className="mb-4" />
 
           <Text className="text-body-1 text-text text-center">Analysing your answer...</Text>
+        </View>
+      )}
+
+      {showTryAgainOverlay && (
+        <View className="absolute inset-0 bg-bg justify-center items-center p-4">
+          <Text className="text-body-1 text-text text-center mb-2">
+            Something went wrong. Please try again.
+          </Text>
+          <Button size="big" onPress={handleRetrySubmit}>
+            Try again
+          </Button>
         </View>
       )}
 
