@@ -10,10 +10,10 @@ interface RequestBody {
   course_id: string;
 }
 
-// Helper function to convert score (0-100) to 5-point scale
-const toFivePointScale = (score: number) => Math.round((score / 20) * 10) / 10;
+// Format score on 0-5 scale to one decimal (aligned with app/course/[id]/progress.tsx)
+const formatScore5 = (score: number) => Math.round(score * 10) / 10;
 
-// Helper function to generate skill progress bar HTML
+// Helper function to generate skill progress bar HTML (fluid-friendly)
 const generateSkillBar = (rating5: number): string => {
   const filled = Math.floor(rating5);
   const bars = [];
@@ -38,28 +38,29 @@ const generateModuleCard = (
   const skillsHtml = skills
     .map(
       (skill, index) => `
-                      <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="width: 100%;">
+                      <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="width: 100%; margin-bottom: 8px;">
                         <tr>
-                          <td style="font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; font-weight: 400; font-size: 14px; line-height: 20px; color: #0a0a0a; padding-right: 12px;">
+                          <td style="font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; font-weight: 400; font-size: 14px; line-height: 20px; color: #0a0a0a; padding-bottom: 4px;">
                             ${skill.title}
                           </td>
-                          <td align="right" style="white-space: nowrap;">
+                        </tr>
+                        <tr>
+                          <td style="padding-top: 0; padding-bottom: 0;">
                             ${generateSkillBar(skill.rating5)}
-                            <span style="display: inline-block; width: 12px;"></span>
+                            <span style="display: inline-block; width: 8px;"></span>
                             <span style="font-family: 'Roboto Condensed', Arial, sans-serif; font-weight: 500; font-size: 16px; line-height: 20px; color: #0a0a0a; vertical-align: middle;">
-                              ${skill.rating5}/5
+                              ${Number(skill.rating5).toFixed(1)}/5
                             </span>
                           </td>
                         </tr>
-                      </table>
-                      ${index < skills.length - 1 ? '<div style="height: 8px; line-height: 8px;">&nbsp;</div>' : ''}`,
+                      ${index < skills.length - 1 ? '<tr><td style="height: 12px; line-height: 12px;">&nbsp;</td></tr>' : ''}`,
     )
     .join('');
 
   return `
                   <tr>
-                    <td style="background-color: #f4f5f6; border: 1px solid rgba(0, 0, 0, 0.05); border-radius: 12px; padding: 16px;">
-                      <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+                    <td class="module-card" style="background-color: #f4f5f6; border: 1px solid rgba(0, 0, 0, 0.05); border-radius: 12px; padding: 16px;">
+                      <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" class="module-header-table">
                         <tr>
                           <td>
                             <div style="font-family: 'Roboto Condensed', Arial, sans-serif; font-weight: 500; font-size: 18px; line-height: 22px; color: #0a0a0a; margin: 0 0 4px;">
@@ -144,66 +145,56 @@ serve(async (req) => {
       year: '2-digit',
     });
 
-    // 2. Fetch Course Grade
-    const { data: courseGradeData, error: gradeError } = await supabaseAdmin
-      .from('view_user_course_grades')
-      .select('course_grade')
-      .eq('user_id', user.id)
-      .eq('course_id', course_id)
-      .maybeSingle();
+    // 2. Score calculation aligned with app/course/[id]/progress.tsx (interactions-based, 0-5 scale)
+    // Get all slide IDs for this course
+    const { data: courseSlides } = await supabaseAdmin
+      .from('course_slides')
+      .select('id, course_lessons!inner(course_modules!inner(course_id))')
+      .eq('course_lessons.course_modules.course_id', course_id);
+    const slideIds = (courseSlides || []).map((s: any) => s.id);
 
-    const courseRating = courseGradeData?.course_grade ?? 0;
-    const overallScore5 = toFivePointScale(courseRating);
+    let totalQuizScore = 0;
+    let quizCount = 0;
+    let totalCaseScore = 0;
+    let caseCount = 0;
 
-    // 3. Fetch Quiz Average
-    const { data: lessonGrades, error: lessonError } = await supabaseAdmin
-      .from('view_user_lesson_grades')
-      .select('quiz_avg_score')
-      .eq('user_id', user.id)
-      .eq('course_id', course_id);
+    if (slideIds.length > 0) {
+      const [quizRows, caseRows] = await Promise.all([
+        supabaseAdmin.from('course_quiz_interactions').select('slide_id, selected_option_index, correct_option_index').eq('user_id', user.id).in('slide_id', slideIds),
+        supabaseAdmin
+          .from('course_case_study_interactions')
+          .select('id, course_case_study_scores(score)')
+          .eq('user_id', user.id)
+          .in('slide_id', slideIds),
+      ]);
 
-    let quizRating = 0;
-    if (lessonGrades && lessonGrades.length > 0) {
-      const totalQuizScore = lessonGrades.reduce((sum, item) => sum + (item.quiz_avg_score || 0), 0);
-      quizRating = totalQuizScore / lessonGrades.length;
-    }
-    const quizScore5 = toFivePointScale(quizRating);
-
-    // 4. Fetch Case Study Score
-    const { data: criterionScores, error: criterionError } = await supabaseAdmin
-      .from('course_case_study_scores')
-      .select(
-        `
-        score,
-        criterion:course_assessment_criteria!inner(title, course_id),
-        interaction:course_case_study_interactions!inner(user_id)
-      `,
-      )
-      .eq('interaction.user_id', user.id)
-      .eq('criterion.course_id', course_id);
-
-    const criterionRatings: Record<string, { total: number; count: number }> = {};
-
-    if (criterionScores) {
-      criterionScores.forEach((item: any) => {
-        const title = item.criterion.title;
-        const score = item.score;
-        if (!criterionRatings[title]) {
-          criterionRatings[title] = { total: 0, count: 0 };
-        }
-        criterionRatings[title].total += score;
-        criterionRatings[title].count += 1;
-      });
+      if (quizRows.data) {
+        (quizRows.data as any[]).forEach((q) => {
+          const score = q.selected_option_index === q.correct_option_index ? 5 : 0;
+          totalQuizScore += score;
+          quizCount++;
+        });
+      }
+      if (caseRows.data) {
+        (caseRows.data as any[]).forEach((c) => {
+          const scores = c.course_case_study_scores || [];
+          const avgScore = scores.length > 0 ? scores.reduce((acc: number, curr: any) => acc + curr.score, 0) / scores.length : 0;
+          totalCaseScore += Math.round(avgScore);
+          caseCount++;
+        });
+      }
     }
 
-    let caseStudyScore100 = 0;
-    if (Object.keys(criterionRatings).length > 0) {
-      const allAverages = Object.values(criterionRatings).map(
-        (data) => (data.count > 0 ? data.total / data.count : 0),
-      );
-      caseStudyScore100 = allAverages.reduce((sum, avg) => sum + avg, 0) / allAverages.length;
-    }
-    const caseStudyScore5 = toFivePointScale(caseStudyScore100);
+    const quizScore = quizCount > 0 ? totalQuizScore / quizCount : 0;
+    const caseStudyScore = caseCount > 0 ? totalCaseScore / caseCount : 0;
+    const quizScoreFormatted = formatScore5(quizScore);
+    const caseStudyScoreFormatted = formatScore5(caseStudyScore);
+
+    const scoresForAverage: number[] = [];
+    if (quizScore > 0) scoresForAverage.push(quizScore);
+    if (caseStudyScore > 0) scoresForAverage.push(caseStudyScore);
+    const overallScore = scoresForAverage.length === 0 ? 0 : scoresForAverage.reduce((a, b) => a + b, 0) / scoresForAverage.length;
+    const overallScoreFormatted = formatScore5(overallScore);
 
     // 5. Fetch Modules with Lessons and Skills
     const { data: modules, error: modulesError } = await supabaseAdmin
@@ -299,7 +290,7 @@ serve(async (req) => {
           const avg = data.count > 0 ? data.total / data.count : 0;
           return {
             title,
-            rating5: toFivePointScale(avg),
+            rating5: avg,
           };
         });
 
@@ -333,13 +324,24 @@ serve(async (req) => {
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="x-apple-disable-message-reformatting" />
     <title>Kiflow – Course completion</title>
+    <style type="text/css">
+      @media only screen and (max-width: 620px) {
+        .email-wrapper { width: 100% !important; max-width: 100% !important; }
+        .email-body { padding: 24px 16px 20px !important; }
+        .module-card { padding: 12px !important; }
+        .module-header-table { display: block !important; }
+        .module-header-table tr { display: block !important; }
+        .module-header-table td { display: block !important; text-align: left !important; padding-bottom: 8px !important; }
+        .module-header-table td:last-child { padding-bottom: 0 !important; }
+      }
+    </style>
   </head>
   <body style="margin: 0; padding: 0; background-color: #f4f5f6; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;">
     <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color: #f4f5f6; width: 100%;">
       <tr>
         <td align="center" style="padding: 24px 12px;">
-          <!-- Container -->
-          <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="600" style="width: 600px; max-width: 600px; background-color: #f4f5f6; border-radius: 16px;">
+          <!-- Container: fluid on mobile, max 600px on desktop -->
+          <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" class="email-wrapper" style="width: 100%; max-width: 600px; background-color: #f4f5f6; border-radius: 16px;">
             <!-- Logo -->
             <tr>
               <td align="center" style="padding: 32px 24px;">
@@ -359,7 +361,7 @@ serve(async (req) => {
 
             <!-- Body -->
             <tr>
-              <td style="background-color: #ffffff; border-bottom-left-radius: 16px; border-bottom-right-radius: 16px; padding: 32px 24px 24px;">
+              <td class="email-body" style="background-color: #ffffff; border-bottom-left-radius: 16px; border-bottom-right-radius: 16px; padding: 32px 24px 24px;">
                 <!-- Intro -->
                 <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
                   <tr>
@@ -384,7 +386,7 @@ serve(async (req) => {
                       <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
                         <tr>
                           <td style="font-family: 'Roboto Condensed', Arial, sans-serif; font-weight: 500; font-size: 20px; line-height: 24px; color: #0a0a0a;">
-                            Overall score: <span style="white-space: nowrap;">${overallScore5}</span>
+                            Overall score: <span style="white-space: nowrap;">${overallScoreFormatted}</span>
                           </td>
                           <td align="right" style="font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; font-weight: 400; font-size: 14px; line-height: 20px; color: #525252; white-space: nowrap;">
                             Completion date: ${completionDate}
@@ -398,7 +400,7 @@ serve(async (req) => {
                             Quiz score:
                           </td>
                           <td align="left" style="font-family: 'Roboto Condensed', Arial, sans-serif; font-weight: 500; font-size: 16px; line-height: 20px; color: #0a0a0a; width: 80px; white-space: nowrap;">
-                            ${quizScore5}
+                            ${quizScoreFormatted}
                           </td>
                         </tr>
                         <tr>
@@ -406,7 +408,7 @@ serve(async (req) => {
                             Case study score:
                           </td>
                           <td align="left" style="font-family: 'Roboto Condensed', Arial, sans-serif; font-weight: 500; font-size: 16px; line-height: 20px; color: #0a0a0a; width: 80px; white-space: nowrap; padding-top: 4px;">
-                            ${caseStudyScore5}
+                            ${caseStudyScoreFormatted}
                           </td>
                         </tr>
                       </table>
@@ -439,7 +441,7 @@ serve(async (req) => {
           </table>
 
           <!-- Footer -->
-          <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="600" style="width: 600px; max-width: 600px;">
+          <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" class="email-wrapper" style="width: 100%; max-width: 600px;">
             <tr>
               <td align="center" style="padding: 24px 0 0; font-family: Helvetica, Arial, sans-serif; font-size: 12px; line-height: 18px; color: #9a9ea6; text-align: center;">
                 Copyright © 2025 Kiflow, all rights reserved.
