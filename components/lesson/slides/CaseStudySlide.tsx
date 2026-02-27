@@ -298,13 +298,16 @@ export function CaseStudySlide({ slide, onNext, isActive }: CaseStudySlideProps)
       )}
 
       {showTryAgainOverlay && (
-        <View className="absolute inset-0 bg-bg justify-center items-center p-4">
-          <Text className="text-body-1 text-text text-center mb-2">
-            Something went wrong. Please try again.
-          </Text>
-          <Button size="big" onPress={handleRetrySubmit}>
-            Try again
-          </Button>
+        <View className="absolute inset-0 bg-bg justify-center items-center">
+          <View className="flex flex-col gap-4 max-w-[320px] mx-auto p-4">
+            <Text className="text-body-1 text-text text-center mb-2">
+              Something went wrong.
+            </Text>
+
+            <Button onPress={handleRetrySubmit}>
+              Try again
+            </Button>
+          </View>
         </View>
       )}
 
